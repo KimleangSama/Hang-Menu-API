@@ -1,0 +1,114 @@
+server:
+  port: 10000
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: HangAPI
+  docker:
+    compose:
+      enabled: true
+  threads:
+    virtual:
+      enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
+  cache:
+    type: redis
+    redis:
+      time-to-live: 90000
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      format_sql: true
+      show_sql: true
+    open-in-view: false
+  datasource:
+    driver-class-name: ${DRIVER_CLASS_NAME:org.postgresql.Driver}
+    url: ${DATASOURCE_URL:jdbc:postgresql://localhost:5432/hang}
+    username: ${DATASOURCE_USERNAME:postgres}
+    password: ${DATASOURCE_PASSWORD:postgres}
+    hikari:
+      driver-class-name: org.postgresql.Driver
+      username: ${spring.datasource.username}
+      password: ${spring.datasource.password}
+      pool-name: SpringBootHikariCP # HikariCP
+      maximum-pool-size: 10
+      minimum-idle: 2
+      initialization-fail-timeout: 0
+      connection-timeout: 30000
+      schema: public
+
+  flyway:
+    enabled: false
+    locations: classpath:db/migration/structure, classpath:db/migration/data
+    validate-on-migrate: true
+    default-schema: public
+    url: ${spring.datasource.url}
+    user: ${spring.datasource.username}
+    password: ${spring.datasource.password}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      username: ${REDIS_USERNAME:redis}
+      password: ${REDIS_PASSWORD:redis}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:rabbitmq}
+    password: ${RABBITMQ_PASSWORD:rabbitmq}
+
+rsa:
+  private-key:
+    classpath:certs/private.pem
+  public-key:
+    classpath:certs/public.pem
+
+token:
+  domain: ${TOKEN_DOMAIN:HangAPI}
+  accessTokenExpiresHours: 336
+  refreshTokenExpiresHours: 720
+  issuer: jwt_issuer
+  secret: ${TOKEN_SECRET:WjJWdVpYSmhkR1ZmYkc5dVoxOXpaV055WlhSZmEyVjU=}
+
+cors:
+  allowedOrigins:
+    - http://localhost:3333
+    - http://localhost:4444
+    - http://localhost:5555
+    - http://localhost:4173
+    - http://localhost:4200
+    - http://localhost:10000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+  info:
+    git:
+      mode: full
+  metrics:
+    tags:
+      application: ${spring.application.name}
+logging:
+  pattern:
+    correlation: '[${spring.application.name:},%X{traceId:-},%X{spanId:-}] '
+loki:
+  url: ${LOKI_URL:http://localhost:3100/loki/api/v1/push}
+
+rabbitmq:
+  queue:
+    name: ${RABBITMQ_QUEUE_NAME:cart_queue}
+  exchange:
+    name: ${RABBITMQ_EXCHANGE_NAME:cart_exchange}
