@@ -17,7 +17,7 @@ import java.util.List;
 @ToString
 @Entity
 @Table(name = "categories", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"name"})
+        @UniqueConstraint(columnNames = {"name", "store_id"})
 })
 public class Category extends BaseEntityAudit {
     @Serial

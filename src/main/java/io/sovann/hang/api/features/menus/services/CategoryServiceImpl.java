@@ -27,7 +27,7 @@ public class CategoryServiceImpl {
     }
 
     @Transactional
-    @CacheEvict(value = "Categories", allEntries = true)
+    @CacheEvict(value = "categories", allEntries = true)
     public CategoryResponse createCategory(User user, CreateCategoryRequest request) {
         Store store = storeServiceImpl.getStoreEntityById(user, request.getStoreId());
         Category category = CreateCategoryRequest.fromRequest(request);
@@ -38,7 +38,7 @@ public class CategoryServiceImpl {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "Categories", key = "#user.id")
+    @Cacheable(value = "categories", key = "#user.id")
     public List<CategoryResponse> listCategories(User user, int page, int size) {
         Pageable pageable = Pageable.ofSize(size).withPage(page);
         List<Category> Categories = categoryRepository.findAll(pageable).getContent();
@@ -58,19 +58,19 @@ public class CategoryServiceImpl {
     }
 
     @Transactional
-    @CacheEvict(value = "Categories", key = "#user.id")
+    @CacheEvict(value = "categories", key = "#user.id")
     public CategoryResponse toggleCategoryVisibility(User user, CategoryToggleRequest request) {
         return toggleCategory(user, request, true);
     }
 
     @Transactional
-    @CacheEvict(value = "Categories", key = "#user.id")
+    @CacheEvict(value = "categories", key = "#user.id")
     public CategoryResponse toggleCategoryAvailability(User user, CategoryToggleRequest request) {
         return toggleCategory(user, request, false);
     }
 
     @Transactional
-    @CacheEvict(value = "Categories", key = "#user.id")
+    @CacheEvict(value = "categories", key = "#user.id")
     public CategoryResponse deleteCategory(User user, CategoryToggleRequest request) {
         Category category = getCategoryById(user, request);
         categoryRepository.delete(category);
@@ -89,4 +89,9 @@ public class CategoryServiceImpl {
         return category;
     }
 
+    @Transactional
+    @Cacheable(value = "categories", key = "#storeId")
+    public List<Category> findAllByStoreId(UUID storeId) {
+        return categoryRepository.findAllByStoreId(storeId);
+    }
 }

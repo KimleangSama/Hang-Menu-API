@@ -7,6 +7,7 @@ import io.sovann.hang.api.features.commons.payloads.BaseResponse;
 import io.sovann.hang.api.features.commons.payloads.PageMeta;
 import io.sovann.hang.api.features.menus.payloads.requests.CreateMenuRequest;
 import io.sovann.hang.api.features.menus.payloads.requests.MenuToggleRequest;
+import io.sovann.hang.api.features.menus.payloads.responses.CategoryMenuResponse;
 import io.sovann.hang.api.features.menus.payloads.responses.MenuResponse;
 import io.sovann.hang.api.features.menus.services.MenuServiceImpl;
 import io.sovann.hang.api.features.users.securities.CustomUserDetails;
@@ -62,17 +63,24 @@ public class MenuController {
                 meta);
     }
 
-    @GetMapping("/list/all/category")
-    public BaseResponse<Map<String, List<MenuResponse>>> listMenusWithCategory(
-            @CurrentUser CustomUserDetails user
+    @GetMapping("/list/{storeId}/all/category")
+    public BaseResponse<List<CategoryMenuResponse>> listMenusWithCategory(
+            @CurrentUser CustomUserDetails user,
+            @PathVariable UUID storeId
     ) {
         return callback.execute(() -> {
-                    List<MenuResponse> responses = menuService.listMenusWithCategory(user != null ? user.getUser() : null);
-                    log.info("Menu list: {}", responses);
-                    return responses.stream()
-                            .filter((menu) -> !menu.isHidden())
-                            .sorted((f1, f2) -> f2.getCategoryName().compareTo(f1.getCategoryName()))
-                            .collect(Collectors.groupingBy(MenuResponse::getCategoryName));
+                    List<MenuResponse> responses = menuService.listMenusWithCategory(user != null ? user.getUser() : null, storeId);
+                    Map<UUID, List<MenuResponse>> grouped = responses.stream().collect(Collectors.groupingBy(MenuResponse::getCategoryId));
+                    log.info("Grouped: {}", grouped);
+                    return grouped.entrySet().stream().map(entry -> {
+                        CategoryMenuResponse categoryMenuResponse = new CategoryMenuResponse();
+                        categoryMenuResponse.setId(entry.getKey());
+                        if (!entry.getValue().isEmpty()) {
+                            categoryMenuResponse.setName(entry.getValue().getFirst().getCategoryName());
+                        }
+                        categoryMenuResponse.setMenus(entry.getValue());
+                        return categoryMenuResponse;
+                    }).collect(Collectors.toList());
                 }, "Menu failed to list",
                 null);
     }

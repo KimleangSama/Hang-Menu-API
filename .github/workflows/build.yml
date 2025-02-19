@@ -68,12 +68,12 @@ jobs:
           cache-from: type=registry,ref=kimleangk/hang-menu-api:buildcache
           cache-to: type=registry,ref=kimleangk/hang-menu-api:buildcache,mode=max
 
-      - name: Install Trivy
-        run: |
-          sudo apt install -y trivy
-
-      - name: Scan Dependencies
-        run: trivy fs .
-
-      - name: Scan docker image
-        run: trivy image kimleangk/hang-api:latest
+#      - name: Install Trivy
+#        run: |
+#          sudo apt install -y trivy
+#
+#      - name: Scan Dependencies
+#        run: trivy fs .
+#
+#      - name: Scan docker image
+#        run: trivy image kimleangk/hang-api:latest

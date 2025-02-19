@@ -1,17 +1,30 @@
 package io.sovann.hang.api.features.menus.services;
 
-import io.sovann.hang.api.exceptions.*;
-import io.sovann.hang.api.features.menus.entities.*;
-import io.sovann.hang.api.features.menus.payloads.requests.*;
-import io.sovann.hang.api.features.menus.payloads.responses.*;
-import io.sovann.hang.api.features.menus.repos.*;
-import io.sovann.hang.api.features.users.entities.*;
-import java.util.*;
-import lombok.*;
-import org.springframework.cache.annotation.*;
-import org.springframework.data.domain.*;
-import org.springframework.stereotype.*;
-import org.springframework.transaction.annotation.*;
+import io.sovann.hang.api.exceptions.ResourceNotFoundException;
+import io.sovann.hang.api.features.menus.entities.Category;
+import io.sovann.hang.api.features.menus.entities.Menu;
+import io.sovann.hang.api.features.menus.entities.MenuImage;
+import io.sovann.hang.api.features.menus.payloads.requests.CreateMenuRequest;
+import io.sovann.hang.api.features.menus.payloads.requests.MenuToggleRequest;
+import io.sovann.hang.api.features.menus.payloads.responses.FavoriteResponse;
+import io.sovann.hang.api.features.menus.payloads.responses.MenuResponse;
+import io.sovann.hang.api.features.menus.repos.CategoryRepository;
+import io.sovann.hang.api.features.menus.repos.MenuImageRepository;
+import io.sovann.hang.api.features.menus.repos.MenuRepository;
+import io.sovann.hang.api.features.users.entities.User;
+import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +33,7 @@ public class MenuServiceImpl {
     private final MenuImageRepository menuImageRepository;
     private final FavoriteServiceImpl favoriteService;
     private final CategoryRepository categoryRepository;
+    private final CategoryServiceImpl categoryServiceImpl;
 
     @Transactional
     @CacheEvict(value = "menus", key = "#request.categoryId", allEntries = true)
@@ -114,8 +128,9 @@ public class MenuServiceImpl {
 
     @Transactional
     @Cacheable(value = "menus")
-    public List<MenuResponse> listMenusWithCategory(User user) {
-        List<Menu> menus = menuRepository.findAll();
+    public List<MenuResponse> listMenusWithCategory(User user, UUID storeId) {
+        List<Category> categories = categoryServiceImpl.findAllByStoreId(storeId);
+        List<Menu> menus = menuRepository.findAllByCategoryIn(categories);
         if (user == null) {
             return MenuResponse.fromEntities(menus, Collections.emptyList());
         }
