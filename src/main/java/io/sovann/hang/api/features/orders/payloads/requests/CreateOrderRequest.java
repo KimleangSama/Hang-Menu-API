@@ -8,7 +8,7 @@ import lombok.*;
 @Setter
 @ToString
 public class CreateOrderRequest {
-    private double totalAmount;
+    private UUID storeId;
     private LocalDateTime orderTime;
     private String phoneNumber;
     private String specialInstructions;

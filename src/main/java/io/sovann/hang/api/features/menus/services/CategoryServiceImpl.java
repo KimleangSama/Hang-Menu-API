@@ -1,28 +1,26 @@
 package io.sovann.hang.api.features.menus.services;
 
-import io.sovann.hang.api.exceptions.ResourceForbiddenException;
-import io.sovann.hang.api.exceptions.ResourceNotFoundException;
-import io.sovann.hang.api.features.menus.entities.Category;
-import io.sovann.hang.api.features.menus.payloads.requests.CategoryToggleRequest;
-import io.sovann.hang.api.features.menus.payloads.requests.CreateCategoryRequest;
-import io.sovann.hang.api.features.menus.payloads.responses.CategoryResponse;
-import io.sovann.hang.api.features.menus.repos.CategoryRepository;
-import io.sovann.hang.api.features.users.entities.Role;
-import io.sovann.hang.api.features.users.entities.User;
-import io.sovann.hang.api.features.users.enums.AuthRole;
-import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
+import io.sovann.hang.api.exceptions.*;
+import io.sovann.hang.api.features.menus.entities.*;
+import io.sovann.hang.api.features.menus.payloads.requests.*;
+import io.sovann.hang.api.features.menus.payloads.responses.*;
+import io.sovann.hang.api.features.menus.repos.*;
+import io.sovann.hang.api.features.stores.entities.*;
+import io.sovann.hang.api.features.stores.services.*;
+import io.sovann.hang.api.features.users.entities.*;
+import io.sovann.hang.api.features.users.enums.*;
+import java.util.*;
+import lombok.*;
+import org.springframework.cache.annotation.*;
+import org.springframework.data.domain.*;
+import org.springframework.stereotype.*;
+import org.springframework.transaction.annotation.*;
 
 @Service
 @RequiredArgsConstructor
 public class CategoryServiceImpl {
     private final CategoryRepository categoryRepository;
+    private final StoreServiceImpl storeServiceImpl;
 
     public long count() {
         return categoryRepository.count();
@@ -31,8 +29,10 @@ public class CategoryServiceImpl {
     @Transactional
     @CacheEvict(value = "Categories", allEntries = true)
     public CategoryResponse createCategory(User user, CreateCategoryRequest request) {
+        Store store = storeServiceImpl.getStoreEntityById(user, request.getStoreId());
         Category category = CreateCategoryRequest.fromRequest(request);
         category.setCreatedBy(user.getId());
+        category.setStore(store);
         categoryRepository.save(category);
         return CategoryResponse.fromEntity(category);
     }

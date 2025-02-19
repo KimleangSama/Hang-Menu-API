@@ -1,9 +1,8 @@
 package io.sovann.hang.api.features.menus.payloads.requests;
 
-import io.sovann.hang.api.features.menus.entities.Category;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import io.sovann.hang.api.features.menus.entities.*;
+import java.util.*;
+import lombok.*;
 
 @Getter
 @Setter
@@ -14,6 +13,7 @@ public class CreateCategoryRequest {
     private String icon;
     private boolean isHidden = false;
     private boolean isAvailable = true;
+    private UUID storeId;
 
     public static Category fromRequest(CreateCategoryRequest request) {
         Category category = new Category();

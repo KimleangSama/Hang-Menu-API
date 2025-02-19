@@ -1,18 +1,13 @@
 package io.sovann.hang.api.features.orders.payloads.requests;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-
-import java.util.UUID;
+import java.util.*;
+import lombok.*;
 
 @Getter
 @Setter
 @ToString
 @Builder
 public class CreateOrderMenuRequest {
-    private UUID orderId;
     private UUID menuId;
     private int quantity;
     private String specialRequests;

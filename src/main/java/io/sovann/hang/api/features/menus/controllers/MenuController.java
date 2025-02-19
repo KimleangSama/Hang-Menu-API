@@ -68,6 +68,7 @@ public class MenuController {
     ) {
         return callback.execute(() -> {
                     List<MenuResponse> responses = menuService.listMenusWithCategory(user != null ? user.getUser() : null);
+                    log.info("Menu list: {}", responses);
                     return responses.stream()
                             .filter((menu) -> !menu.isHidden())
                             .sorted((f1, f2) -> f2.getCategoryName().compareTo(f1.getCategoryName()))

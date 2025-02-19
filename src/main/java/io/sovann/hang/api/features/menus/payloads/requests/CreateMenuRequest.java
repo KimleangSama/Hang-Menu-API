@@ -19,7 +19,7 @@ public class CreateMenuRequest {
     private double discount;
     private String currency;
     private String image;
-    private boolean isHidden;
+    private boolean isHidden = false;
     private boolean isAvailable = true;
     private List<UUID> images;
 

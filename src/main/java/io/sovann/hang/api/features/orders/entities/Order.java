@@ -36,6 +36,6 @@ public class Order extends BaseEntityAudit {
 
     private String phoneNumber;
 
-    @OneToMany(mappedBy = "order")
+    @OneToMany(mappedBy = "order", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private List<OrderMenu> orderMenus;
 }

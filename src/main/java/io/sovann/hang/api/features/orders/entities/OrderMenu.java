@@ -30,7 +30,7 @@ public class OrderMenu extends BaseEntityAudit {
 
     public OrderMenu() {}
 
-    public OrderMenu(Menu menu, Integer quantity, String specialRequests) {
+    public OrderMenu(Menu menu, int quantity, double price, String specialRequests) {
         this.menu = menu;
         this.quantity = quantity;
         this.specialRequests = specialRequests;

@@ -27,6 +27,7 @@ public class OrderResponse {
         response.setOrderTime(order.getOrderTime().toString());
         response.setPhoneNumber(order.getPhoneNumber());
         response.setSpecialInstructions(order.getSpecialInstructions());
+        response.setOrderMenus(OrderMenuResponse.fromEntities(order.getOrderMenus()));
         return response;
     }
 }

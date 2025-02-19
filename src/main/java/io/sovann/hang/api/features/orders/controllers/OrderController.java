@@ -4,7 +4,7 @@ import io.sovann.hang.api.constants.APIURLs;
 import io.sovann.hang.api.features.commons.controllers.ControllerServiceCallback;
 import io.sovann.hang.api.features.commons.payloads.BaseResponse;
 import io.sovann.hang.api.features.orders.payloads.requests.CreateOrderRequest;
-import io.sovann.hang.api.features.orders.payloads.responses.OrderResponse;
+import io.sovann.hang.api.features.orders.payloads.responses.*;
 import io.sovann.hang.api.features.orders.services.OrderServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,7 +20,7 @@ public class OrderController {
     private final ControllerServiceCallback callback;
 
     @PostMapping("/create")
-    public BaseResponse<OrderResponse> createOrder(
+    public BaseResponse<OrderQResponse> createOrder(
             @RequestBody CreateOrderRequest request
     ) {
         return callback.execute(() -> orderService.createOrder(request),

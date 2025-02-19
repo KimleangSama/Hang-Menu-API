@@ -6,26 +6,29 @@ import org.springframework.beans.factory.annotation.*;
 import org.springframework.context.annotation.*;
 
 @Configuration
-public class OrderRabbitMQConfig {
+public class RabbitMQConfig {
+    @Value("${rabbitmq.exchange}")
+    private String exchange;
 
-    @Value("${rabbitmq.queue.name}")
-    public final static String QUEUE_NAME = "order_queue";
-    @Value("${rabbitmq.exchange.name}")
-    public final static String EXCHANGE_NAME = "order_exchange";
+    @Value("${rabbitmq.queue}")
+    private String queue;
+
+    @Value("${rabbitmq.routing-key}")
+    private String routingKey;
 
     @Bean
-    public Queue queue() {
-        return new Queue(OrderRabbitMQConfig.QUEUE_NAME, false);
+    public DirectExchange orderExchange() {
+        return new DirectExchange(exchange);
     }
 
     @Bean
-    public TopicExchange exchange() {
-        return new TopicExchange(OrderRabbitMQConfig.EXCHANGE_NAME);
+    public Queue orderQueue() {
+        return new Queue(queue, true);
     }
 
     @Bean
-    public Binding binding(Queue queue, TopicExchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with("routing.key.#");
+    public Binding binding(Queue orderQueue, DirectExchange orderExchange) {
+        return BindingBuilder.bind(orderQueue).to(orderExchange).with(routingKey);
     }
 
     @Bean

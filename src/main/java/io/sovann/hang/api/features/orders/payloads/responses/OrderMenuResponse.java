@@ -26,8 +26,11 @@ public class OrderMenuResponse {
         return response;
     }
 
-    public static List<OrderMenuResponse> fromEntities(List<OrderMenu> cartMenus) {
-        return cartMenus.stream()
+    public static List<OrderMenuResponse> fromEntities(List<OrderMenu> orderMenus) {
+        if (orderMenus == null) {
+            return Collections.emptyList();
+        }
+        return orderMenus.stream()
                 .map(OrderMenuResponse::fromEntity)
                 .toList();
     }

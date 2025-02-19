@@ -300,4 +300,11 @@ public class StoreServiceImpl {
                 .orElseThrow(() -> new ResourceNotFoundException("Store", slug));
         return StoreResponse.fromEntity(store);
     }
+
+    @Transactional
+    @Cacheable(value = "store-entity", key = "#storeId")
+    public Store getStoreEntityById(User user, UUID storeId) {
+        return storeRepository.findById(storeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Store", storeId.toString()));
+    }
 }
