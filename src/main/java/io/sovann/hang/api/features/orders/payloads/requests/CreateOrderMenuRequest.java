@@ -12,6 +12,7 @@ import java.util.UUID;
 @ToString
 @Builder
 public class CreateOrderMenuRequest {
+    private UUID orderId;
     private UUID menuId;
     private int quantity;
     private String specialRequests;

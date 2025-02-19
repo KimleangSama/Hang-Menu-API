@@ -1,31 +1,26 @@
 package io.sovann.hang.api.configs;
 
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.TopicExchange;
-import org.springframework.amqp.support.converter.DefaultJackson2JavaTypeMapper;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.amqp.core.*;
+import org.springframework.amqp.support.converter.*;
+import org.springframework.beans.factory.annotation.*;
+import org.springframework.context.annotation.*;
 
 @Configuration
-public class CartRabbitMQConfig {
+public class OrderRabbitMQConfig {
 
     @Value("${rabbitmq.queue.name}")
-    public final static String QUEUE_NAME = "cart_queue";
+    public final static String QUEUE_NAME = "order_queue";
     @Value("${rabbitmq.exchange.name}")
-    public final static String EXCHANGE_NAME = "cart_exchange";
+    public final static String EXCHANGE_NAME = "order_exchange";
 
     @Bean
     public Queue queue() {
-        return new Queue(CartRabbitMQConfig.QUEUE_NAME, false);
+        return new Queue(OrderRabbitMQConfig.QUEUE_NAME, false);
     }
 
     @Bean
     public TopicExchange exchange() {
-        return new TopicExchange(CartRabbitMQConfig.EXCHANGE_NAME);
+        return new TopicExchange(OrderRabbitMQConfig.EXCHANGE_NAME);
     }
 
     @Bean

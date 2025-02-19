@@ -109,6 +109,6 @@ loki:
 
 rabbitmq:
   queue:
-    name: ${RABBITMQ_QUEUE_NAME:cart_queue}
+    name: ${RABBITMQ_QUEUE_NAME:order_queue}
   exchange:
-    name: ${RABBITMQ_EXCHANGE_NAME:cart_exchange}
+    name: ${RABBITMQ_EXCHANGE_NAME:order_exchange}

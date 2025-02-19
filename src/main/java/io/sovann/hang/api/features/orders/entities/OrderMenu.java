@@ -1,17 +1,11 @@
 package io.sovann.hang.api.features.orders.entities;
 
-import io.sovann.hang.api.features.menus.entities.Menu;
-import io.sovann.hang.api.features.users.entities.BaseEntityAudit;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-import org.springframework.data.redis.core.RedisHash;
-
-import java.io.Serial;
+import io.sovann.hang.api.features.menus.entities.*;
+import io.sovann.hang.api.features.users.entities.*;
+import jakarta.persistence.*;
+import java.io.*;
+import lombok.*;
+import org.springframework.data.redis.core.*;
 
 @RedisHash("OrderMenu")
 @Getter
@@ -32,15 +26,13 @@ public class OrderMenu extends BaseEntityAudit {
     private Menu menu;
 
     private int quantity;
-    private Double unitPrice;
     private String specialRequests;
 
     public OrderMenu() {}
 
-    public OrderMenu(Menu menu, Integer quantity, Double unitPrice, String specialRequests) {
+    public OrderMenu(Menu menu, Integer quantity, String specialRequests) {
         this.menu = menu;
         this.quantity = quantity;
-        this.unitPrice = unitPrice;
         this.specialRequests = specialRequests;
     }
 }

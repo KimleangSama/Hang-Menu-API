@@ -1,12 +1,9 @@
 package io.sovann.hang.api.features.orders.payloads.responses;
 
-import io.sovann.hang.api.features.orders.entities.Order;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-
-import java.util.List;
-import java.util.UUID;
+import io.sovann.hang.api.features.orders.entities.*;
+import io.sovann.hang.api.features.orders.enums.*;
+import java.util.*;
+import lombok.*;
 
 @Getter
 @Setter
@@ -15,8 +12,9 @@ public class OrderResponse {
     private UUID id;
     private UUID storeId;
     private Double totalAmount;
-    private String status;
+    private OrderStatus status;
     private String orderTime;
+    private String phoneNumber;
     private String specialInstructions;
     private List<OrderMenuResponse> orderMenus;
 
@@ -25,8 +23,9 @@ public class OrderResponse {
         response.setId(order.getId());
         response.setStoreId(order.getStore().getId());
         response.setTotalAmount(order.getTotalAmount());
-        response.setStatus(order.getStatus().name());
+        response.setStatus(order.getStatus());
         response.setOrderTime(order.getOrderTime().toString());
+        response.setPhoneNumber(order.getPhoneNumber());
         response.setSpecialInstructions(order.getSpecialInstructions());
         return response;
     }
