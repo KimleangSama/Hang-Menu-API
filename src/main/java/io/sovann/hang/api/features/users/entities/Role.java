@@ -34,5 +34,9 @@ public class Role implements Serializable {
 
     public Role() {
     }
+
+    public Role(AuthRole name) {
+        this.name = name;
+    }
 }
 
