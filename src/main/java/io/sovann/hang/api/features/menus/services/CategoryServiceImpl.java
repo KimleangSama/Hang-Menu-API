@@ -12,7 +12,6 @@ import io.sovann.hang.api.features.users.enums.*;
 import java.util.*;
 import lombok.*;
 import org.springframework.cache.annotation.*;
-import org.springframework.data.domain.*;
 import org.springframework.stereotype.*;
 import org.springframework.transaction.annotation.*;
 
@@ -38,10 +37,9 @@ public class CategoryServiceImpl {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "categories", key = "#user.id")
-    public List<CategoryResponse> listCategories(User user, int page, int size) {
-        Pageable pageable = Pageable.ofSize(size).withPage(page);
-        List<Category> Categories = categoryRepository.findAll(pageable).getContent();
+    @Cacheable(value = "categories", key = "#storeId")
+    public List<CategoryResponse> listCategories(User user, UUID storeId) {
+        List<Category> Categories = categoryRepository.findAllByStoreId(storeId);
         return CategoryResponse.fromEntities(Categories);
     }
 

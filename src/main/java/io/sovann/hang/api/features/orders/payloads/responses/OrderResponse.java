@@ -11,30 +11,34 @@ import lombok.*;
 public class OrderResponse {
     private UUID id;
     private UUID storeId;
-    private Double totalAmount;
+    private Double totalAmountInRiel;
+    private Double totalAmountInDollar;
     private OrderStatus status;
     private String orderTime;
     private String phoneNumber;
     private String specialInstructions;
     private List<OrderMenuResponse> orderMenus;
 
-    public static OrderResponse fromEntity(Order order) {
+    public static OrderResponse fromEntity(Order order, boolean showOrderDetails) {
         OrderResponse response = new OrderResponse();
         response.setId(order.getId());
         response.setStoreId(order.getStore().getId());
-        response.setTotalAmount(order.getTotalAmount());
+        response.setTotalAmountInRiel(order.getTotalAmountInRiel());
+        response.setTotalAmountInDollar(order.getTotalAmountInDollar());
         response.setStatus(order.getStatus());
         response.setOrderTime(order.getOrderTime().toString());
         response.setPhoneNumber(order.getPhoneNumber());
         response.setSpecialInstructions(order.getSpecialInstructions());
-        response.setOrderMenus(OrderMenuResponse.fromEntities(order.getOrderMenus()));
+        if (showOrderDetails) {
+            response.setOrderMenus(OrderMenuResponse.fromEntities(order.getOrderMenus()));
+        }
         return response;
     }
 
-    public static List<OrderResponse> fromEntities(List<Order> orders) {
+    public static List<OrderResponse> fromEntities(List<Order> orders, boolean showOrderDetails) {
         List<OrderResponse> responses = new ArrayList<>();
         for (Order order : orders) {
-            responses.add(fromEntity(order));
+            responses.add(fromEntity(order, showOrderDetails));
         }
         return responses;
     }

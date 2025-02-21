@@ -44,7 +44,7 @@ public class OrderController {
 
     @GetMapping("/of-store/{storeId}/list")
     @PreAuthorize("hasRole('admin') or hasRole('manager')")
-    public BaseResponse<List<OrderListResponse>> getOrdersByStoreId(
+    public BaseResponse<List<OrderResponse>> getOrdersByStoreId(
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID storeId
     ) {

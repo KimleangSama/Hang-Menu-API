@@ -20,7 +20,6 @@ import java.util.UUID;
 @RedisHash("User")
 @Getter
 @Setter
-@ToString
 @Entity
 @Table(name = "users", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"username"}),

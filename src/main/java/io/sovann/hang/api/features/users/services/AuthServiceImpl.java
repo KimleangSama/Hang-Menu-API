@@ -1,41 +1,28 @@
 package io.sovann.hang.api.features.users.services;
 
 
-import io.sovann.hang.api.exceptions.ResourceNotFoundException;
-import io.sovann.hang.api.features.users.entities.Group;
-import io.sovann.hang.api.features.users.entities.GroupMember;
-import io.sovann.hang.api.features.users.entities.Role;
+import io.sovann.hang.api.exceptions.*;
 import io.sovann.hang.api.features.users.entities.User;
-import io.sovann.hang.api.features.users.enums.AuthProvider;
-import io.sovann.hang.api.features.users.enums.AuthRole;
-import io.sovann.hang.api.features.users.payloads.request.LoginBackOfficeRequest;
-import io.sovann.hang.api.features.users.payloads.request.LoginFrontOfficeRequest;
-import io.sovann.hang.api.features.users.payloads.request.RegisterBackOfficeRequest;
-import io.sovann.hang.api.features.users.payloads.request.RegisterFrontOfficeRequest;
-import io.sovann.hang.api.features.users.payloads.response.AuthResponse;
-import io.sovann.hang.api.features.users.repos.GroupMemberRepository;
-import io.sovann.hang.api.features.users.repos.GroupRepository;
-import io.sovann.hang.api.features.users.repos.UserRepository;
-import io.sovann.hang.api.features.users.securities.CustomUserDetails;
-import io.sovann.hang.api.utils.RandomString;
-import io.sovann.hang.api.utils.SoftEntityDeletable;
-import io.sovann.hang.api.utils.TokenProvider;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.List;
+import io.sovann.hang.api.features.users.entities.*;
+import io.sovann.hang.api.features.users.enums.*;
+import io.sovann.hang.api.features.users.payloads.request.*;
+import io.sovann.hang.api.features.users.payloads.response.*;
+import io.sovann.hang.api.features.users.repos.*;
+import io.sovann.hang.api.features.users.securities.*;
+import io.sovann.hang.api.utils.*;
+import jakarta.servlet.http.*;
+import jakarta.transaction.*;
+import java.time.*;
+import java.util.*;
+import lombok.*;
+import lombok.extern.slf4j.*;
+import org.springframework.http.*;
+import org.springframework.security.authentication.*;
+import org.springframework.security.core.*;
+import org.springframework.security.core.context.*;
+import org.springframework.security.core.userdetails.*;
+import org.springframework.security.crypto.password.*;
+import org.springframework.stereotype.*;
 
 @Slf4j
 @Service
@@ -102,7 +89,6 @@ public class AuthServiceImpl {
     public AuthResponse loginUser(String username, String password) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User with username " + username + " not found."));
-        SoftEntityDeletable.throwErrorIfSoftDeleted(user);
         Authentication authentication = authenticate(username, password);
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
         SecurityContextHolder.getContext().setAuthentication(authentication);

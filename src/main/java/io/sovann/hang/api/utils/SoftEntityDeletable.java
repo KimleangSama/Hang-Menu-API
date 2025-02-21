@@ -8,6 +8,7 @@ import io.sovann.hang.api.features.users.entities.Role;
 import io.sovann.hang.api.features.users.entities.User;
 import io.sovann.hang.api.features.users.enums.AuthRole;
 import io.sovann.hang.api.features.users.enums.AuthStatus;
+import io.sovann.hang.api.features.users.securities.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
@@ -29,6 +30,13 @@ public class SoftEntityDeletable {
                 throw new ResourceDeletedException(entityClass, deletableEntity.getDeletedAt(), deletableEntity.getDeletedBy());
             }
         }
+    }
+
+    public static void throwErrorIfSoftDeleted(CustomUserDetails user) {
+        if (user == null) {
+            throw new ResourceNotFoundException("User", "id: " + "unknown");
+        }
+        throwErrorIfSoftDeleted(user.getUser());
     }
 
     public static void throwErrorIfSoftDeleted(User user) {

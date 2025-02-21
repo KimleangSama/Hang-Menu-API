@@ -1,17 +1,14 @@
 package io.sovann.hang.api.features.menus.repos;
 
-import io.sovann.hang.api.features.menus.entities.Category;
-import io.sovann.hang.api.features.menus.entities.Menu;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import io.sovann.hang.api.features.menus.entities.*;
+import java.util.*;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.repository.*;
+import org.springframework.stereotype.*;
 
 @Repository
 public interface MenuRepository extends JpaRepository<Menu, UUID> {
     List<Menu> findAllByCategory(Category category);
 
-    List<Menu> findAllByCategoryIn(Collection<Category> categories);
+    List<Menu> findAllByCategoryIn(Collection<Category> categories, Pageable page);
 }

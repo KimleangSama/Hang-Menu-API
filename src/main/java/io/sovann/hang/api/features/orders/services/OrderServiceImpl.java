@@ -24,6 +24,7 @@ public class OrderServiceImpl {
     private final RabbitTemplate rabbitTemplate;
     private final StoreServiceImpl storeServiceImpl;
 
+    @Transactional
     @CacheEvict(value = "orders", key = "#request.storeId", allEntries = true)
     public OrderQResponse createOrder(CreateOrderRequest request) {
         OrderQResponse response = new OrderQResponse();
@@ -43,24 +44,28 @@ public class OrderServiceImpl {
         response.setStatusCode(statusCode);
     }
 
+    @Transactional
     @Cacheable(value = "order-entity", key = "#orderId")
     public Optional<Order> getOrderEntityById(UUID orderId) {
         return orderRepository.findById(orderId);
     }
 
+    @Transactional
     @Cacheable(value = "order", key = "#orderId")
     public OrderResponse getOrderById(User user, UUID orderId) {
         return getOrderEntityById(orderId)
                 .filter(order -> isUserAuthorizedForStore(user, order.getStore().getId()))
-                .map(OrderResponse::fromEntity)
+                .map(order -> {
+                    return OrderResponse.fromEntity(order, true);
+                })
                 .orElse(null);
     }
 
     @Transactional
     @Cacheable(value = "orders", key = "#storeId")
-    public List<OrderListResponse> getOrdersByStoreId(User user, UUID storeId) {
+    public List<OrderResponse> getOrdersByStoreId(User user, UUID storeId) {
         return isUserAuthorizedForStore(user, storeId)
-                ? OrderListResponse.fromEntities(orderRepository.findByStoreId(storeId))
+                ? OrderResponse.fromEntities(orderRepository.findByStoreId(storeId), false)
                 : Collections.emptyList();
     }
 

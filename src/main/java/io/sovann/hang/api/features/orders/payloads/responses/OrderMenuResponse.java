@@ -11,8 +11,13 @@ public class OrderMenuResponse {
     private UUID id;
     private UUID orderId;
     private UUID menuId;
+    private String menuName;
+    private String menuImage;
     private Integer quantity;
     private double price;
+    private double discount;
+    private String currency;
+    private double totalAmount;
     private String specialRequests;
 
     public static OrderMenuResponse fromEntity(OrderMenu orderMenu) {
@@ -20,8 +25,13 @@ public class OrderMenuResponse {
         response.setId(orderMenu.getId());
         response.setOrderId(orderMenu.getOrder().getId());
         response.setMenuId(orderMenu.getMenu().getId());
+        response.setMenuName(orderMenu.getMenu().getName());
+        response.setMenuImage(orderMenu.getMenu().getImage());
+        response.setPrice(orderMenu.getPrice());
+        response.setDiscount(orderMenu.getDiscount());
         response.setQuantity(orderMenu.getQuantity());
-        response.setPrice(orderMenu.getMenu().getPrice());
+        response.setCurrency(orderMenu.getCurrency());
+        response.setTotalAmount((orderMenu.getPrice() - orderMenu.getDiscount()) * orderMenu.getQuantity());
         response.setSpecialRequests(orderMenu.getSpecialRequests());
         return response;
     }

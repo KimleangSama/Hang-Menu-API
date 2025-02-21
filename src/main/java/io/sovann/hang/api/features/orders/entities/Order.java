@@ -20,7 +20,8 @@ public class Order extends BaseEntityAudit {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private Double totalAmount;
+    private Double totalAmountInRiel;
+    private Double totalAmountInDollar;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.pending;

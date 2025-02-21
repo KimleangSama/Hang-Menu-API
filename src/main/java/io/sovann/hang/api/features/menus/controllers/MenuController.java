@@ -51,14 +51,15 @@ public class MenuController {
                 null);
     }
 
-    @GetMapping("/list/all")
+    @GetMapping("/of-store/{storeId}/list")
     public BaseResponse<List<MenuResponse>> listMenus(
             @CurrentUser CustomUserDetails user,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @PathVariable UUID storeId
     ) {
         PageMeta meta = new PageMeta(page, size, menuService.count());
-        return callback.execute(() -> menuService.listMenus(user != null ? user.getUser() : null, page, size),
+        return callback.execute(() -> menuService.listMenus(user != null ? user.getUser() : null, storeId, page, size),
                 "Menu failed to list",
                 meta);
     }

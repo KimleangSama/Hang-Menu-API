@@ -25,14 +25,20 @@ public class OrderMenu extends BaseEntityAudit {
     @JoinColumn(name = "menu_id")
     private Menu menu;
 
+    private String currency;
+    private double price;
+    private double discount;
     private int quantity;
     private String specialRequests;
 
     public OrderMenu() {}
 
-    public OrderMenu(Menu menu, int quantity, double price, String specialRequests) {
+    public OrderMenu(Menu menu, int quantity, double price, double discount, String currency, String specialRequests) {
         this.menu = menu;
         this.quantity = quantity;
+        this.price = price;
+        this.discount = discount;
+        this.currency = currency;
         this.specialRequests = specialRequests;
     }
 }

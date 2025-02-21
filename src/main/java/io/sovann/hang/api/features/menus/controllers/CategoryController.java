@@ -1,22 +1,19 @@
 package io.sovann.hang.api.features.menus.controllers;
 
-import io.sovann.hang.api.annotations.CurrentUser;
-import io.sovann.hang.api.constants.APIURLs;
-import io.sovann.hang.api.features.commons.controllers.ControllerServiceCallback;
-import io.sovann.hang.api.features.commons.payloads.BaseResponse;
-import io.sovann.hang.api.features.commons.payloads.PageMeta;
-import io.sovann.hang.api.features.menus.payloads.requests.CategoryToggleRequest;
-import io.sovann.hang.api.features.menus.payloads.requests.CreateCategoryRequest;
-import io.sovann.hang.api.features.menus.payloads.responses.CategoryResponse;
-import io.sovann.hang.api.features.menus.services.CategoryServiceImpl;
-import io.sovann.hang.api.features.users.entities.User;
-import io.sovann.hang.api.features.users.securities.CustomUserDetails;
-import io.sovann.hang.api.utils.SoftEntityDeletable;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
+import io.sovann.hang.api.annotations.*;
+import io.sovann.hang.api.constants.*;
+import io.sovann.hang.api.features.commons.controllers.*;
+import io.sovann.hang.api.features.commons.payloads.*;
+import io.sovann.hang.api.features.menus.payloads.requests.*;
+import io.sovann.hang.api.features.menus.payloads.responses.*;
+import io.sovann.hang.api.features.menus.services.*;
+import io.sovann.hang.api.features.users.entities.*;
+import io.sovann.hang.api.features.users.securities.*;
+import io.sovann.hang.api.utils.*;
+import java.util.*;
+import lombok.*;
+import org.springframework.security.access.prepost.*;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping(APIURLs.CATEGORY)
@@ -37,17 +34,15 @@ public class CategoryController {
                 null);
     }
 
-    @GetMapping("/list")
+    @GetMapping("/of-store/{storeId}/list")
     public BaseResponse<List<CategoryResponse>> listMenuCategories(
             @CurrentUser CustomUserDetails user,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @PathVariable UUID storeId
     ) {
         User authUser = user == null ? null : user.getUser();
-        PageMeta pageMeta = new PageMeta(page, size, categoryService.count());
-        return callback.execute(() -> categoryService.listCategories(authUser, page, size),
+        return callback.execute(() -> categoryService.listCategories(authUser, storeId),
                 "Category failed to list",
-                pageMeta);
+                null);
     }
 
     @PatchMapping("/toggle-visibility")

@@ -23,6 +23,6 @@ public class Group extends BaseEntityAudit {
     private String name;
     private String description;
 
-    @OneToMany(mappedBy = "group", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "group", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private Set<GroupMember> members = new HashSet<>();
 }
