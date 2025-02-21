@@ -23,7 +23,12 @@ public class MenuServiceImpl {
     private final CategoryServiceImpl categoryServiceImpl;
 
     @Transactional
-    @CacheEvict(value = "menus", key = "#request.categoryId", allEntries = true)
+    public long count() {
+        return menuRepository.count();
+    }
+
+    @Transactional
+    @CacheEvict(value = "menus", key = "#request.storeId")
     public MenuResponse createMenu(User user, CreateMenuRequest request) {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category", request.getCategoryId().toString()));
@@ -55,19 +60,16 @@ public class MenuServiceImpl {
         return MenuResponse.fromEntities(menus, favorites);
     }
 
-    // For admin only
     @Transactional
-    @Cacheable(value = "menus")
-    public List<MenuResponse> listMenus(User user, UUID storeId, int page, int size) {
+    @Cacheable(value = "menus", key = "#storeId")
+    public List<MenuResponse> listMenusWithCategory(User user, UUID storeId) {
         List<Category> categories = categoryServiceImpl.findAllByStoreId(storeId);
-        Pageable pageable = PageRequest.of(page, size);
-        List<Menu> menus = menuRepository.findAllByCategoryIn(categories, pageable);
-        return MenuResponse.fromEntities(menus, Collections.emptyList());
-    }
-
-    @Transactional
-    public long count() {
-        return menuRepository.count();
+        List<Menu> menus = menuRepository.findAllByCategoryIn(categories);
+        if (user == null) {
+            return MenuResponse.fromEntities(menus, Collections.emptyList());
+        }
+        List<FavoriteResponse> favorites = favoriteService.listMenuFavorites(user);
+        return MenuResponse.fromEntities(menus, favorites);
     }
 
     @Transactional
@@ -112,18 +114,6 @@ public class MenuServiceImpl {
     @CacheEvict(value = "menu-entity", key = "#menuId")
     public Optional<Menu> getMenuEntityById(UUID menuId) {
         return menuRepository.findById(menuId);
-    }
-
-    @Transactional
-    @Cacheable(value = "menus", key = "#storeId")
-    public List<MenuResponse> listMenusWithCategory(User user, UUID storeId) {
-        List<Category> categories = categoryServiceImpl.findAllByStoreId(storeId);
-        List<Menu> menus = menuRepository.findAllByCategoryIn(categories, PageRequest.of(0, 1000));
-        if (user == null) {
-            return MenuResponse.fromEntities(menus, Collections.emptyList());
-        }
-        List<FavoriteResponse> favorites = favoriteService.listMenuFavorites(user);
-        return MenuResponse.fromEntities(menus, favorites);
     }
 
     @Transactional

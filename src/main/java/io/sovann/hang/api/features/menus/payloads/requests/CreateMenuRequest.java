@@ -23,6 +23,7 @@ public class CreateMenuRequest {
     private boolean isAvailable = true;
     private List<UUID> images;
 
+    private UUID storeId;
     private UUID categoryId;
 
     public static Menu fromRequest(CreateMenuRequest request) {

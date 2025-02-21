@@ -30,7 +30,7 @@ public class Category extends BaseEntityAudit {
     private boolean isHidden = false;
     private boolean isAvailable = true;
 
-    @OneToMany(mappedBy = "category")
+    @OneToMany(mappedBy = "category", fetch = FetchType.EAGER)
     private List<Menu> menus;
 
     @ManyToOne

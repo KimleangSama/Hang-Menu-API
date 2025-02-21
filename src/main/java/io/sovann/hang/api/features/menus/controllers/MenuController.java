@@ -1,26 +1,20 @@
 package io.sovann.hang.api.features.menus.controllers;
 
-import io.sovann.hang.api.annotations.CurrentUser;
-import io.sovann.hang.api.constants.APIURLs;
-import io.sovann.hang.api.features.commons.controllers.ControllerServiceCallback;
-import io.sovann.hang.api.features.commons.payloads.BaseResponse;
-import io.sovann.hang.api.features.commons.payloads.PageMeta;
-import io.sovann.hang.api.features.menus.payloads.requests.CreateMenuRequest;
-import io.sovann.hang.api.features.menus.payloads.requests.MenuToggleRequest;
-import io.sovann.hang.api.features.menus.payloads.responses.CategoryMenuResponse;
-import io.sovann.hang.api.features.menus.payloads.responses.MenuResponse;
-import io.sovann.hang.api.features.menus.services.MenuServiceImpl;
-import io.sovann.hang.api.features.users.securities.CustomUserDetails;
-import io.sovann.hang.api.utils.SoftEntityDeletable;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
+import io.sovann.hang.api.annotations.*;
+import io.sovann.hang.api.constants.*;
+import io.sovann.hang.api.features.commons.controllers.*;
+import io.sovann.hang.api.features.commons.payloads.*;
+import io.sovann.hang.api.features.menus.payloads.requests.*;
+import io.sovann.hang.api.features.menus.payloads.responses.*;
+import io.sovann.hang.api.features.menus.services.*;
+import io.sovann.hang.api.features.users.securities.*;
+import io.sovann.hang.api.utils.*;
+import java.util.*;
+import java.util.stream.*;
+import lombok.*;
+import lombok.extern.slf4j.*;
+import org.springframework.security.access.prepost.*;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -54,14 +48,10 @@ public class MenuController {
     @GetMapping("/of-store/{storeId}/list")
     public BaseResponse<List<MenuResponse>> listMenus(
             @CurrentUser CustomUserDetails user,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
             @PathVariable UUID storeId
     ) {
-        PageMeta meta = new PageMeta(page, size, menuService.count());
-        return callback.execute(() -> menuService.listMenus(user != null ? user.getUser() : null, storeId, page, size),
-                "Menu failed to list",
-                meta);
+        return callback.execute(() -> menuService.listMenusWithCategory(user != null ? user.getUser() : null, storeId),
+                "Menu failed to list", null);
     }
 
     @GetMapping("/list/{storeId}/all/category")
@@ -72,7 +62,6 @@ public class MenuController {
         return callback.execute(() -> {
                     List<MenuResponse> responses = menuService.listMenusWithCategory(user != null ? user.getUser() : null, storeId);
                     Map<UUID, List<MenuResponse>> grouped = responses.stream().collect(Collectors.groupingBy(MenuResponse::getCategoryId));
-                    log.info("Grouped: {}", grouped);
                     return grouped.entrySet().stream().map(entry -> {
                         CategoryMenuResponse categoryMenuResponse = new CategoryMenuResponse();
                         categoryMenuResponse.setId(entry.getKey());

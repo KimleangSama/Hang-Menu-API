@@ -43,16 +43,16 @@ public class MenuResponse {
         response.setImage(menu.getImage());
         response.setHidden(menu.getIsHidden());
         response.setAvailable(menu.getIsAvailable());
-        if (menu.getCategory() == null) {
-            return response;
-        }
-        response.setCategoryId(menu.getCategory().getId());
-        response.setCategoryName(menu.getCategory().getName());
         if (!menu.getImages().isEmpty()) {
             response.setImages(MenuImageResponse.fromEntities(menu.getImages()));
         } else {
             response.setImages(Collections.emptyList());
         }
+        if (menu.getCategory() == null) {
+            return response;
+        }
+        response.setCategoryId(menu.getCategory().getId());
+        response.setCategoryName(menu.getCategory().getName());
         return response;
     }
 

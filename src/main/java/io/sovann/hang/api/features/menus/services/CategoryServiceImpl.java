@@ -39,8 +39,8 @@ public class CategoryServiceImpl {
     @Transactional(readOnly = true)
     @Cacheable(value = "categories", key = "#storeId")
     public List<CategoryResponse> listCategories(User user, UUID storeId) {
-        List<Category> Categories = categoryRepository.findAllByStoreId(storeId);
-        return CategoryResponse.fromEntities(Categories);
+        List<Category> categories = categoryRepository.findAllByStoreId(storeId);
+        return CategoryResponse.fromEntities(categories);
     }
 
     public CategoryResponse toggleCategory(User user, CategoryToggleRequest request, boolean toggleVisibility) {
@@ -88,7 +88,7 @@ public class CategoryServiceImpl {
     }
 
     @Transactional
-    @Cacheable(value = "categories", key = "#storeId")
+    @Cacheable(value = "category-entities", key = "#storeId")
     public List<Category> findAllByStoreId(UUID storeId) {
         return categoryRepository.findAllByStoreId(storeId);
     }
