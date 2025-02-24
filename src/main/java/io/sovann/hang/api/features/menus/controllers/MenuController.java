@@ -120,4 +120,17 @@ public class MenuController {
                 "Menu failed to get",
                 null);
     }
+
+    @PatchMapping("/{id}/update-image")
+    @PreAuthorize("hasAnyRole('admin', 'manager')")
+    public BaseResponse<MenuResponse> updateMenuImage(
+            @CurrentUser CustomUserDetails user,
+            @PathVariable UUID id,
+            @RequestBody String image
+    ) {
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user);
+        return callback.execute(() -> menuService.updateMenuImage(id, image),
+                "Menu failed to update image",
+                null);
+    }
 }

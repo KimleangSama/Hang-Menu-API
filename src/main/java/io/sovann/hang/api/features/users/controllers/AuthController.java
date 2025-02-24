@@ -32,6 +32,11 @@ public class AuthController {
     private final UserServiceImpl userService;
     private final AuthServiceImpl authService;
 
+    @PostMapping("/login")
+    public BaseResponse<AuthResponse> login(@Valid @RequestBody LoginBackOfficeRequest request) {
+        return handleLogin(() -> authService.loginBackOfficeUser(request), "username", request.getUsername());
+    }
+
     @PostMapping("/login-backoffice")
     public BaseResponse<AuthResponse> loginBackOfficeUser(@Valid @RequestBody LoginBackOfficeRequest request) {
         return handleLogin(() -> authService.loginBackOfficeUser(request), "username", request.getUsername());
@@ -104,7 +109,6 @@ public class AuthController {
     ) {
         try {
             SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
-            log.info("Getting current user: {}", user.getUser());
             return BaseResponse.<UserResponse>ok().setPayload(UserResponse.fromUser(user.getUser()));
         } catch (Exception e) {
             return BaseResponse.<UserResponse>exception().setError("Failed to get current user. Reason: " + e.getMessage());

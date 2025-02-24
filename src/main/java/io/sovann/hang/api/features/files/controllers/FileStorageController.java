@@ -1,25 +1,24 @@
 package io.sovann.hang.api.features.files.controllers;
 
-import io.sovann.hang.api.annotations.CurrentUser;
-import io.sovann.hang.api.constants.APIURLs;
-import io.sovann.hang.api.exceptions.ResourceNotFoundException;
-import io.sovann.hang.api.features.commons.payloads.BaseResponse;
-import io.sovann.hang.api.features.files.exceptions.FileStorageException;
-import io.sovann.hang.api.features.files.payloads.FileResponse;
-import io.sovann.hang.api.features.files.services.FileStorageServiceImpl;
-import io.sovann.hang.api.features.users.securities.CustomUserDetails;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.transaction.annotation.Transactional;
+import io.sovann.hang.api.annotations.*;
+import io.sovann.hang.api.constants.*;
+import io.sovann.hang.api.exceptions.*;
+import io.sovann.hang.api.features.commons.payloads.*;
+import io.sovann.hang.api.features.files.exceptions.*;
+import io.sovann.hang.api.features.files.payloads.*;
+import io.sovann.hang.api.features.files.services.*;
+import io.sovann.hang.api.features.menus.entities.*;
+import io.sovann.hang.api.features.menus.services.*;
+import io.sovann.hang.api.features.users.securities.*;
+import java.util.*;
+import lombok.*;
+import lombok.extern.slf4j.*;
+import org.springframework.core.io.*;
+import org.springframework.http.*;
+import org.springframework.security.access.prepost.*;
+import org.springframework.transaction.annotation.*;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
+import org.springframework.web.multipart.*;
 
 @Slf4j
 @RestController
@@ -31,6 +30,7 @@ public class FileStorageController {
     public static final String FILE_STORAGE_ERROR = "File Storage Error";
 
     private final FileStorageServiceImpl fileStorageService;
+    private final MenuServiceImpl menuService;
 
     @GetMapping("/load/{filename}")
     public BaseResponse<FileResponse> loadFile(
@@ -72,11 +72,19 @@ public class FileStorageController {
     }
 
     @PostMapping("/upload")
-//    @PreAuthorize("hasAnyRoles('admin', 'manager')")
+    @PreAuthorize("hasAnyRole('admin', 'manager')")
     public BaseResponse<FileResponse> uploadFile(
             @CurrentUser CustomUserDetails user,
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("menuId") UUID menuId
+    ) {
         try {
+            Menu menu = menuService.getMenuEntityById(menuId)
+                    .orElse(null);
+            if (menu == null) {
+                return BaseResponse.<FileResponse>notFound()
+                        .setError("Menu not found for upload file.");
+            }
             if (user == null || user.getUser() == null) {
                 return BaseResponse.<FileResponse>accessDenied()
                         .setError("User is not permitted to upload file.");
@@ -84,6 +92,8 @@ public class FileStorageController {
             String filename = fileStorageService.save(user.getUser(), file);
             FileResponse fileResponse = FileResponse.fromEntity(filename);
             fileResponse.setCreatedBy(user.getUser().getId());
+            // Update menu image
+            menuService.updateMenuImage(menuId, fileResponse.getUrl());
             return BaseResponse.<FileResponse>ok()
                     .setPayload(fileResponse);
         } catch (FileStorageException e) {

@@ -20,7 +20,6 @@ public class Menu extends BaseEntityAudit {
     @Serial
     private final static long serialVersionUID = 1L;
 
-    @Column(unique = true)
     private String code;
     private String name;
     private String description;
@@ -32,6 +31,7 @@ public class Menu extends BaseEntityAudit {
     private String image;
     private Boolean isHidden = false;
     private Boolean isAvailable = true;
+    private boolean isDeleted = false;
 
     @ManyToOne
     @JoinColumn(name = "category_id")

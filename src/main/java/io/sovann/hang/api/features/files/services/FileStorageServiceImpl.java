@@ -1,26 +1,24 @@
 package io.sovann.hang.api.features.files.services;
 
-import io.sovann.hang.api.features.files.exceptions.FileStorageException;
-import io.sovann.hang.api.features.users.entities.User;
-import io.sovann.hang.api.utils.RandomString;
-import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FilenameUtils;
-import org.springframework.beans.factory.annotation.Value;
+import io.sovann.hang.api.features.files.exceptions.*;
+import io.sovann.hang.api.features.users.entities.*;
+import io.sovann.hang.api.utils.*;
+import jakarta.annotation.*;
+import java.awt.image.*;
+import java.io.*;
+import java.net.*;
+import java.nio.channels.*;
+import java.nio.file.*;
+import java.util.*;
+import javax.imageio.*;
+import javax.imageio.stream.*;
+import lombok.extern.slf4j.*;
+import org.apache.commons.io.*;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import org.springframework.core.io.*;
+import org.springframework.stereotype.*;
+import org.springframework.web.multipart.*;
 
 @Slf4j
 @Service
@@ -28,6 +26,7 @@ public class FileStorageServiceImpl {
     private final Path root;
     private static final long MAX_FILE_SIZE = 10_000_000; // 10MB
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png");
+    private static final float IMAGE_COMPRESSION_QUALITY = 0.6f; // Adjust compression quality as needed
 
     public FileStorageServiceImpl(@Value("${app.upload.base-dir:uploads}") String baseDir) {
         this.root = Path.of(baseDir).toAbsolutePath().normalize();
@@ -49,12 +48,50 @@ public class FileStorageServiceImpl {
         Path targetPath = root.resolve(filename);
         validatePath(targetPath);
         try (InputStream inputStream = file.getInputStream()) {
-            Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
+            String extension = getFileExtension(file);
+            if (ALLOWED_EXTENSIONS.contains(extension)) {
+                compressImage(inputStream, targetPath, extension);
+            } else {
+                Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
+            }
             return filename;
         } catch (IOException e) {
             throw new FileStorageException("Failed to store file " + filename, e);
         }
     }
+
+    private void compressImage(InputStream inputStream, Path targetPath, String extension) throws IOException {
+        try {
+            BufferedImage image = ImageIO.read(inputStream);
+            if (image == null) {
+                // Handle cases where ImageIO.read returns null (e.g., invalid image format)
+                Files.copy(Channels.newInputStream(Channels.newChannel(inputStream)), targetPath, StandardCopyOption.REPLACE_EXISTING);
+                return;
+            }
+
+            FileOutputStream outputStream = new FileOutputStream(targetPath.toFile());
+            ImageOutputStream imageOutputStream = ImageIO.createImageOutputStream(outputStream);
+            ImageWriter writer = ImageIO.getImageWritersByFormatName(extension).next();
+            ImageWriteParam param = writer.getDefaultWriteParam();
+
+            param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+            param.setCompressionQuality(IMAGE_COMPRESSION_QUALITY); // Set compression quality
+
+            writer.setOutput(imageOutputStream);
+            writer.write(null, new IIOImage(image, null, null), param);
+
+            imageOutputStream.close();
+            outputStream.close();
+            writer.dispose();
+
+        } catch (IOException e) {
+            log.error("Error during image compression: {}", e.getMessage());
+            // If compression fails, fallback to saving the original file
+            inputStream.reset(); // Reset input stream to the beginning
+            Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
 
     public Resource load(String filename) throws FileStorageException {
         try {

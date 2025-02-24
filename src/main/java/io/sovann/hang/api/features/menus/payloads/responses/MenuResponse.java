@@ -1,14 +1,8 @@
 package io.sovann.hang.api.features.menus.payloads.responses;
 
-import io.sovann.hang.api.features.menus.entities.Menu;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import io.sovann.hang.api.features.menus.entities.*;
+import java.util.*;
+import lombok.*;
 
 @Getter
 @Setter
@@ -24,6 +18,7 @@ public class MenuResponse {
     private String image;
     private boolean isHidden;
     private boolean isAvailable;
+    private boolean isDeleted;
     private boolean isFavorite;
 
     private UUID categoryId;
@@ -43,10 +38,8 @@ public class MenuResponse {
         response.setImage(menu.getImage());
         response.setHidden(menu.getIsHidden());
         response.setAvailable(menu.getIsAvailable());
-        if (!menu.getImages().isEmpty()) {
+        if (menu.getImages() != null && !menu.getImages().isEmpty()) {
             response.setImages(MenuImageResponse.fromEntities(menu.getImages()));
-        } else {
-            response.setImages(Collections.emptyList());
         }
         if (menu.getCategory() == null) {
             return response;

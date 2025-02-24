@@ -21,7 +21,7 @@ public class CreateMenuRequest {
     private String image;
     private boolean isHidden = false;
     private boolean isAvailable = true;
-    private List<UUID> images;
+    private List<CreateMenuImageRequest> images;
 
     private UUID storeId;
     private UUID categoryId;

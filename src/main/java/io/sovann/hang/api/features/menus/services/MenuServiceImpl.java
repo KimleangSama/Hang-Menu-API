@@ -9,7 +9,6 @@ import io.sovann.hang.api.features.users.entities.*;
 import java.util.*;
 import lombok.*;
 import org.springframework.cache.annotation.*;
-import org.springframework.data.domain.*;
 import org.springframework.stereotype.*;
 import org.springframework.transaction.annotation.*;
 
@@ -32,13 +31,17 @@ public class MenuServiceImpl {
     public MenuResponse createMenu(User user, CreateMenuRequest request) {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category", request.getCategoryId().toString()));
-        List<MenuImage> images = menuImageRepository.findAllById(request.getImages());
         Menu menu = CreateMenuRequest.fromRequest(request);
         menu.setCategory(category);
-        menu.setImages(images);
         menu.setCreatedBy(user.getId());
-        menu = menuRepository.save(menu);
-        return MenuResponse.fromEntity(menu);
+        Menu savedMenu = menuRepository.save(menu);
+        List<MenuImage> images = request.getImages().stream()
+                .map(CreateMenuImageRequest::fromRequest)
+                .peek(image -> image.setMenu(savedMenu))
+                .toList();
+        menuImageRepository.saveAll(images);
+        savedMenu.setImages(images);
+        return MenuResponse.fromEntity(savedMenu);
     }
 
     @Transactional
@@ -106,7 +109,8 @@ public class MenuServiceImpl {
         if (menu == null) {
             return null;
         }
-        menuRepository.delete(menu);
+        menu.setDeleted(true);
+        menuRepository.save(menu);
         return MenuResponse.fromEntity(menu);
     }
 
@@ -133,5 +137,18 @@ public class MenuServiceImpl {
             response.setFavorite(true);
         }
         return response;
+    }
+
+    @Transactional
+    @CacheEvict(value = "menus", key = "#id")
+    public MenuResponse updateMenuImage(UUID id, String image) {
+        Menu menu = menuRepository.findById(id)
+                .orElse(null);
+        if (menu == null) {
+            return null;
+        }
+        menu.setImage(image);
+        menuRepository.save(menu);
+        return MenuResponse.fromEntity(menu);
     }
 }
