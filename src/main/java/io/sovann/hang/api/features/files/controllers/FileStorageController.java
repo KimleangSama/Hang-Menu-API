@@ -1,24 +1,31 @@
 package io.sovann.hang.api.features.files.controllers;
 
-import io.sovann.hang.api.annotations.*;
-import io.sovann.hang.api.constants.*;
-import io.sovann.hang.api.exceptions.*;
-import io.sovann.hang.api.features.commons.payloads.*;
-import io.sovann.hang.api.features.files.exceptions.*;
-import io.sovann.hang.api.features.files.payloads.*;
-import io.sovann.hang.api.features.files.services.*;
-import io.sovann.hang.api.features.menus.entities.*;
-import io.sovann.hang.api.features.menus.services.*;
-import io.sovann.hang.api.features.users.securities.*;
-import java.util.*;
-import lombok.*;
-import lombok.extern.slf4j.*;
-import org.springframework.core.io.*;
-import org.springframework.http.*;
-import org.springframework.security.access.prepost.*;
-import org.springframework.transaction.annotation.*;
+import io.sovann.hang.api.annotations.CurrentUser;
+import io.sovann.hang.api.constants.APIURLs;
+import io.sovann.hang.api.exceptions.ResourceNotFoundException;
+import io.sovann.hang.api.features.commons.payloads.BaseResponse;
+import io.sovann.hang.api.features.files.exceptions.FileStorageException;
+import io.sovann.hang.api.features.files.payloads.FileResponse;
+import io.sovann.hang.api.features.files.services.FileStorageServiceImpl;
+import io.sovann.hang.api.features.menus.entities.Menu;
+import io.sovann.hang.api.features.menus.entities.MenuImage;
+import io.sovann.hang.api.features.menus.repos.MenuImageRepository;
+import io.sovann.hang.api.features.menus.services.MenuServiceImpl;
+import io.sovann.hang.api.features.users.securities.CustomUserDetails;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -31,6 +38,7 @@ public class FileStorageController {
 
     private final FileStorageServiceImpl fileStorageService;
     private final MenuServiceImpl menuService;
+    private final MenuImageRepository menuImageRepository;
 
     @GetMapping("/load/{filename}")
     public BaseResponse<FileResponse> loadFile(
@@ -79,21 +87,21 @@ public class FileStorageController {
             @RequestParam("menuId") UUID menuId
     ) {
         try {
+            if (user == null || user.getUser() == null) {
+                return BaseResponse.<FileResponse>accessDenied()
+                        .setError("User is not permitted to upload file.");
+            }
             Menu menu = menuService.getMenuEntityById(menuId)
                     .orElse(null);
             if (menu == null) {
                 return BaseResponse.<FileResponse>notFound()
                         .setError("Menu not found for upload file.");
             }
-            if (user == null || user.getUser() == null) {
-                return BaseResponse.<FileResponse>accessDenied()
-                        .setError("User is not permitted to upload file.");
-            }
             String filename = fileStorageService.save(user.getUser(), file);
             FileResponse fileResponse = FileResponse.fromEntity(filename);
             fileResponse.setCreatedBy(user.getUser().getId());
             // Update menu image
-            menuService.updateMenuImage(menuId, fileResponse.getUrl());
+            menuService.updateMenuImage(menuId, fileResponse.getName());
             return BaseResponse.<FileResponse>ok()
                     .setPayload(fileResponse);
         } catch (FileStorageException e) {
@@ -111,23 +119,35 @@ public class FileStorageController {
     @PreAuthorize("authenticated")
     public BaseResponse<List<FileResponse>> uploadFiles(
             @CurrentUser CustomUserDetails user,
-            @RequestParam("files") List<MultipartFile> files) {
+            @RequestParam("files") List<MultipartFile> files,
+            @RequestParam UUID menuId) {
         try {
             if (user == null || user.getUser() == null) {
                 return BaseResponse.<List<FileResponse>>accessDenied()
-                        .setError("User is not permitted to upload file.");
+                        .setError("User is not permitted to upload files.");
             }
+
+            Menu menu = menuService.getMenuEntityById(menuId)
+                    .orElseThrow(() -> new EntityNotFoundException("Menu not found for file upload."));
+
             List<String> filenames = fileStorageService.saveAll(user.getUser(), files);
+
+            List<MenuImage> menuImages = filenames.stream()
+                    .map(filename -> new MenuImage(menu, filename, APIURLs.BASE + "/view/" + filename))
+                    .toList();
+
+            menuImageRepository.saveAll(menuImages);
+
             return BaseResponse.<List<FileResponse>>ok()
                     .setPayload(FileResponse.fromEntities(filenames));
+        } catch (EntityNotFoundException e) {
+            return BaseResponse.<List<FileResponse>>notFound().setError(e.getMessage());
         } catch (FileStorageException e) {
             log.error(FILE_STORAGE_ERROR + "{}", e.getMessage());
-            return BaseResponse.<List<FileResponse>>duplicateEntity()
-                    .setError(e.getMessage());
+            return BaseResponse.<List<FileResponse>>duplicateEntity().setError(e.getMessage());
         } catch (Exception e) {
             log.error(FILE_STORAGE_ERROR + "{}", e.getMessage(), e);
-            return BaseResponse.<List<FileResponse>>exception()
-                    .setError(e.getMessage());
+            return BaseResponse.<List<FileResponse>>exception().setError(e.getMessage());
         }
     }
 }
