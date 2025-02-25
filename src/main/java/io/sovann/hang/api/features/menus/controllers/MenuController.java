@@ -45,6 +45,7 @@ public class MenuController {
                 null);
     }
 
+    @WithRateLimitProtection
     @GetMapping("/of-store/{storeId}/list")
     public BaseResponse<List<MenuResponse>> listMenus(
             @CurrentUser CustomUserDetails user,
@@ -54,6 +55,7 @@ public class MenuController {
                 "Menu failed to list", null);
     }
 
+    @WithRateLimitProtection
     @GetMapping("/list/{storeId}/all/category")
     public BaseResponse<List<CategoryMenuResponse>> listMenusWithCategory(
             @CurrentUser CustomUserDetails user,

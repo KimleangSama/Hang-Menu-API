@@ -26,7 +26,7 @@ public class Store extends BaseEntityAudit {
     @Column(unique = true, nullable = false)
     private String slug;
     private String logo;
-    private String color;
+    private String color = "#D22530";
     private String description;
     private String physicalAddress;
     private String virtualAddress;

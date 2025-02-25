@@ -1,21 +1,21 @@
 package io.sovann.hang.api.features.menus.entities;
 
-import io.sovann.hang.api.features.users.entities.BaseEntityAudit;
+import io.sovann.hang.api.features.users.entities.*;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-import org.springframework.data.redis.core.RedisHash;
-
-import java.io.Serial;
-import java.util.List;
+import java.io.*;
+import java.util.*;
+import lombok.*;
+import org.springframework.data.redis.core.*;
 
 @RedisHash("Menu")
 @Getter
 @Setter
 @ToString
 @Entity
-@Table(name = "menus")
+@Table(name = "menus", indexes = {
+        @Index(name = "idx_menu_code", columnList = "code"),
+        @Index(name = "idx_menu_name", columnList = "name"),
+})
 public class Menu extends BaseEntityAudit {
     @Serial
     private final static long serialVersionUID = 1L;

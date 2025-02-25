@@ -15,7 +15,7 @@ import java.util.List;
 public class CreateStoreRequest {
     private String name;
     private String logo;
-    private String color;
+    private String color = "#D22530";
     private String description;
     private String physicalAddress;
     private String virtualAddress;

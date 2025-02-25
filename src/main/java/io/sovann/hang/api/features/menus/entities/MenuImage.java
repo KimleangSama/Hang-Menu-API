@@ -33,4 +33,13 @@ public class MenuImage implements Serializable {
     @ManyToOne
     @JoinColumn(name = "menu_id")
     private Menu menu;
+
+    public MenuImage() {
+    }
+
+    public MenuImage(Menu menu, String filename, String url) {
+        this.menu = menu;
+        this.name = filename;
+        this.url = url;
+    }
 }

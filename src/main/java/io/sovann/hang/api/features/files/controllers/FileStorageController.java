@@ -7,8 +7,11 @@ import io.sovann.hang.api.features.commons.payloads.*;
 import io.sovann.hang.api.features.files.exceptions.*;
 import io.sovann.hang.api.features.files.payloads.*;
 import io.sovann.hang.api.features.files.services.*;
+import io.sovann.hang.api.features.menus.entities.*;
+import io.sovann.hang.api.features.menus.repos.*;
 import io.sovann.hang.api.features.menus.services.*;
 import io.sovann.hang.api.features.users.securities.*;
+import jakarta.persistence.*;
 import java.util.*;
 import lombok.*;
 import lombok.extern.slf4j.*;
@@ -30,6 +33,7 @@ public class FileStorageController {
 
     private final FileStorageServiceImpl fileStorageService;
     private final MenuServiceImpl menuService;
+    private final MenuImageRepository menuImageRepository;
     private final CategoryServiceImpl categoryService;
 
     @GetMapping("/load/{filename}")
@@ -107,23 +111,34 @@ public class FileStorageController {
     @PreAuthorize("authenticated")
     public BaseResponse<List<FileResponse>> uploadFiles(
             @CurrentUser CustomUserDetails user,
-            @RequestParam("files") List<MultipartFile> files) {
+            @RequestParam("files") List<MultipartFile> files,
+            @RequestParam("id") UUID id,
+            @RequestParam("type") String type
+    ) {
         try {
             if (user == null || user.getUser() == null) {
                 return BaseResponse.<List<FileResponse>>accessDenied()
-                        .setError("User is not permitted to upload file.");
+                        .setError("User is not permitted to upload files.");
             }
             List<String> filenames = fileStorageService.saveAll(user.getUser(), files);
+            if (type.equalsIgnoreCase("menu")) {
+                Menu menu = menuService.getMenuEntityById(id)
+                        .orElseThrow(() -> new EntityNotFoundException("Menu not found"));
+                List<MenuImage> menuImages = filenames.stream()
+                        .map(filename -> new MenuImage(menu, filename, APIURLs.BASE + "/view/" + filename))
+                        .toList();
+                menuImageRepository.saveAll(menuImages);
+            }
             return BaseResponse.<List<FileResponse>>ok()
                     .setPayload(FileResponse.fromEntities(filenames));
+        } catch (EntityNotFoundException e) {
+            return BaseResponse.<List<FileResponse>>notFound().setError(e.getMessage());
         } catch (FileStorageException e) {
-            log.error(FILE_STORAGE_ERROR + "{}", e.getMessage());
-            return BaseResponse.<List<FileResponse>>duplicateEntity()
-                    .setError(e.getMessage());
+            log.error(FILE_STORAGE_ERROR + "{}", e.getMessage(), e);
+            return BaseResponse.<List<FileResponse>>duplicateEntity().setError(e.getMessage());
         } catch (Exception e) {
             log.error(FILE_STORAGE_ERROR + "{}", e.getMessage(), e);
-            return BaseResponse.<List<FileResponse>>exception()
-                    .setError(e.getMessage());
+            return BaseResponse.<List<FileResponse>>exception().setError(e.getMessage());
         }
     }
 }
