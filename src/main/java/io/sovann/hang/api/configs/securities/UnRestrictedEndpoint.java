@@ -17,6 +17,7 @@ public class UnRestrictedEndpoint {
             "/api/v1/categories/list/**",
             "/api/v1/stores/{slug}/**",
             "/api/v1/orders/create",
+            "/api/v1/orders/{id}/menus",
     };
 
     public static final String LOGOUT_URL = "/api/v1/auth/logout";

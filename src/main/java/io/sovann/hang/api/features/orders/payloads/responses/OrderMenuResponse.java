@@ -24,9 +24,9 @@ public class OrderMenuResponse {
         OrderMenuResponse response = new OrderMenuResponse();
         response.setId(orderMenu.getId());
         response.setOrderId(orderMenu.getOrder().getId());
-        response.setMenuId(orderMenu.getMenu().getId());
-        response.setMenuName(orderMenu.getMenu().getName());
-        response.setMenuImage(orderMenu.getMenu().getImage());
+        response.setMenuId(orderMenu.getId());
+        response.setMenuName(orderMenu.getName());
+        response.setMenuImage(orderMenu.getImage());
         response.setPrice(orderMenu.getPrice());
         response.setDiscount(orderMenu.getDiscount());
         response.setQuantity(orderMenu.getQuantity());

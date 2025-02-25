@@ -1,11 +1,17 @@
 package io.sovann.hang.api.features.orders.entities;
 
-import io.sovann.hang.api.features.menus.entities.*;
-import io.sovann.hang.api.features.users.entities.*;
-import jakarta.persistence.*;
-import java.io.*;
-import lombok.*;
-import org.springframework.data.redis.core.*;
+import io.sovann.hang.api.features.users.entities.BaseEntityAudit;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import org.springframework.data.redis.core.RedisHash;
+
+import java.io.Serial;
+import java.util.UUID;
 
 @RedisHash("OrderMenu")
 @Getter
@@ -21,24 +27,18 @@ public class OrderMenu extends BaseEntityAudit {
     @JoinColumn(name = "order_id")
     private Order order;
 
-    @ManyToOne
-    @JoinColumn(name = "menu_id")
-    private Menu menu;
+    private UUID menuId;
+    private String code;
+    private String name;
+    private String image;
+    private String description;
 
-    private String currency;
     private double price;
     private double discount;
+    private String currency;
     private int quantity;
     private String specialRequests;
 
-    public OrderMenu() {}
-
-    public OrderMenu(Menu menu, int quantity, double price, double discount, String currency, String specialRequests) {
-        this.menu = menu;
-        this.quantity = quantity;
-        this.price = price;
-        this.discount = discount;
-        this.currency = currency;
-        this.specialRequests = specialRequests;
+    public OrderMenu() {
     }
 }
