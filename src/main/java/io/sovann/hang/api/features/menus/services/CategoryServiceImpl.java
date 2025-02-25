@@ -92,4 +92,14 @@ public class CategoryServiceImpl {
     public List<Category> findAllByStoreId(UUID storeId) {
         return categoryRepository.findAllByStoreId(storeId);
     }
+
+    @Transactional
+    @CacheEvict(value = "categories", key = "#id")
+    public CategoryResponse updateCategoryIcon(UUID id, String icon) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category", id.toString()));
+        category.setIcon(icon);
+        categoryRepository.save(category);
+        return CategoryResponse.fromEntity(category);
+    }
 }

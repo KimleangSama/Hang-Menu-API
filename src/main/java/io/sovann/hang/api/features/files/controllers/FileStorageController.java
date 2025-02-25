@@ -7,7 +7,6 @@ import io.sovann.hang.api.features.commons.payloads.*;
 import io.sovann.hang.api.features.files.exceptions.*;
 import io.sovann.hang.api.features.files.payloads.*;
 import io.sovann.hang.api.features.files.services.*;
-import io.sovann.hang.api.features.menus.entities.*;
 import io.sovann.hang.api.features.menus.services.*;
 import io.sovann.hang.api.features.users.securities.*;
 import java.util.*;
@@ -31,6 +30,7 @@ public class FileStorageController {
 
     private final FileStorageServiceImpl fileStorageService;
     private final MenuServiceImpl menuService;
+    private final CategoryServiceImpl categoryService;
 
     @GetMapping("/load/{filename}")
     public BaseResponse<FileResponse> loadFile(
@@ -75,16 +75,9 @@ public class FileStorageController {
     @PreAuthorize("hasAnyRole('admin', 'manager')")
     public BaseResponse<FileResponse> uploadFile(
             @CurrentUser CustomUserDetails user,
-            @RequestParam("file") MultipartFile file,
-            @RequestParam("menuId") UUID menuId
+            @RequestParam("file") MultipartFile file, @RequestParam("id") UUID id, @RequestParam("type") String type
     ) {
         try {
-            Menu menu = menuService.getMenuEntityById(menuId)
-                    .orElse(null);
-            if (menu == null) {
-                return BaseResponse.<FileResponse>notFound()
-                        .setError("Menu not found for upload file.");
-            }
             if (user == null || user.getUser() == null) {
                 return BaseResponse.<FileResponse>accessDenied()
                         .setError("User is not permitted to upload file.");
@@ -92,8 +85,11 @@ public class FileStorageController {
             String filename = fileStorageService.save(user.getUser(), file);
             FileResponse fileResponse = FileResponse.fromEntity(filename);
             fileResponse.setCreatedBy(user.getUser().getId());
-            // Update menu image
-            menuService.updateMenuImage(menuId, fileResponse.getUrl());
+            if (type.equalsIgnoreCase("menu")) {
+                menuService.updateMenuImage(id, fileResponse.getName());
+            } else if (type.equalsIgnoreCase("category")) {
+                categoryService.updateCategoryIcon(id, fileResponse.getName());
+            }
             return BaseResponse.<FileResponse>ok()
                     .setPayload(fileResponse);
         } catch (FileStorageException e) {
