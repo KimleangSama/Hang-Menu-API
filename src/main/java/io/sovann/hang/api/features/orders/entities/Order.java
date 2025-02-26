@@ -20,6 +20,8 @@ public class Order extends BaseEntityAudit {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    @Column(unique = true)
+    private UUID code;
     private Double totalAmountInRiel;
     private Double totalAmountInDollar;
 

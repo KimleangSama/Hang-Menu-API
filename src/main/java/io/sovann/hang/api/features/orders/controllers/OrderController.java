@@ -45,11 +45,11 @@ public class OrderController {
                 null);
     }
 
-    @GetMapping("/{id}/menus")
-    public BaseResponse<OrderResponse> getOrderById(
-            @PathVariable UUID id
+    @GetMapping("/{code}/menus")
+    public BaseResponse<OrderResponse> getOrderByCode(
+            @PathVariable UUID code
     ) {
-        return callback.execute(() -> orderService.getOrderById(id),
+        return callback.execute(() -> orderService.getOrderByCode(code),
                 "Failed to get order",
                 null);
     }

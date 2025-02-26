@@ -1,22 +1,18 @@
 package io.sovann.hang.api.features.orders.services;
 
-import io.sovann.hang.api.features.menus.entities.Menu;
-import io.sovann.hang.api.features.menus.services.MenuServiceImpl;
-import io.sovann.hang.api.features.orders.entities.Order;
-import io.sovann.hang.api.features.orders.entities.OrderMenu;
-import io.sovann.hang.api.features.orders.payloads.requests.CreateOrderMenuRequest;
-import io.sovann.hang.api.features.orders.payloads.requests.CreateOrderRequest;
-import io.sovann.hang.api.features.orders.repos.OrderMenuRepository;
-import io.sovann.hang.api.features.orders.repos.OrderRepository;
-import io.sovann.hang.api.features.stores.entities.Store;
-import io.sovann.hang.api.features.stores.services.StoreServiceImpl;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.List;
+import io.sovann.hang.api.features.menus.entities.*;
+import io.sovann.hang.api.features.menus.services.*;
+import io.sovann.hang.api.features.orders.entities.*;
+import io.sovann.hang.api.features.orders.payloads.requests.*;
+import io.sovann.hang.api.features.orders.repos.*;
+import io.sovann.hang.api.features.stores.entities.*;
+import io.sovann.hang.api.features.stores.services.*;
+import java.util.*;
+import lombok.*;
+import lombok.extern.slf4j.*;
+import org.springframework.amqp.rabbit.annotation.*;
+import org.springframework.stereotype.*;
+import org.springframework.transaction.annotation.*;
 
 @Slf4j
 @Service
@@ -27,10 +23,9 @@ public class OrderEventListener {
     private final MenuServiceImpl menuService;
     private final StoreServiceImpl storeServiceImpl;
 
+    @Transactional
     @RabbitListener(queues = "order.queue")
     public void handleOrderCreation(CreateOrderRequest request) {
-        log.info("Processing order request: {}", request);
-        // Retrieve store entity
         Store store = storeServiceImpl.getStoreEntityById(null, request.getStoreId());
 
         // Initialize totals
@@ -66,6 +61,7 @@ public class OrderEventListener {
         }
         // Create order after all calculations
         Order order = new Order();
+        order.setCode(request.getCode());
         order.setStore(store);
         order.setStatus(request.getStatus());
         order.setOrderTime(request.getOrderTime());
@@ -73,13 +69,12 @@ public class OrderEventListener {
         order.setTotalAmountInRiel(totalAmountInRiel);
         order.setTotalAmountInDollar(totalAmountInDollar);
         // Save order
-        Order savedOrder = orderRepository.save(order);
+        Order savedOrder = orderRepository.saveAndFlush(order);
         // Associate order with orderMenus
         for (OrderMenu orderMenu : orderMenus) {
             orderMenu.setOrder(savedOrder);
         }
         // Save order menus
         orderMenuRepository.saveAll(orderMenus);
-        log.info("Order successfully processed: {}", savedOrder.getId());
     }
 }

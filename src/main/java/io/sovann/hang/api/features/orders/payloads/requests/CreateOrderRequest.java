@@ -9,6 +9,7 @@ import lombok.*;
 @Setter
 @ToString
 public class CreateOrderRequest {
+    private UUID code;
     private UUID storeId;
     private LocalDateTime orderTime;
     private OrderStatus status;
