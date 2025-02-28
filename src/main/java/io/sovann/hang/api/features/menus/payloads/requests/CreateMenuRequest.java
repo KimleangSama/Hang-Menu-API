@@ -21,7 +21,8 @@ public class CreateMenuRequest {
     private String image;
     private boolean isHidden = false;
     private boolean isAvailable = true;
-    private List<CreateMenuImageRequest> images;
+    private List<String> images;
+    private List<String> badges;
 
     private UUID storeId;
     private UUID categoryId;
@@ -37,6 +38,7 @@ public class CreateMenuRequest {
         menu.setImage(request.getImage());
         menu.setIsHidden(request.isHidden());
         menu.setIsAvailable(request.isAvailable());
+        menu.setBadges(request.getBadges());
         return menu;
     }
 }

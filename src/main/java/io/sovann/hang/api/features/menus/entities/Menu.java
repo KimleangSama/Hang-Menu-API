@@ -39,4 +39,7 @@ public class Menu extends BaseEntityAudit {
 
     @OneToMany(mappedBy = "menu")
     private List<MenuImage> images;
+
+    @ElementCollection
+    private List<String> badges;
 }

@@ -17,4 +17,6 @@ public class APIURLs {
     public static final String ORDER_MENU = BASE + "/order-menus";
     public static final String ORDER = BASE + "/orders";
     public static final String FEEDBACK = BASE + "/feedbacks";
+    public static final String LANGUAGE = BASE + "/languages";
+    public static final String TRANSLATION = BASE + "/translations";
 }

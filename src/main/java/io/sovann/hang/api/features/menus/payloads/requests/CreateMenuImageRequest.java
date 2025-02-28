@@ -8,12 +8,10 @@ import lombok.*;
 @ToString
 public class CreateMenuImageRequest {
     private String name;
-    private String url;
 
-    public static MenuImage fromRequest(CreateMenuImageRequest request) {
+    public static MenuImage fromRequest(String name) {
         MenuImage menuImage = new MenuImage();
-        menuImage.setName(request.getName());
-        menuImage.setUrl(request.getUrl());
+        menuImage.setName(name);
         return menuImage;
     }
 }

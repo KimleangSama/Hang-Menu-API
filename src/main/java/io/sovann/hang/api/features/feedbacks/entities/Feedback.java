@@ -11,7 +11,7 @@ import org.springframework.data.redis.core.RedisHash;
 
 import java.io.Serial;
 
-@RedisHash("Feedback")
+@RedisHash("Language")
 @Getter
 @Setter
 @ToString

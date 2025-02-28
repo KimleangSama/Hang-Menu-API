@@ -25,6 +25,7 @@ public class MenuResponse {
     private String categoryName;
 
     private List<MenuImageResponse> images;
+    private List<String> badges;
 
     public static MenuResponse fromEntity(Menu menu) {
         MenuResponse response = new MenuResponse();
@@ -38,6 +39,7 @@ public class MenuResponse {
         response.setImage(menu.getImage());
         response.setHidden(menu.getIsHidden());
         response.setAvailable(menu.getIsAvailable());
+        response.setBadges(menu.getBadges());
         if (menu.getImages() != null && !menu.getImages().isEmpty()) {
             response.setImages(MenuImageResponse.fromEntities(menu.getImages()));
         }

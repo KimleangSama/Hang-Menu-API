@@ -1,5 +1,6 @@
 package io.sovann.hang.api.features.stores.entities;
 
+import io.sovann.hang.api.features.translations.entities.*;
 import io.sovann.hang.api.features.users.entities.BaseEntityAudit;
 import io.sovann.hang.api.features.users.entities.Group;
 import jakarta.persistence.*;

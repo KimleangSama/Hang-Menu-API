@@ -1,13 +1,10 @@
 package io.sovann.hang.api.features.stores.payloads.request;
 
-import io.sovann.hang.api.configs.MMConfig;
-import io.sovann.hang.api.features.stores.entities.Store;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-import org.modelmapper.ModelMapper;
-
-import java.util.List;
+import io.sovann.hang.api.configs.*;
+import io.sovann.hang.api.features.stores.entities.*;
+import java.util.*;
+import lombok.*;
+import org.modelmapper.*;
 
 @Getter
 @Setter
@@ -32,7 +29,6 @@ public class CreateStoreRequest {
     private List<CreateOperatingHourRequest> operatingHours;
     private List<CreateOrderingOptionRequest> orderOptions;
     private List<CreatePaymentMethodRequest> paymentMethods;
-    private List<CreateLanguageRequest> languages;
 
     public static Store fromRequest(CreateStoreRequest request) {
         ModelMapper mapper = MMConfig.mapper();

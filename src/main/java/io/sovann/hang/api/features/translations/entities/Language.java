@@ -1,14 +1,11 @@
-package io.sovann.hang.api.features.stores.entities;
+package io.sovann.hang.api.features.translations.entities;
 
+import io.sovann.hang.api.features.stores.entities.*;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-import org.springframework.data.redis.core.RedisHash;
-
-import java.io.Serial;
-import java.io.Serializable;
-import java.util.UUID;
+import java.io.*;
+import java.util.*;
+import lombok.*;
+import org.springframework.data.redis.core.*;
 
 @RedisHash("Language")
 @Getter
@@ -25,7 +22,8 @@ public class Language implements Serializable {
     @Column(columnDefinition = "UUID", updatable = false, nullable = false)
     private UUID id;
 
-    private String language;
+    private String code;
+    private String name;
 
     @ManyToOne
     @JoinColumn(name = "store_id")

@@ -1,7 +1,6 @@
 package io.sovann.hang.api.features.stores.payloads.response;
 
-import io.sovann.hang.api.features.stores.entities.Language;
-import io.sovann.hang.api.features.stores.entities.OperatingHour;
+import io.sovann.hang.api.features.translations.entities.Language;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -20,7 +19,7 @@ public class LanguageResponse {
     public static LanguageResponse fromEntity(Language language) {
         LanguageResponse response = new LanguageResponse();
         response.setId(language.getId());
-        response.setLanguage(language.getLanguage());
+        response.setLanguage(language.getName());
         return response;
     }
 
