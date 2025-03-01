@@ -2,10 +2,10 @@ package io.sovann.hang.api.features.translations.services;
 
 import io.sovann.hang.api.exceptions.*;
 import io.sovann.hang.api.features.stores.entities.*;
-import io.sovann.hang.api.features.stores.payloads.request.*;
 import io.sovann.hang.api.features.stores.services.*;
 import io.sovann.hang.api.features.translations.entities.*;
-import io.sovann.hang.api.features.translations.payloads.*;
+import io.sovann.hang.api.features.translations.payloads.requests.CreateLanguageRequest;
+import io.sovann.hang.api.features.translations.payloads.responses.LanguageResponse;
 import io.sovann.hang.api.features.translations.repos.*;
 import io.sovann.hang.api.features.users.entities.*;
 import java.util.*;

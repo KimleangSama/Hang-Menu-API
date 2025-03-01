@@ -5,7 +5,7 @@ import io.sovann.hang.api.constants.*;
 import io.sovann.hang.api.features.commons.controllers.*;
 import io.sovann.hang.api.features.commons.payloads.*;
 import io.sovann.hang.api.features.menus.payloads.responses.*;
-import io.sovann.hang.api.features.translations.payloads.*;
+import io.sovann.hang.api.features.translations.payloads.requests.CreateTranslationRequest;
 import io.sovann.hang.api.features.translations.services.*;
 import io.sovann.hang.api.features.users.securities.*;
 import io.sovann.hang.api.utils.*;

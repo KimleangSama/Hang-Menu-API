@@ -5,7 +5,7 @@ import io.sovann.hang.api.features.menus.entities.*;
 import io.sovann.hang.api.features.menus.payloads.responses.*;
 import io.sovann.hang.api.features.menus.services.*;
 import io.sovann.hang.api.features.translations.entities.*;
-import io.sovann.hang.api.features.translations.payloads.*;
+import io.sovann.hang.api.features.translations.payloads.requests.CreateTranslationRequest;
 import io.sovann.hang.api.features.translations.repos.*;
 import io.sovann.hang.api.features.users.entities.*;
 import lombok.*;

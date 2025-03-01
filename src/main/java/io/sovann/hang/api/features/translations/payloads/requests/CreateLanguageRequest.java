@@ -1,4 +1,4 @@
-package io.sovann.hang.api.features.stores.payloads.request;
+package io.sovann.hang.api.features.translations.payloads.requests;
 
 import io.sovann.hang.api.configs.*;
 import io.sovann.hang.api.features.translations.entities.*;

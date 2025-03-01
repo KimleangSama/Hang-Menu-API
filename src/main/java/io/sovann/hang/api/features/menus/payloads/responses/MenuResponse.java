@@ -1,9 +1,16 @@
 package io.sovann.hang.api.features.menus.payloads.responses;
 
-import io.sovann.hang.api.features.menus.entities.*;
-import java.util.*;
-import lombok.*;
+import io.sovann.hang.api.features.menus.entities.Menu;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+@Slf4j
 @Getter
 @Setter
 @ToString

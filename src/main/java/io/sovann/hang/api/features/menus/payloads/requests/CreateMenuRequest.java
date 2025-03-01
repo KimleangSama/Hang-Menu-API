@@ -24,6 +24,8 @@ public class CreateMenuRequest {
     private List<String> images;
     private List<String> badges;
 
+    private UUID createdBy;
+
     private UUID storeId;
     private UUID categoryId;
 

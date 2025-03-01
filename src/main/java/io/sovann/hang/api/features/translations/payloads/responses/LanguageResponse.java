@@ -1,6 +1,6 @@
-package io.sovann.hang.api.features.translations.payloads;
+package io.sovann.hang.api.features.translations.payloads.responses;
 
-import io.sovann.hang.api.features.translations.entities.*;
+import io.sovann.hang.api.features.translations.entities.Language;
 import java.util.*;
 import lombok.*;
 
@@ -18,6 +18,7 @@ public class LanguageResponse {
         response.setId(language.getId());
         response.setStoreId(language.getStore().getId());
         response.setName(language.getName());
+        response.setCode(language.getCode());
         return response;
     }
 

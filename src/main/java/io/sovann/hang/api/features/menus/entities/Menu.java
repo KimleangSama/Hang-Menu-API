@@ -40,6 +40,7 @@ public class Menu extends BaseEntityAudit {
     @OneToMany(mappedBy = "menu")
     private List<MenuImage> images;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "menu_badges", joinColumns = @JoinColumn(name = "menu_id"))
     private List<String> badges;
 }

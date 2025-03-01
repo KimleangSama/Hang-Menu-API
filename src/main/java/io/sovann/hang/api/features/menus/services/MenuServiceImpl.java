@@ -1,25 +1,50 @@
 package io.sovann.hang.api.features.menus.services;
 
-import io.sovann.hang.api.exceptions.*;
-import io.sovann.hang.api.features.menus.entities.*;
-import io.sovann.hang.api.features.menus.payloads.requests.*;
-import io.sovann.hang.api.features.menus.payloads.responses.*;
-import io.sovann.hang.api.features.menus.repos.*;
-import io.sovann.hang.api.features.users.entities.*;
+import io.sovann.hang.api.configs.RabbitMQConfig;
+import io.sovann.hang.api.exceptions.ResourceNotFoundException;
+import io.sovann.hang.api.features.menus.entities.Category;
+import io.sovann.hang.api.features.menus.entities.Menu;
+import io.sovann.hang.api.features.menus.entities.MenuImage;
+import io.sovann.hang.api.features.menus.payloads.requests.CreateMenuImageRequest;
+import io.sovann.hang.api.features.menus.payloads.requests.CreateMenuRequest;
+import io.sovann.hang.api.features.menus.payloads.requests.MenuToggleRequest;
+import io.sovann.hang.api.features.menus.payloads.requests.UpdateMenuRequest;
+import io.sovann.hang.api.features.menus.payloads.responses.FavoriteResponse;
+import io.sovann.hang.api.features.menus.payloads.responses.MenuResponse;
+import io.sovann.hang.api.features.menus.repos.CategoryRepository;
+import io.sovann.hang.api.features.menus.repos.MenuImageRepository;
+import io.sovann.hang.api.features.menus.repos.MenuRepository;
+import io.sovann.hang.api.features.users.entities.User;
+import lombok.RequiredArgsConstructor;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.*;
-import lombok.*;
-import org.springframework.cache.annotation.*;
-import org.springframework.stereotype.*;
-import org.springframework.transaction.annotation.*;
 
 @Service
 @RequiredArgsConstructor
 public class MenuServiceImpl {
+    private static final Logger log = LoggerFactory.getLogger(MenuServiceImpl.class);
     private final MenuRepository menuRepository;
     private final MenuImageRepository menuImageRepository;
     private final FavoriteServiceImpl favoriteService;
     private final CategoryRepository categoryRepository;
     private final CategoryServiceImpl categoryServiceImpl;
+
+    private final RabbitTemplate rabbitTemplate;
 
     @Transactional
     public long count() {
@@ -35,13 +60,45 @@ public class MenuServiceImpl {
         menu.setCategory(category);
         menu.setCreatedBy(user.getId());
         Menu savedMenu = menuRepository.save(menu);
-        List<MenuImage> images = request.getImages().stream()
+        saveMenuImages(savedMenu, request.getImages());
+        return MenuResponse.fromEntity(savedMenu);
+    }
+
+    @Transactional
+    @CacheEvict(value = "menus", key = "#id")
+    public MenuResponse updateMenu(User user, UUID id, UpdateMenuRequest request) {
+        Menu menu = menuRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Menu", id.toString()));
+        if (!menu.getCategory().getId().equals(request.getCategoryId())) {
+            Category category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Category", request.getCategoryId().toString()));
+            menu.setCategory(category);
+        }
+        updateMenuFields(menu, user, request);
+        Menu savedMenu = menuRepository.save(menu);
+        saveMenuImages(savedMenu, request.getImages());
+        return MenuResponse.fromEntity(savedMenu);
+    }
+
+    private void saveMenuImages(Menu menu, List<String> imageRequests) {
+        List<MenuImage> images = imageRequests.stream()
                 .map(CreateMenuImageRequest::fromRequest)
-                .peek(image -> image.setMenu(savedMenu))
+                .peek(image -> image.setMenu(menu))
                 .toList();
         menuImageRepository.saveAll(images);
-        savedMenu.setImages(images);
-        return MenuResponse.fromEntity(savedMenu);
+        menu.setImages(images);
+    }
+
+    private void updateMenuFields(Menu menu, User user, UpdateMenuRequest request) {
+        menu.setCode(request.getCode());
+        menu.setName(request.getName());
+        menu.setDescription(request.getDescription());
+        menu.setPrice(request.getPrice());
+        menu.setDiscount(request.getDiscount());
+        menu.setCurrency(request.getCurrency());
+        menu.setImage(request.getImage());
+        menu.setBadges(request.getBadges());
+        menu.setUpdatedBy(user.getId());
     }
 
     @Transactional
@@ -150,5 +207,76 @@ public class MenuServiceImpl {
         menu.setImage(image);
         menuRepository.save(menu);
         return MenuResponse.fromEntity(menu);
+    }
+
+    @Transactional
+    public String batchMenuCreate(
+            User user,
+            UUID storeId,
+            MultipartFile file
+    ) throws IOException {
+        if (file.isEmpty()) return "File is empty!";
+        try (Reader reader = new InputStreamReader(file.getInputStream());
+             CSVParser csvParser = CSVParser.parse(reader, CSVFormat.Builder.create()
+                     .setHeader()
+                     .setSkipHeaderRecord(true)
+                     .get())) {
+            List<CreateMenuRequest> batch = new ArrayList<>();
+            for (CSVRecord record : csvParser) {
+                try {
+                    CreateMenuRequest menu = new CreateMenuRequest();
+                    menu.setCreatedBy(user.getId());
+                    menu.setStoreId(storeId);
+                    menu.setCode(record.get("code"));
+                    menu.setName(record.get("name"));
+                    menu.setDescription(record.get("description"));
+                    menu.setPrice(Double.parseDouble(record.get("price")));
+                    menu.setDiscount(Double.parseDouble(record.get("discount")));
+                    menu.setCurrency(record.get("currency"));
+                    menu.setImage(record.get("image"));
+                    menu.setHidden(Boolean.parseBoolean(record.get("isHidden")));
+                    menu.setAvailable(Boolean.parseBoolean(record.get("isAvailable")));
+                    String badgesStr = record.get("badges");
+                    if (badgesStr != null && !badgesStr.trim().isEmpty()) {
+                        menu.setBadges(Arrays.stream(badgesStr.split(",")).map(String::trim).toList());
+                    } else {
+                        menu.setBadges(Collections.emptyList());
+                    }
+                    menu.setCategoryId(UUID.fromString(record.get("categoryId")));
+                    batch.add(menu);
+                } catch (NumberFormatException e) {
+                    return "Invalid number format in row " + record.getRecordNumber();
+                } catch (IllegalArgumentException e) {
+                    return "Invalid data in row " + record.getRecordNumber() + ": " + e.getMessage();
+                }
+            }
+            if (!batch.isEmpty()) {
+                rabbitTemplate.convertAndSend(RabbitMQConfig.BATCH_MENU_QUEUE, batch);
+                return "Batch menu creation is in progress!";
+            } else {
+                return "No valid data found in the file!";
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @RabbitListener(queues = RabbitMQConfig.BATCH_MENU_QUEUE)
+    public void processBatch(List<CreateMenuRequest> menuList) {
+        List<Menu> menus = new ArrayList<>();
+        for (CreateMenuRequest m : menuList) {
+            try {
+                Category category = categoryRepository.findById(m.getCategoryId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Category", m.getCategoryId().toString()));
+                Menu menu = CreateMenuRequest.fromRequest(m);
+                menu.setCreatedBy(m.getCreatedBy());
+                menu.setCategory(category);
+                menus.add(menu);
+            } catch (ResourceNotFoundException e) {
+                log.error("Error processing menu: {}", e.getMessage());
+            }
+        }
+        menuRepository.saveAll(menus);
     }
 }
