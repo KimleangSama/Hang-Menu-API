@@ -11,5 +11,5 @@ import java.util.UUID;
 @ToString
 public class MenuToggleRequest {
     private UUID menuId;
-    private UUID categoryId;
+    private UUID storeId;
 }

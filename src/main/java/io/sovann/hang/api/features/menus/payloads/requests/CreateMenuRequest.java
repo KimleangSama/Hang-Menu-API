@@ -39,7 +39,6 @@ public class CreateMenuRequest {
         menu.setCurrency(request.getCurrency());
         menu.setImage(request.getImage());
         menu.setIsHidden(request.isHidden());
-        menu.setIsAvailable(request.isAvailable());
         menu.setBadges(request.getBadges());
         return menu;
     }

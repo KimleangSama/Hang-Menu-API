@@ -30,8 +30,7 @@ public class Menu extends BaseEntityAudit {
 
     private String image;
     private Boolean isHidden = false;
-    private Boolean isAvailable = true;
-    private boolean isDeleted = false;
+    private boolean deleted = false;
 
     @ManyToOne
     @JoinColumn(name = "category_id")
