@@ -47,7 +47,7 @@ public class GroupController {
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID id,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10000") int size
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
         PageMeta pageMeta = new PageMeta(page, size, groupService.countUsers(id));

@@ -13,6 +13,7 @@ import io.sovann.hang.api.features.menus.repos.MenuImageRepository;
 import io.sovann.hang.api.features.menus.services.CategoryServiceImpl;
 import io.sovann.hang.api.features.menus.services.MenuServiceImpl;
 import io.sovann.hang.api.features.users.securities.CustomUserDetails;
+import io.sovann.hang.api.utils.SoftEntityDeletable;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -78,6 +79,30 @@ public class FileStorageController {
         } catch (Exception e) {
             log.error(LOAD_FILE_ERROR + ": {}", e.getMessage());
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/update")
+    @PreAuthorize("hasAnyRole('admin', 'manager')")
+    public BaseResponse<FileResponse> uploadFile(
+            @CurrentUser CustomUserDetails user,
+            @RequestParam("file") MultipartFile file
+    ) {
+        try {
+            SoftEntityDeletable.throwErrorIfSoftDeleted(user);
+            String filename = fileStorageService.save(user.getUser(), file);
+            FileResponse fileResponse = FileResponse.fromEntity(filename);
+            fileResponse.setCreatedBy(user.getUser().getId());
+            return BaseResponse.<FileResponse>ok()
+                    .setPayload(fileResponse);
+        } catch (FileStorageException e) {
+            log.error(FILE_STORAGE_ERROR + "{}", e.getMessage());
+            return BaseResponse.<FileResponse>duplicateEntity()
+                    .setError(e.getMessage());
+        } catch (Exception e) {
+            log.error(FILE_STORAGE_ERROR + "{}", e.getMessage(), e);
+            return BaseResponse.<FileResponse>exception()
+                    .setError(e.getMessage());
         }
     }
 

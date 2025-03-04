@@ -55,7 +55,7 @@ public class StoreController {
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID id
     ) {
-        SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user);
         return callback.execute(() -> storeService.deleteStore(id),
                 "Store failed to list",
                 null);

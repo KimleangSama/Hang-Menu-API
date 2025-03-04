@@ -62,15 +62,11 @@ public class GroupServiceImpl {
     @Transactional
     public List<UserResponse> getUsers(User user, UUID groupId, int page, int size) {
         Group group = getGroupById(groupId);
-
         if (!isManagerOrCreator(user, group)) {
             throw new ResourceForbiddenException(user.getUsername(), Group.class);
         }
-
         Pageable pageable = PageRequest.of(page, size);
         Page<GroupMember> groupMembers = groupMemberRepository.findByGroupId(group.getId(), pageable);
-
-        log.info("Retrieved {} users for group {}", groupMembers.getTotalElements(), groupId);
         return groupMembers.map(member -> UserResponse.fromEntity(member.getUser())).toList();
     }
 

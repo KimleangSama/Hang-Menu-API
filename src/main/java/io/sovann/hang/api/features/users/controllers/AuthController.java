@@ -108,7 +108,7 @@ public class AuthController {
             @CurrentUser CustomUserDetails user
     ) {
         try {
-            SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
+            SoftEntityDeletable.throwErrorIfSoftDeleted(user);
             return BaseResponse.<UserResponse>ok().setPayload(UserResponse.fromUser(user.getUser()));
         } catch (Exception e) {
             return BaseResponse.<UserResponse>exception().setError("Failed to get current user. Reason: " + e.getMessage());
