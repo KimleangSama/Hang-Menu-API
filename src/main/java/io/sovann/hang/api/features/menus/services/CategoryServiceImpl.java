@@ -26,7 +26,7 @@ public class CategoryServiceImpl {
     }
 
     @Transactional
-    @CacheEvict(value = "categories", allEntries = true)
+    @CacheEvict(value = "categories", key = "#request.storeId")
     public CategoryResponse createCategory(User user, CreateCategoryRequest request) {
         Store store = storeServiceImpl.getStoreEntityById(user, request.getStoreId());
         Category category = CreateCategoryRequest.fromRequest(request);
@@ -43,7 +43,7 @@ public class CategoryServiceImpl {
         return CategoryResponse.fromEntities(categories);
     }
 
-    public CategoryResponse toggleCategory(User user, CategoryToggleRequest request, boolean toggleVisibility) {
+    private CategoryResponse toggleCategory(User user, CategoryToggleRequest request, boolean toggleVisibility) {
         Category category = getCategoryById(user, request);
         if (toggleVisibility) {
             category.setHidden(!category.isHidden());
@@ -56,19 +56,28 @@ public class CategoryServiceImpl {
     }
 
     @Transactional
-    @CacheEvict(value = "categories", key = "#user.id")
+    @Caching(evict = {
+            @CacheEvict(value = "categories", key = "#request.storeId"),
+            @CacheEvict(value = "category-entities", key = "#request.storeId")
+    })
     public CategoryResponse toggleCategoryVisibility(User user, CategoryToggleRequest request) {
         return toggleCategory(user, request, true);
     }
 
     @Transactional
-    @CacheEvict(value = "categories", key = "#user.id")
+    @Caching(evict = {
+            @CacheEvict(value = "categories", key = "#request.storeId"),
+            @CacheEvict(value = "category-entities", key = "#request.storeId")
+    })
     public CategoryResponse toggleCategoryAvailability(User user, CategoryToggleRequest request) {
         return toggleCategory(user, request, false);
     }
 
     @Transactional
-    @CacheEvict(value = "categories", key = "#user.id")
+    @Caching(evict = {
+            @CacheEvict(value = "categories", key = "#request.storeId"),
+            @CacheEvict(value = "category-entities", key = "#request.storeId")
+    })
     public CategoryResponse deleteCategory(User user, CategoryToggleRequest request) {
         Category category = getCategoryById(user, request);
         categoryRepository.delete(category);

@@ -28,7 +28,7 @@ public class StoreController {
             @CurrentUser CustomUserDetails user,
             @RequestBody CreateStoreRequest request
     ) {
-        SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user);
         return callback.execute(() -> storeService.createStore(user.getUser(), request),
                 "Store failed to create",
                 null);
@@ -55,22 +55,11 @@ public class StoreController {
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID id
     ) {
-        SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
-        return callback.execute(() -> storeService.deleteStore(id),
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user);
+        return callback.execute(() -> storeService.deleteStore(user.getUser(), id),
                 "Store failed to list",
                 null);
     }
-
-//    @GetMapping("/{id}/get")
-//    public BaseResponse<StoreResponse> getStore(
-//            @CurrentUser CustomUserDetails user,
-//            @PathVariable UUID id
-//    ) {
-//        SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
-//        return callback.execute(() -> storeService.getStore(user.getUser(), id),
-//                "Store failed to list",
-//                null);
-//    }
 
     @GetMapping("/{slug}/get")
     public BaseResponse<StoreResponse> getStoreByNameSlug(
