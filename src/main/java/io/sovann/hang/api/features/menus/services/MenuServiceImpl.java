@@ -1,38 +1,23 @@
 package io.sovann.hang.api.features.menus.services;
 
-import io.sovann.hang.api.configs.RabbitMQConfig;
-import io.sovann.hang.api.exceptions.ResourceNotFoundException;
-import io.sovann.hang.api.features.menus.entities.Category;
-import io.sovann.hang.api.features.menus.entities.Menu;
-import io.sovann.hang.api.features.menus.entities.MenuImage;
-import io.sovann.hang.api.features.menus.payloads.requests.CreateMenuImageRequest;
-import io.sovann.hang.api.features.menus.payloads.requests.CreateMenuRequest;
-import io.sovann.hang.api.features.menus.payloads.requests.MenuToggleRequest;
-import io.sovann.hang.api.features.menus.payloads.requests.UpdateMenuRequest;
-import io.sovann.hang.api.features.menus.payloads.responses.FavoriteResponse;
-import io.sovann.hang.api.features.menus.payloads.responses.MenuResponse;
-import io.sovann.hang.api.features.menus.repos.CategoryRepository;
-import io.sovann.hang.api.features.menus.repos.MenuImageRepository;
-import io.sovann.hang.api.features.menus.repos.MenuRepository;
-import io.sovann.hang.api.features.users.entities.User;
-import lombok.RequiredArgsConstructor;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import io.sovann.hang.api.configs.*;
+import io.sovann.hang.api.exceptions.*;
+import io.sovann.hang.api.features.menus.entities.*;
+import io.sovann.hang.api.features.menus.payloads.requests.*;
+import io.sovann.hang.api.features.menus.payloads.responses.*;
+import io.sovann.hang.api.features.menus.repos.*;
+import io.sovann.hang.api.features.users.entities.*;
+import java.io.*;
 import java.util.*;
+import lombok.*;
+import org.apache.commons.csv.*;
+import org.slf4j.*;
+import org.springframework.amqp.rabbit.annotation.*;
+import org.springframework.amqp.rabbit.core.*;
+import org.springframework.cache.annotation.*;
+import org.springframework.stereotype.*;
+import org.springframework.transaction.annotation.*;
+import org.springframework.web.multipart.*;
 
 @Service
 @RequiredArgsConstructor
@@ -52,7 +37,10 @@ public class MenuServiceImpl {
     }
 
     @Transactional
-    @CacheEvict(value = "menus", key = "#request.storeId")
+    @Caching(evict = {
+            @CacheEvict(value = "menus", key = "#request.storeId"),
+            @CacheEvict(value = "menus-categories", allEntries = true)
+    })
     public MenuResponse createMenu(User user, CreateMenuRequest request) {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category", request.getCategoryId().toString()));
@@ -65,7 +53,10 @@ public class MenuServiceImpl {
     }
 
     @Transactional
-    @CacheEvict(value = "menus", key = "#id")
+    @Caching(evict = {
+            @CacheEvict(value = "menus", key = "#id"),
+            @CacheEvict(value = "menus-categories", allEntries = true)
+    })
     public MenuResponse updateMenu(User user, UUID id, UpdateMenuRequest request) {
         Menu menu = menuRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Menu", id.toString()));
@@ -102,8 +93,8 @@ public class MenuServiceImpl {
     }
 
     @Transactional
-    @Cacheable(value = "menus", key = "#categoryId")
-    public List<MenuResponse> listMenuByCategoryId(
+    @Cacheable(value = "menus-categories", key = "#categoryId")
+    public List<MenuResponse> listMenusOfCategoryId(
             User user,
             UUID categoryId
     ) {
@@ -124,7 +115,7 @@ public class MenuServiceImpl {
     @Cacheable(value = "menus", key = "#storeId")
     public List<MenuResponse> listMenusWithCategory(User user, UUID storeId) {
         List<Category> categories = categoryServiceImpl.findAllByStoreId(storeId);
-        List<Menu> menus = menuRepository.findAllByCategoryIn(categories);
+        List<Menu> menus = menuRepository.findAllByCategoryInOrderByCreatedAtDesc(categories);
         if (user == null) {
             return MenuResponse.fromEntities(menus, Collections.emptyList());
         }
@@ -133,7 +124,11 @@ public class MenuServiceImpl {
     }
 
     @Transactional
-    @CacheEvict(value = "menus", key = "#request.categoryId")
+    @Caching(evict = {
+            @CacheEvict(value = "menus", key = "#request.storeId"),
+            @CacheEvict(value = "menus", key = "#request.menuId"),
+            @CacheEvict(value = "menus-categories", allEntries = true)
+    })
     public MenuResponse toggleMenuVisibility(User user, MenuToggleRequest request) {
         Menu menu = menuRepository.findById(request.getMenuId())
                 .orElse(null);
@@ -146,20 +141,11 @@ public class MenuServiceImpl {
     }
 
     @Transactional
-    @CacheEvict(value = "menus", key = "#request.categoryId")
-    public MenuResponse toggleMenuAvailability(User user, MenuToggleRequest request) {
-        Menu menu = menuRepository.findById(request.getMenuId())
-                .orElse(null);
-        if (menu == null) {
-            return null;
-        }
-        menu.setIsAvailable(!menu.getIsAvailable());
-        menuRepository.save(menu);
-        return MenuResponse.fromEntity(menu);
-    }
-
-    @Transactional
-    @CacheEvict(value = "menus", key = "#request.categoryId")
+    @Caching(evict = {
+            @CacheEvict(value = "menus", key = "#request.storeId"),
+            @CacheEvict(value = "menus", key = "#request.menuId"),
+            @CacheEvict(value = "menus-categories", allEntries = true)
+    })
     public MenuResponse deleteMenu(User user, MenuToggleRequest request) {
         Menu menu = menuRepository.findById(request.getMenuId())
                 .orElse(null);
@@ -181,10 +167,7 @@ public class MenuServiceImpl {
     @Cacheable(value = "menus", key = "#id")
     public MenuResponse getMenuResponseById(User user, UUID id) {
         Menu menu = menuRepository.findById(id)
-                .orElse(null);
-        if (menu == null) {
-            return null;
-        }
+                .orElseThrow(() -> new ResourceNotFoundException("Menu", id.toString()));
         if (user == null) {
             return MenuResponse.fromEntity(menu);
         }
@@ -197,16 +180,15 @@ public class MenuServiceImpl {
     }
 
     @Transactional
-    @CacheEvict(value = "menus", key = "#id")
-    public MenuResponse updateMenuImage(UUID id, String image) {
+    @Caching(evict = {
+            @CacheEvict(value = "menus", key = "#id"),
+            @CacheEvict(value = "menus-categories", allEntries = true)
+    })
+    public void updateMenuImage(UUID id, String image) {
         Menu menu = menuRepository.findById(id)
-                .orElse(null);
-        if (menu == null) {
-            return null;
-        }
+                .orElseThrow(() -> new ResourceNotFoundException("Menu", id.toString()));
         menu.setImage(image);
         menuRepository.save(menu);
-        return MenuResponse.fromEntity(menu);
     }
 
     @Transactional

@@ -13,7 +13,7 @@ public class UnRestrictedEndpoint {
             "/actuator/prometheus",
             "/actuator/health/**",
             "/api/v1/files/**",
-            "/api/v1/menus/list/**",
+            "/api/v1/menus/of-store/{storeId}/all/with",
             "/api/v1/categories/list/**",
             "/api/v1/stores/{slug}/**",
             "/api/v1/orders/create",

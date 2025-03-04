@@ -1,20 +1,24 @@
 package io.sovann.hang.api.features.stores.controllers;
 
-import io.sovann.hang.api.annotations.*;
-import io.sovann.hang.api.constants.*;
-import io.sovann.hang.api.features.commons.controllers.*;
-import io.sovann.hang.api.features.commons.payloads.*;
-import io.sovann.hang.api.features.stores.payloads.request.*;
-import io.sovann.hang.api.features.stores.payloads.request.updates.*;
-import io.sovann.hang.api.features.stores.payloads.response.*;
-import io.sovann.hang.api.features.stores.services.*;
-import io.sovann.hang.api.features.users.entities.*;
-import io.sovann.hang.api.features.users.securities.*;
-import io.sovann.hang.api.utils.*;
-import java.util.*;
-import lombok.*;
-import org.springframework.security.access.prepost.*;
+import io.sovann.hang.api.annotations.CurrentUser;
+import io.sovann.hang.api.constants.APIURLs;
+import io.sovann.hang.api.features.commons.controllers.ControllerServiceCallback;
+import io.sovann.hang.api.features.commons.payloads.BaseResponse;
+import io.sovann.hang.api.features.commons.payloads.PageMeta;
+import io.sovann.hang.api.features.stores.payloads.request.AssignGroupRequest;
+import io.sovann.hang.api.features.stores.payloads.request.CreateStoreRequest;
+import io.sovann.hang.api.features.stores.payloads.request.updates.UpdateStoreRequest;
+import io.sovann.hang.api.features.stores.payloads.response.StoreResponse;
+import io.sovann.hang.api.features.stores.services.StoreServiceImpl;
+import io.sovann.hang.api.features.users.entities.User;
+import io.sovann.hang.api.features.users.securities.CustomUserDetails;
+import io.sovann.hang.api.utils.SoftEntityDeletable;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping(APIURLs.STORE)
@@ -28,7 +32,7 @@ public class StoreController {
             @CurrentUser CustomUserDetails user,
             @RequestBody CreateStoreRequest request
     ) {
-        SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user);
         return callback.execute(() -> storeService.createStore(user.getUser(), request),
                 "Store failed to create",
                 null);
@@ -56,21 +60,10 @@ public class StoreController {
             @PathVariable UUID id
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> storeService.deleteStore(id),
+        return callback.execute(() -> storeService.deleteStore(user.getUser(), id),
                 "Store failed to list",
                 null);
     }
-
-//    @GetMapping("/{id}/get")
-//    public BaseResponse<StoreResponse> getStore(
-//            @CurrentUser CustomUserDetails user,
-//            @PathVariable UUID id
-//    ) {
-//        SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
-//        return callback.execute(() -> storeService.getStore(user.getUser(), id),
-//                "Store failed to list",
-//                null);
-//    }
 
     @GetMapping("/{slug}/get")
     public BaseResponse<StoreResponse> getStoreByNameSlug(

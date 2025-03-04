@@ -38,7 +38,10 @@ public class StoreServiceImpl {
         return storeRepository.count();
     }
 
-    @CacheEvict(value = "store", key = "#user.getId()", allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(value = "store", key = "#user.id"),
+            @CacheEvict(value = "stores", key = "#user.id")
+    })
     public StoreResponse createStore(User user, CreateStoreRequest request) {
         try {
             Store savedStore = createAndSaveStore(user, request);
@@ -100,6 +103,7 @@ public class StoreServiceImpl {
     }
 
     @Transactional
+    @Cacheable(value = "stores", key = "#user.id")
     public List<StoreResponse> listStores(User user, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         boolean isAdmin = user.getRoles().stream()
@@ -115,12 +119,19 @@ public class StoreServiceImpl {
                 .toList();
     }
 
-    public StoreResponse deleteStore(UUID id) {
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "store", key = "#user.id"),
+            @CacheEvict(value = "stores", key = "#user.id")
+    })
+    public StoreResponse deleteStore(User user, UUID id) {
         Store store = storeRepository.findById(id).orElseThrow();
         storeRepository.delete(store);
         return StoreResponse.fromEntity(store);
     }
 
+    @Transactional
+    @Cacheable(value = "store", key = "#user.id")
     public StoreResponse getStore(User user, UUID id) {
         Store store = storeRepository.findById(id).orElseThrow();
         StoreResponse response = StoreResponse.fromEntity(store);
@@ -133,7 +144,7 @@ public class StoreServiceImpl {
     }
 
     @Transactional
-    @Cacheable(value = "store", key = "#user.getId()")
+    @Cacheable(value = "store", key = "#user.id")
     public StoreResponse getMyStore(User user) {
         UUID groupId = user.getGroupMembers().stream().findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Group Member", user.getId().toString()))
@@ -146,6 +157,10 @@ public class StoreServiceImpl {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "store", key = "#user.id"),
+            @CacheEvict(value = "stores", key = "#user.id")
+    })
     public List<StoreResponse> assignGroup(User user, AssignGroupRequest request) {
         Group group = groupRepository.findById(request.getGroupId())
                 .orElseThrow(() -> new ResourceNotFoundException("Group", request.getGroupId().toString()));
@@ -161,7 +176,10 @@ public class StoreServiceImpl {
     }
 
     @Transactional
-    @CacheEvict(value = "store", key = "#user.getId()", allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(value = "store", key = "#user.id"),
+            @CacheEvict(value = "stores", key = "#user.id")
+    })
     public StoreResponse updateStore(User user, UUID id, UpdateStoreRequest request) {
         Store store = storeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Store", id.toString()));

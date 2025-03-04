@@ -1,14 +1,9 @@
 package io.sovann.hang.api.features.menus.payloads.responses;
 
-import io.sovann.hang.api.features.menus.entities.Menu;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import io.sovann.hang.api.features.menus.entities.*;
+import java.util.*;
+import lombok.*;
+import lombok.extern.slf4j.*;
 
 @Slf4j
 @Getter
@@ -30,6 +25,7 @@ public class MenuResponse {
 
     private UUID categoryId;
     private String categoryName;
+    private int position;
 
     private List<MenuImageResponse> images;
     private List<String> badges;
@@ -45,7 +41,6 @@ public class MenuResponse {
         response.setCurrency(menu.getCurrency());
         response.setImage(menu.getImage());
         response.setHidden(menu.getIsHidden());
-        response.setAvailable(menu.getIsAvailable());
         response.setBadges(menu.getBadges());
         if (menu.getImages() != null && !menu.getImages().isEmpty()) {
             response.setImages(MenuImageResponse.fromEntities(menu.getImages()));
@@ -54,6 +49,7 @@ public class MenuResponse {
             return response;
         }
         response.setCategoryId(menu.getCategory().getId());
+        response.setPosition(menu.getCategory().getPosition());
         response.setCategoryName(menu.getCategory().getName());
         return response;
     }

@@ -30,7 +30,7 @@ public class FavoriteController {
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
         return callback.execute(() -> favoriteService.createFavorite(user.getUser(), request),
-                "Menu category failed to create",
+                "Favorite failed to create",
                 null);
     }
 
@@ -42,7 +42,7 @@ public class FavoriteController {
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
         return callback.execute(() -> favoriteService.deleteFavorite(user.getUser(), request),
-                "Menu category failed to delete",
+                "Favorite failed to delete",
                 null);
     }
 
@@ -53,7 +53,7 @@ public class FavoriteController {
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
         return callback.execute(() -> favoriteService.listMenuFavorites(user.getUser()),
-                "Menu category failed to list",
+                "Favorite failed to list",
                 null);
     }
 }

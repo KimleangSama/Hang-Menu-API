@@ -30,9 +30,13 @@ public class Category extends BaseEntityAudit {
     private boolean isHidden = false;
     private boolean isAvailable = true;
 
+    private int position = 0;
+
+    @ToString.Exclude
     @OneToMany(mappedBy = "category", fetch = FetchType.EAGER)
     private List<Menu> menus;
 
+    @ToString.Exclude
     @ManyToOne
     @JoinColumn(name = "store_id")
     private Store store;

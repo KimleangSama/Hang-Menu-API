@@ -4,8 +4,8 @@ import io.sovann.hang.api.exceptions.*;
 import io.sovann.hang.api.features.stores.entities.*;
 import io.sovann.hang.api.features.stores.services.*;
 import io.sovann.hang.api.features.translations.entities.*;
-import io.sovann.hang.api.features.translations.payloads.requests.CreateLanguageRequest;
-import io.sovann.hang.api.features.translations.payloads.responses.LanguageResponse;
+import io.sovann.hang.api.features.translations.payloads.requests.*;
+import io.sovann.hang.api.features.translations.payloads.responses.*;
 import io.sovann.hang.api.features.translations.repos.*;
 import io.sovann.hang.api.features.users.entities.*;
 import java.util.*;
@@ -38,5 +38,11 @@ public class LanguageServiceImpl {
     public List<LanguageResponse> listLanguages(UUID storeId) {
         List<Language> languages = languageRepository.findAllByStoreId(storeId);
         return LanguageResponse.fromEntities(languages);
+    }
+
+    @Transactional
+    @CacheEvict(value = "code", key = "#languageCode")
+    public boolean isLanguageExist(String languageCode) {
+        return languageRepository.existsByCode(languageCode);
     }
 }
