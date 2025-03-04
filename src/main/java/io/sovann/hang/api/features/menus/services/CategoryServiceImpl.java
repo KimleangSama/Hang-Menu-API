@@ -26,7 +26,10 @@ public class CategoryServiceImpl {
     }
 
     @Transactional
-    @CacheEvict(value = "categories", key = "#request.storeId")
+    @Caching(evict = {
+            @CacheEvict(value = "categories", key = "#request.storeId"),
+            @CacheEvict(value = "category-entities", key = "#request.storeId")
+    })
     public CategoryResponse createCategory(User user, CreateCategoryRequest request) {
         Store store = storeServiceImpl.getStoreEntityById(user, request.getStoreId());
         Category category = CreateCategoryRequest.fromRequest(request);
@@ -39,7 +42,7 @@ public class CategoryServiceImpl {
     @Transactional(readOnly = true)
     @Cacheable(value = "categories", key = "#storeId")
     public List<CategoryResponse> listCategories(User user, UUID storeId) {
-        List<Category> categories = categoryRepository.findAllByStoreId(storeId);
+        List<Category> categories = categoryRepository.findAllByStoreIdOrderByPosition(storeId);
         return CategoryResponse.fromEntities(categories);
     }
 
@@ -99,7 +102,7 @@ public class CategoryServiceImpl {
     @Transactional
     @Cacheable(value = "category-entities", key = "#storeId")
     public List<Category> findAllByStoreId(UUID storeId) {
-        return categoryRepository.findAllByStoreId(storeId);
+        return categoryRepository.findAllByStoreIdOrderByPosition(storeId);
     }
 
     @Transactional

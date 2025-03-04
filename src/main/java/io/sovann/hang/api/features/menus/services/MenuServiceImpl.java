@@ -115,7 +115,7 @@ public class MenuServiceImpl {
     @Cacheable(value = "menus", key = "#storeId")
     public List<MenuResponse> listMenusWithCategory(User user, UUID storeId) {
         List<Category> categories = categoryServiceImpl.findAllByStoreId(storeId);
-        List<Menu> menus = menuRepository.findAllByCategoryIn(categories);
+        List<Menu> menus = menuRepository.findAllByCategoryInOrderByCreatedAtDesc(categories);
         if (user == null) {
             return MenuResponse.fromEntities(menus, Collections.emptyList());
         }

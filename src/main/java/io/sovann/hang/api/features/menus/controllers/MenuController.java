@@ -57,26 +57,32 @@ public class MenuController {
                 "Menu failed to list", null);
     }
 
-//    @WithRateLimitProtection
+    // @WithRateLimitProtection
     @GetMapping("/of-store/{storeId}/all/with")
     public BaseResponse<List<CategoryMenuResponse>> listMenusOfStoreWithMappedCategory(
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID storeId
     ) {
         return callback.execute(() -> {
-                    List<MenuResponse> responses = menuService.listMenusWithCategory(user != null ? user.getUser() : null, storeId);
-                    Map<UUID, List<MenuResponse>> grouped = responses.stream().collect(Collectors.groupingBy(MenuResponse::getCategoryId));
-                    return grouped.entrySet().stream().map(entry -> {
-                        CategoryMenuResponse categoryMenuResponse = new CategoryMenuResponse();
-                        categoryMenuResponse.setId(entry.getKey());
-                        if (!entry.getValue().isEmpty()) {
-                            categoryMenuResponse.setName(entry.getValue().getFirst().getCategoryName());
+            List<MenuResponse> responses = menuService.listMenusWithCategory(user != null ? user.getUser() : null, storeId);
+            Map<UUID, List<MenuResponse>> grouped = responses.stream()
+                    .collect(Collectors.groupingBy(MenuResponse::getCategoryId));
+            return grouped.entrySet().stream()
+                    .map(entry -> {
+                        CategoryMenuResponse res = new CategoryMenuResponse();
+                        res.setId(entry.getKey());
+                        List<MenuResponse> menuList = entry.getValue();
+                        menuList.sort(Comparator.comparingInt(MenuResponse::getPosition));
+                        if (!menuList.isEmpty()) {
+                            res.setName(menuList.getFirst().getCategoryName());
+                            res.setPosition(menuList.getFirst().getPosition());
                         }
-                        categoryMenuResponse.setMenus(entry.getValue());
-                        return categoryMenuResponse;
-                    }).collect(Collectors.toList());
-                }, "Menu failed to list",
-                null);
+                        res.setMenus(menuList);
+                        return res;
+                    })
+                    .sorted(Comparator.comparingInt(CategoryMenuResponse::getPosition))
+                    .collect(Collectors.toList());
+        }, "Menu failed to list", null);
     }
 
     @PatchMapping("/toggle-visibility")

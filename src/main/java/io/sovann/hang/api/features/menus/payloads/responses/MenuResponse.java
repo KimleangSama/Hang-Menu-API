@@ -25,6 +25,7 @@ public class MenuResponse {
 
     private UUID categoryId;
     private String categoryName;
+    private int position;
 
     private List<MenuImageResponse> images;
     private List<String> badges;
@@ -48,6 +49,7 @@ public class MenuResponse {
             return response;
         }
         response.setCategoryId(menu.getCategory().getId());
+        response.setPosition(menu.getCategory().getPosition());
         response.setCategoryName(menu.getCategory().getName());
         return response;
     }

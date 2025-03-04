@@ -10,5 +10,5 @@ import org.springframework.stereotype.*;
 public interface MenuRepository extends JpaRepository<Menu, UUID> {
     List<Menu> findAllByCategory(Category category);
 
-    List<Menu> findAllByCategoryIn(Collection<Category> categories);
+    List<Menu> findAllByCategoryInOrderByCreatedAtDesc(Collection<Category> categories);
 }
