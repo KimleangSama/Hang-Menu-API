@@ -1,16 +1,13 @@
 package io.sovann.hang.api.features.menus.payloads.responses;
 
-import io.sovann.hang.api.features.menus.entities.Category;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-
-import java.util.List;
-import java.util.UUID;
+import io.sovann.hang.api.features.menus.entities.*;
+import java.util.*;
+import lombok.*;
 
 @Getter
 @Setter
 @ToString
+@NoArgsConstructor
 public class CategoryResponse {
     private UUID id;
     private String name;
@@ -18,6 +15,18 @@ public class CategoryResponse {
     private String icon;
     private boolean isHidden = false;
     private boolean isAvailable = true;
+
+    private int position;
+    private long menuCount;
+
+    // This constructor is used to create a response object from an entity
+    // DO NOT REMOVE
+    public CategoryResponse(UUID id, String name, int position, long menuCount) {
+        this.id = id;
+        this.name = name;
+        this.position = position;
+        this.menuCount = menuCount;
+    }
 
     public static CategoryResponse fromEntity(Category category) {
         CategoryResponse response = new CategoryResponse();

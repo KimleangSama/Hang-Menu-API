@@ -1,16 +1,10 @@
 package io.sovann.hang.api.features.users.entities;
 
-import com.redis.om.spring.annotations.Indexed;
-import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
-import lombok.Getter;
-import lombok.Setter;
-
-import java.io.Serializable;
-import java.util.Objects;
-import java.util.UUID;
+import com.redis.om.spring.annotations.*;
+import jakarta.persistence.*;
+import java.io.*;
+import java.util.*;
+import lombok.*;
 
 @Getter
 @Setter
