@@ -28,4 +28,6 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
     @Query(value = "SELECT COALESCE(SUM(total_amount_in_riel), 0) FROM orders WHERE store_id = ?1 AND created_at BETWEEN ?2 AND ?3", nativeQuery = true)
     Integer sumTotalRielByStoreIdAndCreatedAtBetween(UUID storeId, LocalDateTime startDateOfLastWeek, LocalDateTime endDateOfLastWeek);
+
+    List<Order> findByStoreIdOrderByCreatedAt(UUID storeId);
 }

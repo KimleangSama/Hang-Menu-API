@@ -1,21 +1,18 @@
 package io.sovann.hang.api.features.orders.controllers;
 
-import io.sovann.hang.api.annotations.CurrentUser;
-import io.sovann.hang.api.constants.APIURLs;
-import io.sovann.hang.api.features.commons.controllers.ControllerServiceCallback;
-import io.sovann.hang.api.features.commons.payloads.BaseResponse;
-import io.sovann.hang.api.features.orders.payloads.requests.CreateOrderRequest;
-import io.sovann.hang.api.features.orders.payloads.responses.OrderQResponse;
-import io.sovann.hang.api.features.orders.payloads.responses.OrderResponse;
-import io.sovann.hang.api.features.orders.services.OrderServiceImpl;
-import io.sovann.hang.api.features.users.securities.CustomUserDetails;
-import io.sovann.hang.api.utils.SoftEntityDeletable;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
+import io.sovann.hang.api.annotations.*;
+import io.sovann.hang.api.constants.*;
+import io.sovann.hang.api.features.commons.controllers.*;
+import io.sovann.hang.api.features.commons.payloads.*;
+import io.sovann.hang.api.features.orders.payloads.requests.*;
+import io.sovann.hang.api.features.orders.payloads.responses.*;
+import io.sovann.hang.api.features.orders.services.*;
+import io.sovann.hang.api.features.users.securities.*;
+import io.sovann.hang.api.utils.*;
+import java.util.*;
+import lombok.*;
+import org.springframework.security.access.prepost.*;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping(APIURLs.ORDER)
@@ -39,7 +36,7 @@ public class OrderController {
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID orderId
     ) {
-        SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user);
         return callback.execute(() -> orderService.getOrderById(user.getUser(), orderId),
                 "Failed to get order",
                 null);
@@ -60,9 +57,22 @@ public class OrderController {
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID storeId
     ) {
-        SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user);
         return callback.execute(() -> orderService.getOrdersByStoreId(user.getUser(), storeId),
                 "Failed to get orders",
+                null);
+    }
+
+    @PatchMapping("/{orderId}/update")
+    @PreAuthorize("hasRole('admin') or hasRole('manager')")
+    public BaseResponse<OrderResponse> updateOrderStatus(
+            @CurrentUser CustomUserDetails user,
+            @PathVariable UUID orderId,
+            @RequestParam String status
+    ) {
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user);
+        return callback.execute(() -> orderService.updateOrderStatus(user.getUser(), orderId, status),
+                "Failed to update order status",
                 null);
     }
 }

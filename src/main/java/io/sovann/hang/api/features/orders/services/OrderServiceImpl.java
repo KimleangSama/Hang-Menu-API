@@ -1,6 +1,7 @@
 package io.sovann.hang.api.features.orders.services;
 
 import io.sovann.hang.api.features.orders.entities.*;
+import io.sovann.hang.api.features.orders.enums.*;
 import io.sovann.hang.api.features.orders.payloads.requests.*;
 import io.sovann.hang.api.features.orders.payloads.responses.*;
 import io.sovann.hang.api.features.orders.repos.*;
@@ -26,7 +27,7 @@ public class OrderServiceImpl {
     private final OrderMenuRepository orderMenuRepository;
 
     @Transactional
-    @CacheEvict(value = "orders", key = "#request.storeId", allEntries = true)
+    @CacheEvict(value = "orders", key = "#request.storeId")
     public OrderQResponse createOrder(CreateOrderRequest request) {
         OrderQResponse response = new OrderQResponse();
         try {
@@ -59,9 +60,7 @@ public class OrderServiceImpl {
     public OrderResponse getOrderById(User user, UUID orderId) {
         return getOrderEntityById(orderId)
                 .filter(order -> isUserAuthorizedForStore(user, order.getStore().getId()))
-                .map(order -> {
-                    return OrderResponse.fromEntity(order, true);
-                })
+                .map(order -> OrderResponse.fromEntity(order, true))
                 .orElse(null);
     }
 
@@ -69,7 +68,7 @@ public class OrderServiceImpl {
     @Cacheable(value = "orders", key = "#storeId")
     public List<OrderResponse> getOrdersByStoreId(User user, UUID storeId) {
         return isUserAuthorizedForStore(user, storeId)
-                ? OrderResponse.fromEntities(orderRepository.findByStoreId(storeId), false)
+                ? OrderResponse.fromEntities(orderRepository.findByStoreIdOrderByCreatedAt(storeId), false)
                 : Collections.emptyList();
     }
 
@@ -91,5 +90,23 @@ public class OrderServiceImpl {
         return orderRepository.findByCode(code)
                 .map(order -> OrderResponse.fromEntity(order, true))
                 .orElse(null);
+    }
+
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "order-entity", key = "#orderId"),
+            @CacheEvict(value = "order", key = "#orderId"),
+            @CacheEvict(value = "orders", allEntries = true),
+    })
+    public OrderResponse updateOrderStatus(User user, UUID orderId, String status) {
+        Order order = orderRepository.findById(orderId)
+                .filter(o -> isUserAuthorizedForStore(user, o.getStore().getId()))
+                .orElse(null);
+        if (order == null) {
+            return null;
+        }
+        order.setStatus(OrderStatus.valueOf(status));
+        orderRepository.save(order);
+        return OrderResponse.fromEntity(order, false);
     }
 }

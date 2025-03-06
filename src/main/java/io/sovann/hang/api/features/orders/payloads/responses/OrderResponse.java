@@ -4,13 +4,16 @@ import io.sovann.hang.api.features.orders.entities.*;
 import io.sovann.hang.api.features.orders.enums.*;
 import java.util.*;
 import lombok.*;
+import lombok.extern.slf4j.*;
 
+@Slf4j
 @Getter
 @Setter
 @ToString
 public class OrderResponse {
     private UUID id;
     private UUID storeId;
+    private UUID code;
     private Double totalAmountInRiel;
     private Double totalAmountInDollar;
     private OrderStatus status;
@@ -23,6 +26,7 @@ public class OrderResponse {
         OrderResponse response = new OrderResponse();
         response.setId(order.getId());
         response.setStoreId(order.getStore().getId());
+        response.setCode(order.getCode());
         response.setTotalAmountInRiel(order.getTotalAmountInRiel());
         response.setTotalAmountInDollar(order.getTotalAmountInDollar());
         response.setStatus(order.getStatus());

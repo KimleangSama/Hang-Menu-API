@@ -63,6 +63,7 @@ public class OrderEventListener {
         Order order = new Order();
         order.setCode(request.getCode());
         order.setStore(store);
+        order.setPhoneNumber(request.getPhoneNumber());
         order.setStatus(request.getStatus());
         order.setOrderTime(request.getOrderTime());
         order.setSpecialInstructions(request.getSpecialInstructions());
