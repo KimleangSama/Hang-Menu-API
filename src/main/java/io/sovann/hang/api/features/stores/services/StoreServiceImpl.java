@@ -299,4 +299,48 @@ public class StoreServiceImpl {
         return storeRepository.findById(storeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Store", storeId.toString()));
     }
+
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "store", key = "#user.id"),
+            @CacheEvict(value = "store", key = "#slug"),
+            @CacheEvict(value = "stores", key = "#user.id"),
+    })
+    public StoreResponse updateLayout(User user, String slug, String layout) {
+        Store store = storeRepository.findBySlug(slug)
+                .orElseThrow(() -> new ResourceNotFoundException("Store", slug));
+        store.setLayout(layout);
+        store.setUpdatedAt(LocalDateTime.now());
+        store.setUpdatedBy(user.getId());
+        storeRepository.save(store);
+        return StoreResponse.fromEntity(store);
+    }
+
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "store", key = "#userId"),
+            @CacheEvict(value = "store", key = "#store.id"),
+            @CacheEvict(value = "store", key = "#store.slug"),
+            @CacheEvict(value = "stores", key = "#userId"),
+    })
+    public void updateStorePromotionImage(UUID userId, Store store, String name) {
+        store.setPromotion(name);
+        store.setUpdatedAt(LocalDateTime.now());
+        store.setUpdatedBy(userId);
+        storeRepository.save(store);
+    }
+
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "store", key = "#userId"),
+            @CacheEvict(value = "store", key = "#store.id"),
+            @CacheEvict(value = "store", key = "#store.slug"),
+            @CacheEvict(value = "stores", key = "#userId"),
+    })
+    public void updateStoreLogo(UUID userId, Store store, String name) {
+        store.setLogo(name);
+        store.setUpdatedAt(LocalDateTime.now());
+        store.setUpdatedBy(userId);
+        storeRepository.save(store);
+    }
 }

@@ -1,16 +1,12 @@
 package io.sovann.hang.api.features.stores.entities;
 
 import io.sovann.hang.api.features.translations.entities.*;
-import io.sovann.hang.api.features.users.entities.BaseEntityAudit;
-import io.sovann.hang.api.features.users.entities.Group;
+import io.sovann.hang.api.features.users.entities.*;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-import org.springframework.data.redis.core.RedisHash;
-
-import java.io.Serial;
-import java.util.List;
+import java.io.*;
+import java.util.*;
+import lombok.*;
+import org.springframework.data.redis.core.*;
 
 @RedisHash("Store")
 @Getter
@@ -37,8 +33,9 @@ public class Store extends BaseEntityAudit {
     private String facebook;
     private String telegram;
     private String instagram;
-    private String cover;
+    private String promotion;
     private String banner;
+    private String layout;
 
     @OneToMany(mappedBy = "store", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OperatingHour> operatingHours;

@@ -1,34 +1,29 @@
 package io.sovann.hang.api.features.files.controllers;
 
-import io.sovann.hang.api.annotations.CurrentUser;
-import io.sovann.hang.api.constants.APIURLs;
-import io.sovann.hang.api.exceptions.ResourceNotFoundException;
-import io.sovann.hang.api.features.commons.payloads.BaseResponse;
-import io.sovann.hang.api.features.files.exceptions.FileStorageException;
-import io.sovann.hang.api.features.files.payloads.FileResponse;
-import io.sovann.hang.api.features.files.services.FileStorageServiceImpl;
-import io.sovann.hang.api.features.menus.entities.Menu;
-import io.sovann.hang.api.features.menus.entities.MenuImage;
-import io.sovann.hang.api.features.menus.payloads.responses.*;
-import io.sovann.hang.api.features.menus.repos.MenuImageRepository;
-import io.sovann.hang.api.features.menus.services.CategoryServiceImpl;
-import io.sovann.hang.api.features.menus.services.MenuServiceImpl;
-import io.sovann.hang.api.features.users.securities.CustomUserDetails;
-import io.sovann.hang.api.utils.SoftEntityDeletable;
-import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.transaction.annotation.Transactional;
+import io.sovann.hang.api.annotations.*;
+import io.sovann.hang.api.constants.*;
+import io.sovann.hang.api.exceptions.*;
+import io.sovann.hang.api.features.commons.payloads.*;
+import io.sovann.hang.api.features.files.exceptions.*;
+import io.sovann.hang.api.features.files.payloads.*;
+import io.sovann.hang.api.features.files.services.*;
+import io.sovann.hang.api.features.menus.entities.*;
+import io.sovann.hang.api.features.menus.repos.*;
+import io.sovann.hang.api.features.menus.services.*;
+import io.sovann.hang.api.features.stores.entities.*;
+import io.sovann.hang.api.features.stores.services.*;
+import io.sovann.hang.api.features.users.securities.*;
+import io.sovann.hang.api.utils.*;
+import jakarta.persistence.*;
+import java.util.*;
+import lombok.*;
+import lombok.extern.slf4j.*;
+import org.springframework.core.io.*;
+import org.springframework.http.*;
+import org.springframework.security.access.prepost.*;
+import org.springframework.transaction.annotation.*;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
-import java.util.UUID;
+import org.springframework.web.multipart.*;
 
 @Slf4j
 @RestController
@@ -41,6 +36,7 @@ public class FileStorageController {
 
     private final FileStorageServiceImpl fileStorageService;
     private final MenuServiceImpl menuService;
+    private final StoreServiceImpl storeService;
     private final MenuImageRepository menuImageRepository;
     private final CategoryServiceImpl categoryService;
 
@@ -127,6 +123,12 @@ public class FileStorageController {
                 menuService.updateMenuImage(id, fileResponse.getName());
             } else if (type.equalsIgnoreCase("category")) {
                 categoryService.updateCategoryIcon(id, fileResponse.getName());
+            } else if (type.equalsIgnoreCase("store-promotion")) {
+                Store store = storeService.getStoreEntityById(user.getUser(), id);
+                storeService.updateStorePromotionImage(
+                        user.getUser().getId(),
+                        store,
+                        fileResponse.getName());
             }
             return BaseResponse.<FileResponse>ok()
                     .setPayload(fileResponse);

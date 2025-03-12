@@ -1,21 +1,16 @@
 package io.sovann.hang.api.features.stores.payloads.response;
 
-import io.sovann.hang.api.configs.MMConfig;
-import io.sovann.hang.api.features.stores.entities.Store;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-import org.modelmapper.ModelMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.UUID;
+import io.sovann.hang.api.configs.*;
+import io.sovann.hang.api.features.stores.entities.*;
+import java.io.*;
+import java.util.*;
+import lombok.*;
+import org.modelmapper.*;
 
 @Getter
 @Setter
 @ToString
-public class StoreResponse {
-    private static final Logger log = LoggerFactory.getLogger(StoreResponse.class);
+public class StoreResponse implements Serializable {
     private UUID id;
     private String name;
     private String slug;
@@ -30,7 +25,7 @@ public class StoreResponse {
     private String facebook;
     private String telegram;
     private String instagram;
-    private String cover;
+    private String promotion;
     private String banner;
     private String layout;
 
