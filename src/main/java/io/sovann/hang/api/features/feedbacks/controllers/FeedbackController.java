@@ -10,6 +10,7 @@ import io.sovann.hang.api.features.feedbacks.payloads.RateResponse;
 import io.sovann.hang.api.features.feedbacks.services.FeedbackServiceImpl;
 import io.sovann.hang.api.features.users.securities.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.*;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,6 +34,7 @@ public class FeedbackController {
     }
 
     @GetMapping("/list")
+    @PreAuthorize("hasAnyRole('admin', 'manager')")
     public BaseResponse<List<FeedbackResponse>> listFeedbacksOfStore(
             @CurrentUser CustomUserDetails user,
             @RequestParam UUID storeId

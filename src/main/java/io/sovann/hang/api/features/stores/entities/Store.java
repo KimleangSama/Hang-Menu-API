@@ -13,7 +13,10 @@ import org.springframework.data.redis.core.*;
 @Setter
 @ToString
 @Entity
-@Table(name = "stores")
+@Table(name = "stores", indexes = {
+        @Index(name = "idx_store_name", columnList = "name"),
+        @Index(name = "idx_store_slug", columnList = "slug"),
+})
 public class Store extends BaseEntityAudit {
     @Serial
     private final static long serialVersionUID = 1L;

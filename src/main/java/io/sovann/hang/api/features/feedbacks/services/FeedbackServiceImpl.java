@@ -1,19 +1,16 @@
 package io.sovann.hang.api.features.feedbacks.services;
 
-import io.sovann.hang.api.features.feedbacks.entities.Feedback;
-import io.sovann.hang.api.features.feedbacks.payloads.CreateFeedbackRequest;
-import io.sovann.hang.api.features.feedbacks.payloads.FeedbackResponse;
-import io.sovann.hang.api.features.feedbacks.payloads.RateResponse;
-import io.sovann.hang.api.features.feedbacks.repos.FeedbackRepository;
-import io.sovann.hang.api.features.stores.services.StoreServiceImpl;
-import io.sovann.hang.api.features.users.entities.User;
-import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
+import io.sovann.hang.api.features.feedbacks.entities.*;
+import io.sovann.hang.api.features.feedbacks.payloads.*;
+import io.sovann.hang.api.features.feedbacks.repos.*;
+import io.sovann.hang.api.features.stores.entities.*;
+import io.sovann.hang.api.features.stores.services.*;
+import io.sovann.hang.api.features.users.entities.*;
+import java.util.*;
+import lombok.*;
+import org.springframework.cache.annotation.*;
+import org.springframework.stereotype.*;
+import org.springframework.transaction.annotation.*;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +20,9 @@ public class FeedbackServiceImpl {
 
     @Transactional
     public FeedbackResponse createFeedback(User user, CreateFeedbackRequest request) {
+        Store store = storeServiceImpl.getStoreEntityById(user, request.getStoreId());
         Feedback feedback = CreateFeedbackRequest.fromRequest(request);
+        feedback.setStore(store);
         if (user != null) {
             feedback.setCreatedBy(user.getId());
         }
