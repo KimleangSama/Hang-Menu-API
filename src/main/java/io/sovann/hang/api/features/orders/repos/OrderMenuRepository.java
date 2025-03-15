@@ -1,9 +1,12 @@
 package io.sovann.hang.api.features.orders.repos;
 
-import io.sovann.hang.api.features.orders.entities.*;
-import java.util.*;
-import org.springframework.data.jpa.repository.*;
-import org.springframework.stereotype.*;
+import io.sovann.hang.api.features.orders.entities.OrderMenu;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface OrderMenuRepository extends JpaRepository<OrderMenu, UUID> {

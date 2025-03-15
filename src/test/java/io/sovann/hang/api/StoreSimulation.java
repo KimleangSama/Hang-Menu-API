@@ -1,11 +1,17 @@
 package io.sovann.hang.api;
 
-import static io.gatling.javaapi.core.CoreDsl.*;
-import io.gatling.javaapi.core.*;
-import static io.gatling.javaapi.http.HttpDsl.*;
-import io.gatling.javaapi.http.*;
-import io.sovann.hang.api.services.*;
-import java.time.*;
+import io.gatling.javaapi.core.OpenInjectionStep;
+import io.gatling.javaapi.core.ScenarioBuilder;
+import io.gatling.javaapi.core.Simulation;
+import io.gatling.javaapi.http.HttpProtocolBuilder;
+import io.sovann.hang.api.services.AuthSimulationService;
+
+import java.time.Duration;
+
+import static io.gatling.javaapi.core.CoreDsl.rampUsersPerSec;
+import static io.gatling.javaapi.core.CoreDsl.scenario;
+import static io.gatling.javaapi.http.HttpDsl.http;
+import static io.gatling.javaapi.http.HttpDsl.status;
 
 
 public class StoreSimulation extends Simulation {

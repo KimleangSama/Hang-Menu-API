@@ -1,12 +1,16 @@
 package io.sovann.hang.api.features.stores.entities;
 
-import io.sovann.hang.api.features.translations.entities.*;
-import io.sovann.hang.api.features.users.entities.*;
+import io.sovann.hang.api.features.translations.entities.Language;
+import io.sovann.hang.api.features.users.entities.BaseEntityAudit;
+import io.sovann.hang.api.features.users.entities.Group;
 import jakarta.persistence.*;
-import java.io.*;
-import java.util.*;
-import lombok.*;
-import org.springframework.data.redis.core.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import org.springframework.data.redis.core.RedisHash;
+
+import java.io.Serial;
+import java.util.List;
 
 @RedisHash("Store")
 @Getter
@@ -50,6 +54,6 @@ public class Store extends BaseEntityAudit {
     private List<Language> languages;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "group_id")
+    @JoinColumn(name = "group_id", unique = true, nullable = false)
     private Group group;
 }

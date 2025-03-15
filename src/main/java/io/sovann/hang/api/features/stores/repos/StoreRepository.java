@@ -11,5 +11,8 @@ import java.util.UUID;
 @Repository
 public interface StoreRepository extends JpaRepository<Store, UUID> {
     List<Store> findAllByGroupIdOrderByCreatedAt(UUID groupId);
+
     Optional<Store> findBySlug(String slug);
+
+    Optional<Store> findByGroupId(UUID id);
 }

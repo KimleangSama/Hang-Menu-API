@@ -55,7 +55,7 @@ public class CategoryController {
             @CurrentUser CustomUserDetails user,
             @RequestBody CategoryToggleRequest request
     ) {
-        SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user);
         return callback.execute(() -> categoryService.toggleCategoryVisibility(user.getUser(), request),
                 "Category failed to hide",
                 null);
@@ -67,7 +67,7 @@ public class CategoryController {
             @CurrentUser CustomUserDetails user,
             @RequestBody CategoryToggleRequest request
     ) {
-        SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user);
         return callback.execute(() -> categoryService.toggleCategoryAvailability(user.getUser(), request),
                 "Category failed to availability",
                 null);

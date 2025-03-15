@@ -1,7 +1,10 @@
 package io.sovann.hang.api.features.orders.payloads.requests;
 
-import java.util.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+import java.util.UUID;
 
 @Getter
 @Setter

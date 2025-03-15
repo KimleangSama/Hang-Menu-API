@@ -8,7 +8,7 @@ import io.sovann.hang.api.features.users.entities.Role;
 import io.sovann.hang.api.features.users.entities.User;
 import io.sovann.hang.api.features.users.enums.AuthRole;
 import io.sovann.hang.api.features.users.enums.AuthStatus;
-import io.sovann.hang.api.features.users.securities.*;
+import io.sovann.hang.api.features.users.securities.CustomUserDetails;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;

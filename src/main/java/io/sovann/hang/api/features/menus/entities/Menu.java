@@ -1,11 +1,14 @@
 package io.sovann.hang.api.features.menus.entities;
 
-import io.sovann.hang.api.features.users.entities.*;
+import io.sovann.hang.api.features.users.entities.BaseEntityAudit;
 import jakarta.persistence.*;
-import java.io.*;
-import java.util.*;
-import lombok.*;
-import org.springframework.data.redis.core.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import org.springframework.data.redis.core.RedisHash;
+
+import java.io.Serial;
+import java.util.List;
 
 @RedisHash("Menu")
 @Getter
@@ -32,10 +35,12 @@ public class Menu extends BaseEntityAudit {
     private Boolean isHidden = false;
     private boolean deleted = false;
 
+    @ToString.Exclude
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
 
+    @ToString.Exclude
     @OneToMany(mappedBy = "menu")
     private List<MenuImage> images;
 

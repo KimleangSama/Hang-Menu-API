@@ -9,7 +9,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @ToString
-public class CategoryToggleRequest {
+public class UpdateMenuCategoryRequest {
     private UUID categoryId;
     private UUID storeId;
 }

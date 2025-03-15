@@ -10,7 +10,7 @@ import io.sovann.hang.api.features.feedbacks.payloads.RateResponse;
 import io.sovann.hang.api.features.feedbacks.services.FeedbackServiceImpl;
 import io.sovann.hang.api.features.users.securities.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

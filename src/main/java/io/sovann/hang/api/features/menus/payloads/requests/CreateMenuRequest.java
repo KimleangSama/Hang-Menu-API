@@ -20,7 +20,6 @@ public class CreateMenuRequest {
     private String currency;
     private String image;
     private boolean isHidden = false;
-    private boolean isAvailable = true;
     private List<String> images;
     private List<String> badges;
 

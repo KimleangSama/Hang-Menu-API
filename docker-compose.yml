@@ -1,7 +1,7 @@
 services:
   postgresql:
     image: postgres:17.2
-    container_name: postgresql-stack
+    container_name: postgresql
     restart: on-failure
     ports:
       - "5432:5432"
@@ -15,21 +15,18 @@ services:
     networks:
       - backend
   redis:
-    image: redis/redis-stack-server:7.4.0-v3
-    container_name: redis-stack
+    image: redis:latest
+    container_name: redis
     restart: on-failure
     ports:
       - "6379:6379"
     volumes:
       - ./data/redis:/data
-    environment:
-      REDIS_USER: redis
-      REDIS_PASSWORD: redis
     networks:
       - backend
   rabbitmq:
     image: rabbitmq:3.13.7-management-alpine
-    container_name: rabbitmq-stack
+    container_name: rabbitmq
     restart: on-failure
     ports:
       - "5672:5672"
@@ -100,6 +97,24 @@ services:
     ports:
       - "9093:9093"
     networks:
+      - monitoring
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    ports:
+      - "9100:9100"
+    networks:
+      - backend
+      - monitoring
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8080:8080"
+    networks:
+      - backend
       - monitoring
 volumes:
   data:

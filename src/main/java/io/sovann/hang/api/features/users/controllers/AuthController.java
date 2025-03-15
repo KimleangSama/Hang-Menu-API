@@ -1,23 +1,24 @@
 package io.sovann.hang.api.features.users.controllers;
 
-import io.sovann.hang.api.annotations.*;
-import io.sovann.hang.api.constants.*;
-import io.sovann.hang.api.features.commons.payloads.*;
+import io.sovann.hang.api.annotations.CurrentUser;
+import io.sovann.hang.api.constants.APIURLs;
+import io.sovann.hang.api.features.commons.payloads.BaseResponse;
 import io.sovann.hang.api.features.users.entities.User;
-import io.sovann.hang.api.features.users.enums.*;
-import io.sovann.hang.api.features.users.payloads.request.*;
-import io.sovann.hang.api.features.users.payloads.response.*;
-import io.sovann.hang.api.features.users.securities.*;
-import io.sovann.hang.api.features.users.services.*;
-import io.sovann.hang.api.utils.*;
-import jakarta.servlet.http.*;
-import jakarta.validation.*;
-import lombok.*;
-import lombok.extern.slf4j.*;
-import org.springframework.cache.annotation.*;
-import org.springframework.security.access.prepost.*;
-import org.springframework.security.authentication.*;
-import org.springframework.security.core.userdetails.*;
+import io.sovann.hang.api.features.users.payloads.request.LoginBackOfficeRequest;
+import io.sovann.hang.api.features.users.payloads.request.RegisterBackOfficeRequest;
+import io.sovann.hang.api.features.users.payloads.response.AuthResponse;
+import io.sovann.hang.api.features.users.payloads.response.UserResponse;
+import io.sovann.hang.api.features.users.securities.CustomUserDetails;
+import io.sovann.hang.api.features.users.services.AuthServiceImpl;
+import io.sovann.hang.api.features.users.services.UserServiceImpl;
+import io.sovann.hang.api.utils.SoftEntityDeletable;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -30,25 +31,15 @@ public class AuthController {
 
     @PostMapping("/login")
     public BaseResponse<AuthResponse> login(@Valid @RequestBody LoginBackOfficeRequest request) {
-        return handleLogin(() -> authService.loginBackOfficeUser(request), "username", request.getUsername());
+        return handleLogin(() -> authService.loginBackOfficeUser(request), request.getUsername());
     }
 
-    @PostMapping("/login-backoffice")
-    public BaseResponse<AuthResponse> loginBackOfficeUser(@Valid @RequestBody LoginBackOfficeRequest request) {
-        return handleLogin(() -> authService.loginBackOfficeUser(request), "username", request.getUsername());
-    }
-
-    @PostMapping("/login-frontoffice")
-    public BaseResponse<AuthResponse> loginFrontOfficeUser(@Valid @RequestBody LoginFrontOfficeRequest request) {
-        return handleLogin(() -> authService.loginFrontOfficeUser(request), "email", request.getEmail());
-    }
-
-    private BaseResponse<AuthResponse> handleLogin(AuthenticatedOperation operation, String identifierType, String identifier) {
+    private BaseResponse<AuthResponse> handleLogin(AuthenticatedOperation operation, String identifier) {
         try {
             AuthResponse response = operation.authenticate();
             return BaseResponse.<AuthResponse>ok().setPayload(response);
         } catch (UsernameNotFoundException e) {
-            return createErrorResponse("User with " + identifierType + " " + identifier + " not found.");
+            return createErrorResponse("User with " + "username" + " " + identifier + " not found.");
         } catch (BadCredentialsException e) {
             return createErrorResponse(e.getMessage());
         } catch (Exception e) {
@@ -56,30 +47,21 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/register-backoffice")
+    @PostMapping("/register")
     public BaseResponse<UserResponse> registerBackOfficeUser(@Valid @RequestBody RegisterBackOfficeRequest request) {
-        return handleUserRegistration(() -> authService.registerUser(request), request.getUsername(), "username");
+        return handleUserRegistration(() -> authService.registerUser(request), request.getUsername());
     }
 
-    @PostMapping("/register-frontoffice")
-    public BaseResponse<UserResponse> registerFrontOfficeUser(@Valid @RequestBody RegisterFrontOfficeRequest request) {
-        return handleUserRegistration(() -> authService.registerUser(request), request.getEmail(), "email");
-    }
-
-    private BaseResponse<UserResponse> handleUserRegistration(UserRegistrationOperation operation, String identifier, String identifierType) {
+    private BaseResponse<UserResponse> handleUserRegistration(UserRegistrationOperation operation, String identifier) {
         try {
             try {
-                User user;
-                if (identifierType.equalsIgnoreCase(identifier)) {
-                    user = userService.findByEmail(identifier);
-                } else {
-                    user = userService.findByUsername(identifier);
-                }
+                User user = userService.findByUsername(identifier);
                 if (user != null) {
-                    return createUserAlreadyExistsResponse(user, identifierType, identifier);
+                    return BaseResponse.<UserResponse>duplicateEntity()
+                            .setError("User with " + "username" + " " + identifier + " already exists.");
+                } else {
+                    throw new UsernameNotFoundException("User not found.");
                 }
-                user = operation.register();
-                return BaseResponse.<UserResponse>created().setPayload(UserResponse.fromUser(user));
             } catch (UsernameNotFoundException e) {
                 User user = operation.register();
                 return BaseResponse.<UserResponse>created().setPayload(UserResponse.fromUser(user));
@@ -88,14 +70,6 @@ public class AuthController {
             log.error("User registration failed. Reason: {}", e.getMessage(), e);
             return BaseResponse.<UserResponse>badRequest().setError("User registration failed. Reason: " + e.getMessage());
         }
-    }
-
-    private BaseResponse<UserResponse> createUserAlreadyExistsResponse(User user, String identifierType, String identifier) {
-        String message = "User with " + identifierType + " " + identifier + " already exists.";
-        if (!user.getProvider().equals(AuthProvider.local)) {
-            message = "Looks like you're already registered with " + user.getProvider() + " account. Please login with your " + user.getProvider() + " account.";
-        }
-        return BaseResponse.<UserResponse>badRequest().setError(message);
     }
 
     @GetMapping("/me")

@@ -33,7 +33,7 @@ public class Category extends BaseEntityAudit {
     private int position = 0;
 
     @ToString.Exclude
-    @OneToMany(mappedBy = "category", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     private List<Menu> menus;
 
     @ToString.Exclude

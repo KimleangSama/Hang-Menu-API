@@ -1,7 +1,9 @@
 package io.sovann.hang.api.features.menus.payloads.requests;
 
-import io.sovann.hang.api.features.menus.entities.*;
-import lombok.*;
+import io.sovann.hang.api.features.menus.entities.MenuImage;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter

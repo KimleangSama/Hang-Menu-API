@@ -1,14 +1,18 @@
 package io.sovann.hang.api.features.orders.entities;
 
-import io.sovann.hang.api.features.orders.enums.*;
-import io.sovann.hang.api.features.stores.entities.*;
-import io.sovann.hang.api.features.users.entities.*;
+import io.sovann.hang.api.features.orders.enums.OrderStatus;
+import io.sovann.hang.api.features.stores.entities.Store;
+import io.sovann.hang.api.features.users.entities.BaseEntityAudit;
 import jakarta.persistence.*;
-import java.io.*;
-import java.time.*;
-import java.util.*;
-import lombok.*;
-import org.springframework.data.redis.core.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import org.springframework.data.redis.core.RedisHash;
+
+import java.io.Serial;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 
 @RedisHash("Order")
 @Getter
@@ -39,6 +43,6 @@ public class Order extends BaseEntityAudit {
 
     private String phoneNumber;
 
-    @OneToMany(mappedBy = "order", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<OrderMenu> orderMenus;
 }

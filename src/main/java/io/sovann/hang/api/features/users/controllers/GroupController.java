@@ -4,7 +4,7 @@ import io.sovann.hang.api.annotations.CurrentUser;
 import io.sovann.hang.api.constants.APIURLs;
 import io.sovann.hang.api.features.commons.controllers.ControllerServiceCallback;
 import io.sovann.hang.api.features.commons.payloads.BaseResponse;
-import io.sovann.hang.api.features.commons.payloads.PageMeta;
+import io.sovann.hang.api.features.commons.payloads.PageInfo;
 import io.sovann.hang.api.features.users.payloads.request.AddOrRemoveGroupMemberRequest;
 import io.sovann.hang.api.features.users.payloads.request.CreateGroupRequest;
 import io.sovann.hang.api.features.users.payloads.request.PromoteDemoteRequest;
@@ -50,10 +50,10 @@ public class GroupController {
             @RequestParam(defaultValue = "10000") int size
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
-        PageMeta pageMeta = new PageMeta(page, size, groupService.countUsers(id));
+        PageInfo pageInfo = new PageInfo(page, size, groupService.countUsers(id));
         return callback.execute(() -> groupService.getUsers(user.getUser(), id, page, size),
                 "Groups failed to fetch",
-                pageMeta);
+                pageInfo);
     }
 
     @DeleteMapping("/remove")

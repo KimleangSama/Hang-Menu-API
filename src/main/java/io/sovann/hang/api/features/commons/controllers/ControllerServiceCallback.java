@@ -5,7 +5,7 @@ import io.sovann.hang.api.exceptions.ResourceException;
 import io.sovann.hang.api.exceptions.ResourceForbiddenException;
 import io.sovann.hang.api.exceptions.ResourceNotFoundException;
 import io.sovann.hang.api.features.commons.payloads.BaseResponse;
-import io.sovann.hang.api.features.commons.payloads.PageMeta;
+import io.sovann.hang.api.features.commons.payloads.PageInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -16,10 +16,10 @@ import org.springframework.stereotype.Component;
 public class ControllerServiceCallback {
     private static final String LOG_ERROR = "{}: {}";
 
-    public <T> BaseResponse<T> execute(ServiceOperation<T> operation, String errorMessage, PageMeta page) {
+    public <T> BaseResponse<T> execute(ServiceOperation<T> operation, String errorMessage, PageInfo page) {
         try {
             T result = operation.execute();
-            return BaseResponse.<T>ok().setPayload(result).setMetadata(page);
+            return BaseResponse.<T>ok().setPayload(result).setPage(page);
         } catch (ResourceNotFoundException e) {
             log.error(LOG_ERROR, errorMessage, e.getMessage(), e);
             return BaseResponse.<T>notFound().setError(e.getMessage());

@@ -1,27 +1,40 @@
 package io.sovann.hang.api.features.stores.services;
 
-import io.sovann.hang.api.exceptions.*;
+import io.sovann.hang.api.exceptions.ResourceNotFoundException;
 import io.sovann.hang.api.features.stores.entities.*;
-import io.sovann.hang.api.features.stores.payloads.request.*;
-import io.sovann.hang.api.features.stores.payloads.request.updates.*;
-import io.sovann.hang.api.features.stores.payloads.response.*;
+import io.sovann.hang.api.features.stores.payloads.request.AssignGroupRequest;
+import io.sovann.hang.api.features.stores.payloads.request.CreateFeeRangeRequest;
+import io.sovann.hang.api.features.stores.payloads.request.CreateOrderingOptionRequest;
+import io.sovann.hang.api.features.stores.payloads.request.CreateStoreRequest;
+import io.sovann.hang.api.features.stores.payloads.request.updates.UpdateStoreRequest;
+import io.sovann.hang.api.features.stores.payloads.response.StoreResponse;
 import io.sovann.hang.api.features.stores.repos.*;
-import io.sovann.hang.api.features.users.entities.*;
-import io.sovann.hang.api.features.users.enums.*;
-import io.sovann.hang.api.features.users.repos.*;
-import io.sovann.hang.api.utils.*;
-import java.time.*;
-import java.util.*;
-import java.util.function.*;
-import java.util.stream.*;
-import lombok.*;
-import lombok.extern.slf4j.*;
-import org.springframework.cache.annotation.*;
-import org.springframework.dao.*;
-import org.springframework.data.domain.*;
-import org.springframework.data.jpa.repository.*;
-import org.springframework.stereotype.*;
-import org.springframework.transaction.annotation.*;
+import io.sovann.hang.api.features.users.entities.Group;
+import io.sovann.hang.api.features.users.entities.User;
+import io.sovann.hang.api.features.users.enums.AuthRole;
+import io.sovann.hang.api.features.users.repos.GroupRepository;
+import io.sovann.hang.api.utils.Slugify;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -325,6 +338,20 @@ public class StoreServiceImpl {
     })
     public void updateStorePromotionImage(UUID userId, Store store, String name) {
         store.setPromotion(name);
+        store.setUpdatedAt(LocalDateTime.now());
+        store.setUpdatedBy(userId);
+        storeRepository.save(store);
+    }
+
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "store", key = "#userId"),
+            @CacheEvict(value = "store", key = "#store.id"),
+            @CacheEvict(value = "store", key = "#store.slug"),
+            @CacheEvict(value = "stores", key = "#userId"),
+    })
+    public void updateStoreBanner(UUID userId, Store store, String name) {
+        store.setBanner(name);
         store.setUpdatedAt(LocalDateTime.now());
         store.setUpdatedBy(userId);
         storeRepository.save(store);

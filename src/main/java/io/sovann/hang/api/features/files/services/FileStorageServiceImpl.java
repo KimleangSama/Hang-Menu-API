@@ -1,24 +1,34 @@
 package io.sovann.hang.api.features.files.services;
 
-import io.sovann.hang.api.features.files.exceptions.*;
-import io.sovann.hang.api.features.users.entities.*;
-import io.sovann.hang.api.utils.*;
-import jakarta.annotation.*;
-import java.awt.image.*;
-import java.io.*;
-import java.net.*;
-import java.nio.channels.*;
-import java.nio.file.*;
-import java.util.*;
-import javax.imageio.*;
-import javax.imageio.stream.*;
-import lombok.extern.slf4j.*;
-import org.apache.commons.io.*;
-import org.springframework.beans.factory.annotation.*;
+import io.sovann.hang.api.features.files.exceptions.FileStorageException;
+import io.sovann.hang.api.features.users.entities.User;
+import io.sovann.hang.api.utils.RandomString;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.*;
-import org.springframework.stereotype.*;
-import org.springframework.web.multipart.*;
+import org.springframework.core.io.UrlResource;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
+import java.awt.image.BufferedImage;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.nio.channels.Channels;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -166,5 +176,17 @@ public class FileStorageServiceImpl {
                 .toList());
         filenames.removeIf(Objects::isNull);
         return filenames;
+    }
+
+    public void deleteAllInExclude(List<String> existingImages, List<String> excludeImages) {
+        existingImages.forEach(filename -> {
+            try {
+                if (!excludeImages.contains(filename)) {
+                    Files.deleteIfExists(root.resolve(filename));
+                }
+            } catch (IOException e) {
+                log.error("Failed to delete file: {}", e.getMessage());
+            }
+        });
     }
 }

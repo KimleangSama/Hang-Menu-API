@@ -23,7 +23,7 @@ public class BaseResponse<T> implements Serializable {
     private transient Object error;
     private boolean success = false;
     private Instant timestamp = Instant.now();
-    private transient PageMeta metadata;
+    private transient PageInfo page;
 
     public static <T> BaseResponse<T> badRequest() {
         BaseResponse<T> response = new BaseResponse<>();

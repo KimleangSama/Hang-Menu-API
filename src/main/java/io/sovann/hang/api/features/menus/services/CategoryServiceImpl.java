@@ -1,21 +1,32 @@
 package io.sovann.hang.api.features.menus.services;
 
-import io.sovann.hang.api.exceptions.*;
-import io.sovann.hang.api.features.menus.entities.*;
-import io.sovann.hang.api.features.menus.payloads.requests.*;
-import io.sovann.hang.api.features.menus.payloads.responses.*;
-import io.sovann.hang.api.features.menus.repos.*;
-import io.sovann.hang.api.features.stores.entities.*;
-import io.sovann.hang.api.features.stores.services.*;
-import io.sovann.hang.api.features.users.entities.*;
-import io.sovann.hang.api.features.users.enums.*;
-import java.util.*;
-import java.util.stream.*;
-import lombok.*;
-import org.springframework.cache.annotation.*;
-import org.springframework.stereotype.*;
-import org.springframework.transaction.annotation.*;
+import io.sovann.hang.api.exceptions.ResourceForbiddenException;
+import io.sovann.hang.api.exceptions.ResourceNotFoundException;
+import io.sovann.hang.api.features.menus.entities.Category;
+import io.sovann.hang.api.features.menus.payloads.requests.CategoryReorderRequest;
+import io.sovann.hang.api.features.menus.payloads.requests.CategoryToggleRequest;
+import io.sovann.hang.api.features.menus.payloads.requests.CreateCategoryRequest;
+import io.sovann.hang.api.features.menus.payloads.responses.CategoryResponse;
+import io.sovann.hang.api.features.menus.repos.CategoryRepository;
+import io.sovann.hang.api.features.stores.entities.Store;
+import io.sovann.hang.api.features.stores.services.StoreServiceImpl;
+import io.sovann.hang.api.features.users.entities.Role;
+import io.sovann.hang.api.features.users.entities.User;
+import io.sovann.hang.api.features.users.enums.AuthRole;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CategoryServiceImpl {
@@ -121,21 +132,15 @@ public class CategoryServiceImpl {
             @CacheEvict(value = "menus", key = "#storeId"),
     })
     public List<CategoryResponse> reorderCategories(User user, UUID storeId, List<CategoryReorderRequest.CategoryPositionUpdate> updates) {
-        // Extract IDs from the request
         List<UUID> categoryIds = updates.stream()
                 .map(CategoryReorderRequest.CategoryPositionUpdate::getId)
                 .toList();
-        // Fetch categories from DB
         List<Category> categories = categoryRepository.findByIdIn(categoryIds);
-        // Convert updates into a map for quick lookup
         Map<UUID, Integer> updatedPositions = updates.stream()
                 .collect(Collectors.toMap(CategoryReorderRequest.CategoryPositionUpdate::getId,
                         CategoryReorderRequest.CategoryPositionUpdate::getPosition));
-        // Update positions
         categories.forEach(category -> category.setPosition(updatedPositions.get(category.getId())));
-        // Save all updates in batch
         categoryRepository.saveAll(categories);
-        // Return updated categories
         return CategoryResponse.fromEntities(categories);
     }
 }

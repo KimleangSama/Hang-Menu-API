@@ -1,8 +1,10 @@
 package io.sovann.hang.api.services;
 
-import static io.gatling.javaapi.core.CoreDsl.*;
-import static io.gatling.javaapi.http.HttpDsl.*;
-import io.gatling.javaapi.http.*;
+import io.gatling.javaapi.http.HttpRequestActionBuilder;
+
+import static io.gatling.javaapi.core.CoreDsl.StringBody;
+import static io.gatling.javaapi.http.HttpDsl.http;
+import static io.gatling.javaapi.http.HttpDsl.status;
 
 public class AuthSimulationService {
     public static HttpRequestActionBuilder login() {

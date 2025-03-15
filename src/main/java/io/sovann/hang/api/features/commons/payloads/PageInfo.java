@@ -10,7 +10,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PageMeta {
+public class PageInfo {
     private final int page;
     private final int size;
     private final int totalPages;
@@ -18,7 +18,7 @@ public class PageMeta {
     private final boolean first;
     private final boolean last;
 
-    public PageMeta(int page, int size, long totalElements) {
+    public PageInfo(int page, int size, long totalElements) {
         this.size = size;
         this.page = page + 1;
         this.totalElements = totalElements;

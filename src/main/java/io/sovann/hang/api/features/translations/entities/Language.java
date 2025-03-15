@@ -1,11 +1,15 @@
 package io.sovann.hang.api.features.translations.entities;
 
-import io.sovann.hang.api.features.stores.entities.*;
+import io.sovann.hang.api.features.stores.entities.Store;
 import jakarta.persistence.*;
-import java.io.*;
-import java.util.*;
-import lombok.*;
-import org.springframework.data.redis.core.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import org.springframework.data.redis.core.RedisHash;
+
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.UUID;
 
 @RedisHash("Language")
 @Getter

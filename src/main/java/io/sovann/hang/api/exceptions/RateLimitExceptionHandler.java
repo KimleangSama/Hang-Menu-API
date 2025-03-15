@@ -1,12 +1,15 @@
 package io.sovann.hang.api.exceptions;
 
-import io.sovann.hang.api.features.commons.payloads.*;
-import jakarta.servlet.http.*;
-import org.slf4j.*;
-import org.springframework.core.*;
-import org.springframework.core.annotation.*;
-import org.springframework.http.*;
-import org.springframework.web.bind.annotation.*;
+import io.sovann.hang.api.features.commons.payloads.BaseResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)

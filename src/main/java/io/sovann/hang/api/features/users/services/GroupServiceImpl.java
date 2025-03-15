@@ -70,7 +70,7 @@ public class GroupServiceImpl {
         return groupMembers.map(member -> UserResponse.fromEntity(member.getUser())).toList();
     }
 
-    @CacheEvict(value = "users", key = "#request.username")
+    @CacheEvict(value = "groups", key = "#request.username")
     public GroupResponse promoteOrDemoteUser(User user, PromoteDemoteRequest request) {
         Group group = getGroupById(request.getGroupId());
         User userToPromote = getUserById(request.getUserId());
@@ -90,7 +90,7 @@ public class GroupServiceImpl {
         return GroupResponse.fromEntity(group);
     }
 
-    @CacheEvict(value = "users", key = "#request.username")
+    @CacheEvict(value = "groups", key = "#request.username")
     public GroupMemberResponse removeUser(User user, AddOrRemoveGroupMemberRequest request) {
         Group group = getGroupById(request.getGroupId());
         User userToRemove = getUserById(request.getUserId());
@@ -103,7 +103,7 @@ public class GroupServiceImpl {
         return GroupMemberResponse.fromEntities(userToRemove, group);
     }
 
-    @CacheEvict(value = "users", key = "#request.username")
+    @CacheEvict(value = "groups", key = "#request.username")
     public GroupMemberResponse addUser(User user, AddOrRemoveGroupMemberRequest request) {
         Group group = getGroupById(request.getGroupId());
         User userToAdd = getUserById(request.getUserId());
@@ -111,7 +111,7 @@ public class GroupServiceImpl {
     }
 
     @Transactional
-    @CacheEvict(value = "users", key = "#request.username")
+    @CacheEvict(value = "groups", key = "#request.username")
     public GroupMemberResponse registerUser(User user, RegisterToGroupRequest request) {
         Group group = getGroupById(request.getGroupId());
         List<Role> roles = roleServiceImpl.findByIds(request.getRoles());
@@ -142,5 +142,13 @@ public class GroupServiceImpl {
         groupMember.setUser(user);
         groupMemberRepository.save(groupMember);
         return GroupMemberResponse.fromEntities(user, group);
+    }
+
+    @Transactional
+    @Cacheable(value = "groups", key = "#user.username")
+    public Group getGroupOfUser(User user) {
+        return groupMemberRepository.findByUserId(user.getId())
+                .map(GroupMember::getGroup)
+                .orElseThrow(() -> new ResourceNotFoundException("Group", user.getId().toString()));
     }
 }

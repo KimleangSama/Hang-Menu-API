@@ -1,23 +1,37 @@
 package io.sovann.hang.api.features.menus.services;
 
-import io.sovann.hang.api.configs.*;
-import io.sovann.hang.api.exceptions.*;
-import io.sovann.hang.api.features.menus.entities.*;
+import io.sovann.hang.api.configs.RabbitMQConfig;
+import io.sovann.hang.api.exceptions.ResourceNotFoundException;
+import io.sovann.hang.api.features.files.services.FileStorageServiceImpl;
+import io.sovann.hang.api.features.menus.entities.Category;
+import io.sovann.hang.api.features.menus.entities.Menu;
+import io.sovann.hang.api.features.menus.entities.MenuImage;
 import io.sovann.hang.api.features.menus.payloads.requests.*;
-import io.sovann.hang.api.features.menus.payloads.responses.*;
-import io.sovann.hang.api.features.menus.repos.*;
-import io.sovann.hang.api.features.users.entities.*;
-import java.io.*;
+import io.sovann.hang.api.features.menus.payloads.responses.FavoriteResponse;
+import io.sovann.hang.api.features.menus.payloads.responses.MenuResponse;
+import io.sovann.hang.api.features.menus.repos.CategoryRepository;
+import io.sovann.hang.api.features.menus.repos.MenuImageRepository;
+import io.sovann.hang.api.features.menus.repos.MenuRepository;
+import io.sovann.hang.api.features.users.entities.User;
+import lombok.RequiredArgsConstructor;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.*;
-import lombok.*;
-import org.apache.commons.csv.*;
-import org.slf4j.*;
-import org.springframework.amqp.rabbit.annotation.*;
-import org.springframework.amqp.rabbit.core.*;
-import org.springframework.cache.annotation.*;
-import org.springframework.stereotype.*;
-import org.springframework.transaction.annotation.*;
-import org.springframework.web.multipart.*;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +44,7 @@ public class MenuServiceImpl {
     private final CategoryServiceImpl categoryServiceImpl;
 
     private final RabbitTemplate rabbitTemplate;
+    private final FileStorageServiceImpl fileStorageServiceImpl;
 
     @Transactional
     public long count() {
@@ -39,7 +54,9 @@ public class MenuServiceImpl {
     @Transactional
     @Caching(evict = {
             @CacheEvict(value = "menus", key = "#request.storeId"),
-            @CacheEvict(value = "menus-categories", allEntries = true)
+            @CacheEvict(value = "menus-categories", key = "#request.storeId"),
+            @CacheEvict(value = "categories", key = "#request.storeId"),
+            @CacheEvict(value = "category-entities", key = "#request.storeId")
     })
     public MenuResponse createMenu(User user, CreateMenuRequest request) {
         Category category = categoryRepository.findById(request.getCategoryId())
@@ -54,7 +71,7 @@ public class MenuServiceImpl {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "menus", key = "#id"),
+            @CacheEvict(value = "menus", key = "#request.storeId"),
             @CacheEvict(value = "menus-categories", allEntries = true)
     })
     public MenuResponse updateMenu(User user, UUID id, UpdateMenuRequest request) {
@@ -65,9 +82,11 @@ public class MenuServiceImpl {
                     .orElseThrow(() -> new ResourceNotFoundException("Category", request.getCategoryId().toString()));
             menu.setCategory(category);
         }
+        List<String> existingImages = menu.getImages().stream().map(MenuImage::getName).toList();
+        fileStorageServiceImpl.deleteAllInExclude(existingImages, request.getImages());
         updateMenuFields(menu, user, request);
         Menu savedMenu = menuRepository.save(menu);
-        saveMenuImages(savedMenu, request.getImages());
+        updateMenuImages(savedMenu, request.getImages());
         return MenuResponse.fromEntity(savedMenu);
     }
 
@@ -76,6 +95,20 @@ public class MenuServiceImpl {
                 .map(CreateMenuImageRequest::fromRequest)
                 .peek(image -> image.setMenu(menu))
                 .toList();
+        menuImageRepository.saveAll(images);
+        menu.setImages(images);
+    }
+
+    private void updateMenuImages(Menu menu, List<String> imageRequests) {
+        if (imageRequests.isEmpty()) {
+            menuImageRepository.deleteAllByMenu(menu);
+            return;
+        }
+        List<MenuImage> images = imageRequests.stream()
+                .map(CreateMenuImageRequest::fromRequest)
+                .peek(image -> image.setMenu(menu))
+                .toList();
+        menuImageRepository.deleteAllByMenu(menu);
         menuImageRepository.saveAll(images);
         menu.setImages(images);
     }
@@ -217,7 +250,6 @@ public class MenuServiceImpl {
                     menu.setCurrency(record.get("currency"));
                     menu.setImage(record.get("image"));
                     menu.setHidden(Boolean.parseBoolean(record.get("isHidden")));
-                    menu.setAvailable(Boolean.parseBoolean(record.get("isAvailable")));
                     String badgesStr = record.get("badges");
                     if (badgesStr != null && !badgesStr.trim().isEmpty()) {
                         menu.setBadges(Arrays.stream(badgesStr.split(",")).map(String::trim).toList());
@@ -260,5 +292,21 @@ public class MenuServiceImpl {
             }
         }
         menuRepository.saveAll(menus);
+    }
+
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "menus", key = "#request.storeId"),
+            @CacheEvict(value = "menus-categories", key = "#request.storeId"),
+            @CacheEvict(value = "categories", key = "#request.storeId"),
+    })
+    public MenuResponse updateMenuCategory(User user, UUID id, UpdateMenuCategoryRequest request) {
+        Menu menu = menuRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Menu", id.toString()));
+        Category category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Category", request.getCategoryId().toString()));
+        menu.setCategory(category);
+        menuRepository.save(menu);
+        return MenuResponse.fromEntity(menu);
     }
 }

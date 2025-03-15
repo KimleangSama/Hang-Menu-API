@@ -1,8 +1,11 @@
 package io.sovann.hang.api.features.stores.payloads.response;
 
-import io.sovann.hang.api.features.stores.entities.*;
-import java.util.*;
-import lombok.*;
+import io.sovann.hang.api.features.stores.entities.Store;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+import java.util.List;
 
 @Getter
 @Setter

@@ -1,8 +1,11 @@
 package io.sovann.hang.api.features.translations.payloads.requests;
 
-import io.sovann.hang.api.features.translations.entities.*;
-import java.util.*;
-import lombok.*;
+import io.sovann.hang.api.features.translations.entities.Translation;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+import java.util.UUID;
 
 @Getter
 @Setter
