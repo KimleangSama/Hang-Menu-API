@@ -71,8 +71,9 @@ public class MenuServiceImpl {
 
     @Transactional
     @Caching(evict = {
+            @CacheEvict(value = "menus", key = "#id"),
             @CacheEvict(value = "menus", key = "#request.storeId"),
-            @CacheEvict(value = "menus-categories", allEntries = true)
+            @CacheEvict(value = "menus-categories", key = "#request.storeId"),
     })
     public MenuResponse updateMenu(User user, UUID id, UpdateMenuRequest request) {
         Menu menu = menuRepository.findById(id)

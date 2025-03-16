@@ -8,4 +8,5 @@ import java.util.UUID;
 
 @Repository
 public interface FeeRangeRepository extends JpaRepository<FeeRange, UUID> {
+    void deleteAllByOrderingOptionStoreId(UUID id);
 }

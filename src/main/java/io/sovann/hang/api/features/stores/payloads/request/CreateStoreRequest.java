@@ -28,6 +28,9 @@ public class CreateStoreRequest {
     private String cover;
     private String banner;
     private String layout;
+    private Double lat;
+    private Double lng;
+    private Boolean showGoogleMap = true;
 
     private List<CreateOperatingHourRequest> operatingHours;
     private List<CreateOrderingOptionRequest> orderOptions;

@@ -25,6 +25,9 @@ public class UpdateStoreRequest {
     private String cover;
     private String banner;
     private String layout;
+    private Double lat;
+    private Double lng;
+    private Boolean showGoogleMap;
 
     private List<UpdateOperatingHourRequest> operatingHours;
     private List<UpdateOrderingOptionRequest> orderOptions;

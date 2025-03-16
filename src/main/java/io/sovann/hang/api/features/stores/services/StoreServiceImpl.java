@@ -6,6 +6,7 @@ import io.sovann.hang.api.features.stores.payloads.request.AssignGroupRequest;
 import io.sovann.hang.api.features.stores.payloads.request.CreateFeeRangeRequest;
 import io.sovann.hang.api.features.stores.payloads.request.CreateOrderingOptionRequest;
 import io.sovann.hang.api.features.stores.payloads.request.CreateStoreRequest;
+import io.sovann.hang.api.features.stores.payloads.request.updates.UpdateOrderingOptionRequest;
 import io.sovann.hang.api.features.stores.payloads.request.updates.UpdateStoreRequest;
 import io.sovann.hang.api.features.stores.payloads.response.StoreResponse;
 import io.sovann.hang.api.features.stores.repos.*;
@@ -22,7 +23,6 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,9 +31,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -197,50 +194,59 @@ public class StoreServiceImpl {
         Store store = storeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Store", id.toString()));
         updateStoreDetails(store, request, user);
-        updateEntities(
-                request.getOperatingHours(),
-                operatingHourRepository,
-                OperatingHour::getId,
-                (hour, req) -> {
-                    hour.setDay(req.getDay());
-                    hour.setOpenTime(req.getOpenTime());
-                    hour.setCloseTime(req.getCloseTime());
-                    hour.setStore(store);
-                },
-                OperatingHour::new
-        );
 
-        updateEntities(
-                request.getOrderOptions(),
-                orderingOptionRepository,
-                OrderingOption::getId,
-                (option, req) -> {
-                    option.setName(req.getName());
-                    option.setDescription(req.getDescription());
-                    option.setStore(store);
-                    updateEntities(req.getFeeRanges(), feeRangeRepository, FeeRange::getId,
-                            (range, rangeReq) -> {
-                                orderingOptionRepository.save(option);
-                                range.setCondition(rangeReq.getCondition());
-                                range.setFee(rangeReq.getFee());
-                                range.setOrderingOption(option);
-                            },
-                            FeeRange::new);
-                },
-                OrderingOption::new
-        );
+        operatingHourRepository.deleteAllByStoreId(id);
+        List<OperatingHour> operatingHours = request.getOperatingHours()
+                .stream().map(hour -> {
+                    OperatingHour operatingHour = new OperatingHour();
+                    operatingHour.setStore(store);
+                    operatingHour.setDay(hour.getDay());
+                    operatingHour.setOpenTime(hour.getOpenTime());
+                    operatingHour.setCloseTime(hour.getCloseTime());
+                    return operatingHour;
+                }).toList();
+        operatingHourRepository.saveAll(operatingHours);
 
-        updateEntities(
-                request.getPaymentMethods(),
-                paymentMethodRepository,
-                PaymentMethod::getId,
-                (method, req) -> {
-                    method.setStore(store);
-                    method.setMethod(req.getMethod());
-                },
-                PaymentMethod::new
-        );
+        feeRangeRepository.deleteAllByOrderingOptionStoreId(id);
+        orderingOptionRepository.deleteAllByStoreId(id);
+        List<OrderingOption> orderingOptions = request.getOrderOptions()
+                .stream().map(option -> {
+                    OrderingOption orderingOption = new OrderingOption();
+                    orderingOption.setStore(store);
+                    orderingOption.setName(option.getName());
+                    orderingOption.setDescription(option.getDescription());
+                    return orderingOption;
+                }).toList();
+        orderingOptionRepository.saveAll(orderingOptions);
 
+        // Handle fee ranges for ordering options
+        Map<String, OrderingOption> savedOptionsMap = orderingOptions.stream()
+                .collect(Collectors.toMap(OrderingOption::getName, option -> option));
+        List<FeeRange> allFeeRanges = new ArrayList<>();
+        for (int i = 0; i < request.getOrderOptions().size(); i++) {
+            UpdateOrderingOptionRequest optionReq = request.getOrderOptions().get(i);
+            OrderingOption savedOption = savedOptionsMap.get(optionReq.getName());
+            List<FeeRange> feeRanges = optionReq.getFeeRanges()
+                    .stream().map(rangeReq -> {
+                        FeeRange feeRange = new FeeRange();
+                        feeRange.setOrderingOption(savedOption);
+                        feeRange.setCondition(rangeReq.getCondition());
+                        feeRange.setFee(rangeReq.getFee());
+                        return feeRange;
+                    }).toList();
+            allFeeRanges.addAll(feeRanges);
+        }
+        feeRangeRepository.saveAll(allFeeRanges);
+
+        paymentMethodRepository.deleteAllByStoreId(id);
+        List<PaymentMethod> paymentMethods = request.getPaymentMethods()
+                .stream().map(method -> {
+                    PaymentMethod paymentMethod = new PaymentMethod();
+                    paymentMethod.setStore(store);
+                    paymentMethod.setMethod(method.getMethod());
+                    return paymentMethod;
+                }).toList();
+        paymentMethodRepository.saveAll(paymentMethods);
         return StoreResponse.fromEntity(store);
     }
 
@@ -261,41 +267,10 @@ public class StoreServiceImpl {
         store.setBanner(request.getBanner());
         store.setUpdatedAt(LocalDateTime.now());
         store.setUpdatedBy(user.getId());
+        store.setLat(request.getLat());
+        store.setLng(request.getLng());
+        store.setShowGoogleMap(request.getShowGoogleMap());
         storeRepository.save(store);
-    }
-
-    private <T, R> void updateEntities(
-            List<R> requestList,
-            JpaRepository<T, UUID> repository,
-            Function<T, UUID> idGetter,
-            BiConsumer<T, R> updater,
-            Supplier<T> entitySupplier) {
-        if (!(repository instanceof FeeRangeRepository)) {
-            repository.deleteAll();
-        }
-        if (requestList == null || requestList.isEmpty()) return;
-        Map<UUID, R> requestMap = requestList.stream()
-                .collect(Collectors.toMap(this::extractId, Function.identity()));
-        List<T> existingEntities = repository.findAllById(requestMap.keySet());
-        Map<UUID, T> existingEntitiesMap = existingEntities.stream()
-                .collect(Collectors.toMap(idGetter, Function.identity()));
-        List<T> allEntities = new ArrayList<>();
-        for (R request : requestList) {
-            UUID id = extractId(request);
-            T entity = existingEntitiesMap.getOrDefault(id, entitySupplier.get()); // Use existing or create new
-
-            updater.accept(entity, request);
-            allEntities.add(entity);
-        }
-        repository.saveAll(allEntities);
-    }
-
-    private <R> UUID extractId(R request) {
-        try {
-            return (UUID) request.getClass().getMethod("getId").invoke(request);
-        } catch (Exception e) {
-            throw new IllegalStateException("Unable to extract ID from request object", e);
-        }
     }
 
     @Transactional

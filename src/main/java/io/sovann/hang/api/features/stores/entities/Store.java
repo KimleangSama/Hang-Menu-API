@@ -43,6 +43,9 @@ public class Store extends BaseEntityAudit {
     private String promotion;
     private String banner;
     private String layout;
+    private Double lat;
+    private Double lng;
+    private Boolean showGoogleMap = true;
 
     @OneToMany(mappedBy = "store", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OperatingHour> operatingHours;

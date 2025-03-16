@@ -10,7 +10,6 @@ import io.sovann.hang.api.features.stores.payloads.request.CreateStoreRequest;
 import io.sovann.hang.api.features.stores.payloads.request.updates.UpdateStoreRequest;
 import io.sovann.hang.api.features.stores.payloads.response.StoreResponse;
 import io.sovann.hang.api.features.stores.services.StoreServiceImpl;
-import io.sovann.hang.api.features.users.entities.User;
 import io.sovann.hang.api.features.users.securities.CustomUserDetails;
 import io.sovann.hang.api.utils.SoftEntityDeletable;
 import lombok.RequiredArgsConstructor;
@@ -45,10 +44,9 @@ public class StoreController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size
     ) {
-        User currentUser = user.getUser();
-        SoftEntityDeletable.throwErrorIfSoftDeleted(currentUser);
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user);
         PageInfo meta = new PageInfo(page, size, storeService.count());
-        return callback.execute(() -> storeService.listStores(currentUser, page, size),
+        return callback.execute(() -> storeService.listStores(user.getUser(), page, size),
                 "Store failed to list",
                 meta);
     }
@@ -79,7 +77,7 @@ public class StoreController {
             @CurrentUser CustomUserDetails user,
             @RequestBody AssignGroupRequest request
     ) {
-        SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user);
         return callback.execute(() -> storeService.assignGroup(user.getUser(), request),
                 "Store failed to assign group",
                 null);

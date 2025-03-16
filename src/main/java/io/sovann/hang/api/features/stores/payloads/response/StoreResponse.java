@@ -31,6 +31,9 @@ public class StoreResponse implements Serializable {
     private String promotion;
     private String banner;
     private String layout;
+    private Double lat;
+    private Double lng;
+    private Boolean showGoogleMap;
 
     private UUID createdBy;
     private boolean hasPrivilege = false;
