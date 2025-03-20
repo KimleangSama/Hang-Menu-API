@@ -1,11 +1,13 @@
 package io.sovann.hang.api.features.menus.services;
 
+import io.sovann.hang.api.constants.CacheValue;
 import io.sovann.hang.api.exceptions.ResourceForbiddenException;
 import io.sovann.hang.api.exceptions.ResourceNotFoundException;
 import io.sovann.hang.api.features.menus.entities.Category;
 import io.sovann.hang.api.features.menus.payloads.requests.CategoryReorderRequest;
 import io.sovann.hang.api.features.menus.payloads.requests.CategoryToggleRequest;
 import io.sovann.hang.api.features.menus.payloads.requests.CreateCategoryRequest;
+import io.sovann.hang.api.features.menus.payloads.requests.UpdateCategoryRequest;
 import io.sovann.hang.api.features.menus.payloads.responses.CategoryResponse;
 import io.sovann.hang.api.features.menus.repos.CategoryRepository;
 import io.sovann.hang.api.features.stores.entities.Store;
@@ -13,6 +15,7 @@ import io.sovann.hang.api.features.stores.services.StoreServiceImpl;
 import io.sovann.hang.api.features.users.entities.Role;
 import io.sovann.hang.api.features.users.entities.User;
 import io.sovann.hang.api.features.users.enums.AuthRole;
+import io.sovann.hang.api.utils.ResourceOwner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -39,10 +42,10 @@ public class CategoryServiceImpl {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "categories", key = "#request.storeId"),
-            @CacheEvict(value = "category-entities", key = "#request.storeId")
+            @CacheEvict(value = CacheValue.CATEGORIES, key = "#request.storeId"),
+            @CacheEvict(value = CacheValue.CATEGORY_ENTITIES, key = "#request.storeId")
     })
-    public CategoryResponse createCategory(User user, CreateCategoryRequest request) {
+    public CategoryResponse create(User user, CreateCategoryRequest request) {
         Store store = storeServiceImpl.getStoreEntityById(user, request.getStoreId());
         Category category = CreateCategoryRequest.fromRequest(request);
         category.setCreatedBy(user.getId());
@@ -52,9 +55,14 @@ public class CategoryServiceImpl {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "categories", key = "#storeId")
-    public List<CategoryResponse> listCategories(User user, UUID storeId) {
-        return categoryRepository.findAllWithMenuCountByStoreId(storeId);
+    @Cacheable(value = CacheValue.CATEGORIES, key = "#storeId")
+    public List<CategoryResponse> list(User user, UUID storeId) {
+        Store store = storeServiceImpl.getStoreEntityById(user, storeId);
+        if (ResourceOwner.hasPermission(user, store)) {
+            return categoryRepository.findAllWithMenuCountByStoreId(storeId);
+        } else {
+            throw new ResourceForbiddenException(user.getUsername(), Store.class);
+        }
     }
 
     private CategoryResponse toggleCategory(User user, CategoryToggleRequest request, boolean toggleVisibility) {
@@ -142,5 +150,24 @@ public class CategoryServiceImpl {
         categories.forEach(category -> category.setPosition(updatedPositions.get(category.getId())));
         categoryRepository.saveAll(categories);
         return CategoryResponse.fromEntities(categories);
+    }
+
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "categories", key = "#request.storeId"),
+            @CacheEvict(value = "category-entities", key = "#request.storeId")
+    })
+    public CategoryResponse updateCategory(User user, UpdateCategoryRequest request) {
+        Category category = categoryRepository.findById(request.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Category", request.getId().toString()));
+        if (ResourceOwner.hasPermission(user, category)) {
+            category.setName(request.getName());
+            category.setDescription(request.getDescription());
+            category.setUpdatedBy(user.getId());
+            categoryRepository.save(category);
+            return CategoryResponse.fromEntity(category);
+        } else {
+            throw new ResourceForbiddenException(user.getUsername(), Category.class);
+        }
     }
 }

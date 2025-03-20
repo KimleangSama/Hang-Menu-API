@@ -1,6 +1,6 @@
 package io.sovann.hang.api.features.orders.entities;
 
-import io.sovann.hang.api.features.users.entities.BaseEntityAudit;
+import io.sovann.hang.api.commons.entities.BaseEntityAudit;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;

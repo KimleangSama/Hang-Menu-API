@@ -1,4 +1,4 @@
-package io.sovann.hang.api.features.users.entities;
+package io.sovann.hang.api.commons.entities;
 
 import com.redis.om.spring.annotations.Indexed;
 import jakarta.persistence.Column;

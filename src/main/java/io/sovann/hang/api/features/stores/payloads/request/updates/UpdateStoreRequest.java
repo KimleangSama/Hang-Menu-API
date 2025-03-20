@@ -11,6 +11,7 @@ import java.util.List;
 @ToString
 public class UpdateStoreRequest {
     private String name;
+    private String slug;
     private String logo;
     private String color;
     private String description;

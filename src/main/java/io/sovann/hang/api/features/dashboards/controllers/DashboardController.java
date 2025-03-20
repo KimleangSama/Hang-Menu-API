@@ -1,7 +1,7 @@
 package io.sovann.hang.api.features.dashboards.controllers;
 
 import io.sovann.hang.api.constants.APIURLs;
-import io.sovann.hang.api.features.commons.payloads.BaseResponse;
+import io.sovann.hang.api.commons.payloads.BaseResponse;
 import io.sovann.hang.api.features.dashboards.payloads.OverviewResponse;
 import io.sovann.hang.api.features.menus.entities.Category;
 import io.sovann.hang.api.features.menus.repos.CategoryRepository;

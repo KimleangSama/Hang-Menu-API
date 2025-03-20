@@ -1,5 +1,6 @@
 package io.sovann.hang.api.features.users.entities;
 
+import io.sovann.hang.api.commons.entities.BaseEntityAudit;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

@@ -1,4 +1,4 @@
-package io.sovann.hang.api.features.users.entities;
+package io.sovann.hang.api.commons.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;

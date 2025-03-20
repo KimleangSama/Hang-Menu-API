@@ -2,11 +2,12 @@ package io.sovann.hang.api.features.menus.controllers;
 
 import io.sovann.hang.api.annotations.CurrentUser;
 import io.sovann.hang.api.constants.APIURLs;
-import io.sovann.hang.api.features.commons.controllers.ControllerServiceCallback;
-import io.sovann.hang.api.features.commons.payloads.BaseResponse;
+import io.sovann.hang.api.commons.controllers.ControllerServiceCallback;
+import io.sovann.hang.api.commons.payloads.BaseResponse;
 import io.sovann.hang.api.features.menus.payloads.requests.CategoryReorderRequest;
 import io.sovann.hang.api.features.menus.payloads.requests.CategoryToggleRequest;
 import io.sovann.hang.api.features.menus.payloads.requests.CreateCategoryRequest;
+import io.sovann.hang.api.features.menus.payloads.requests.UpdateCategoryRequest;
 import io.sovann.hang.api.features.menus.payloads.responses.CategoryResponse;
 import io.sovann.hang.api.features.menus.services.CategoryServiceImpl;
 import io.sovann.hang.api.features.users.entities.User;
@@ -32,8 +33,8 @@ public class CategoryController {
             @CurrentUser CustomUserDetails user,
             @RequestBody CreateCategoryRequest request
     ) {
-        SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
-        return callback.execute(() -> categoryService.createCategory(user.getUser(), request),
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user);
+        return callback.execute(() -> categoryService.create(user.getUser(), request),
                 "Category failed to create",
                 null);
     }
@@ -44,8 +45,20 @@ public class CategoryController {
             @PathVariable UUID storeId
     ) {
         User authUser = user == null ? null : user.getUser();
-        return callback.execute(() -> categoryService.listCategories(authUser, storeId),
+        return callback.execute(() -> categoryService.list(authUser, storeId),
                 "Category failed to list",
+                null);
+    }
+
+    @PutMapping("/{id}/update")
+    @PreAuthorize("hasAnyRole('admin', 'manager')")
+    public BaseResponse<CategoryResponse> updateCategory(
+            @CurrentUser CustomUserDetails user,
+            @RequestBody UpdateCategoryRequest request
+    ) {
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user);
+        return callback.execute(() -> categoryService.updateCategory(user.getUser(), request),
+                "Category failed to hide",
                 null);
     }
 
@@ -79,7 +92,7 @@ public class CategoryController {
             @CurrentUser CustomUserDetails user,
             @RequestBody CategoryToggleRequest request
     ) {
-        SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user);
         return callback.execute(() -> categoryService.deleteCategory(user.getUser(), request),
                 "Category failed to delete",
                 null);

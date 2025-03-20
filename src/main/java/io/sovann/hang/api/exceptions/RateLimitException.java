@@ -1,7 +1,7 @@
 package io.sovann.hang.api.exceptions;
 
 
-import io.sovann.hang.api.features.commons.payloads.BaseResponse;
+import io.sovann.hang.api.commons.payloads.BaseResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 

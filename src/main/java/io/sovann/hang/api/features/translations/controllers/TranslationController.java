@@ -2,8 +2,8 @@ package io.sovann.hang.api.features.translations.controllers;
 
 import io.sovann.hang.api.annotations.CurrentUser;
 import io.sovann.hang.api.constants.APIURLs;
-import io.sovann.hang.api.features.commons.controllers.ControllerServiceCallback;
-import io.sovann.hang.api.features.commons.payloads.BaseResponse;
+import io.sovann.hang.api.commons.controllers.ControllerServiceCallback;
+import io.sovann.hang.api.commons.payloads.BaseResponse;
 import io.sovann.hang.api.features.menus.payloads.responses.MenuResponse;
 import io.sovann.hang.api.features.translations.payloads.requests.CreateTranslationRequest;
 import io.sovann.hang.api.features.translations.services.TranslationServiceImpl;

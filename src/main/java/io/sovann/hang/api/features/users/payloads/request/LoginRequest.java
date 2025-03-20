@@ -7,7 +7,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class LoginBackOfficeRequest {
+public class LoginRequest {
     private String username;
     private String password;
 }

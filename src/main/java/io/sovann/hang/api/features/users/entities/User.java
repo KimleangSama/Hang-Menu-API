@@ -1,7 +1,8 @@
 package io.sovann.hang.api.features.users.entities;
 
 import com.redis.om.spring.annotations.Indexed;
-import io.sovann.hang.api.features.commons.entities.EntityDeletable;
+import io.sovann.hang.api.commons.entities.BaseEntityAudit;
+import io.sovann.hang.api.commons.entities.EntityDeletable;
 import io.sovann.hang.api.features.users.enums.AuthProvider;
 import io.sovann.hang.api.features.users.enums.AuthStatus;
 import jakarta.persistence.*;

@@ -31,7 +31,7 @@ public class OrderEventListener {
     @Transactional
     @RabbitListener(queues = "order.queue")
     public void handleOrderCreation(CreateOrderRequest request) {
-        Store store = storeServiceImpl.getStoreEntityById(null, request.getStoreId());
+        Store store = storeServiceImpl.getStoreEntityById(request.getStoreId());
 
         // Initialize totals
         double totalAmountInRiel = 0;

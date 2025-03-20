@@ -2,9 +2,8 @@ package io.sovann.hang.api.features.users.controllers;
 
 import io.sovann.hang.api.annotations.CurrentUser;
 import io.sovann.hang.api.constants.APIURLs;
-import io.sovann.hang.api.features.commons.controllers.ControllerServiceCallback;
-import io.sovann.hang.api.features.commons.payloads.BaseResponse;
-import io.sovann.hang.api.features.commons.payloads.PageInfo;
+import io.sovann.hang.api.commons.controllers.ControllerServiceCallback;
+import io.sovann.hang.api.commons.payloads.BaseResponse;
 import io.sovann.hang.api.features.users.payloads.request.AddOrRemoveGroupMemberRequest;
 import io.sovann.hang.api.features.users.payloads.request.CreateGroupRequest;
 import io.sovann.hang.api.features.users.payloads.request.PromoteDemoteRequest;
@@ -45,15 +44,12 @@ public class GroupController {
     @PreAuthorize("hasAnyRole('admin', 'manager')")
     public BaseResponse<List<UserResponse>> getUsers(
             @CurrentUser CustomUserDetails user,
-            @PathVariable UUID id,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10000") int size
+            @PathVariable UUID id
     ) {
-        SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
-        PageInfo pageInfo = new PageInfo(page, size, groupService.countUsers(id));
-        return callback.execute(() -> groupService.getUsers(user.getUser(), id, page, size),
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user);
+        return callback.execute(() -> groupService.getUsers(user.getUser(), id),
                 "Groups failed to fetch",
-                pageInfo);
+                null);
     }
 
     @DeleteMapping("/remove")

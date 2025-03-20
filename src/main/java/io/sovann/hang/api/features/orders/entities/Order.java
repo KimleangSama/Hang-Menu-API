@@ -2,7 +2,7 @@ package io.sovann.hang.api.features.orders.entities;
 
 import io.sovann.hang.api.features.orders.enums.OrderStatus;
 import io.sovann.hang.api.features.stores.entities.Store;
-import io.sovann.hang.api.features.users.entities.BaseEntityAudit;
+import io.sovann.hang.api.commons.entities.BaseEntityAudit;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

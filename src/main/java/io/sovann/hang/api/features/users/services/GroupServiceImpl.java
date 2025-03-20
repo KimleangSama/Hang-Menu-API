@@ -20,10 +20,6 @@ import io.sovann.hang.api.features.users.repos.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,33 +40,30 @@ public class GroupServiceImpl {
     private final RoleServiceImpl roleServiceImpl;
     private final PasswordEncoder passwordEncoder;
 
+    @Transactional
     public GroupResponse createGroup(User user, CreateGroupRequest request) {
         Group group = CreateGroupRequest.fromRequest(request);
         group.setCreatedBy(user.getId());
         return GroupResponse.fromEntity(groupRepository.save(group));
     }
 
+    @Transactional
     public long count() {
         return groupRepository.count();
     }
 
-    @Cacheable(value = "members", key = "#id")
-    public long countUsers(UUID id) {
-        return groupMemberRepository.countByGroupId(id);
-    }
-
     @Transactional
-    public List<UserResponse> getUsers(User user, UUID groupId, int page, int size) {
+    public List<UserResponse> getUsers(User user, UUID groupId) {
         Group group = getGroupById(groupId);
         if (!isManagerOrCreator(user, group)) {
             throw new ResourceForbiddenException(user.getUsername(), Group.class);
         }
-        Pageable pageable = PageRequest.of(page, size);
-        Page<GroupMember> groupMembers = groupMemberRepository.findByGroupId(group.getId(), pageable);
-        return groupMembers.map(member -> UserResponse.fromEntity(member.getUser())).toList();
+        List<GroupMember> groupMembers = groupMemberRepository.findByGroupId(group.getId());
+        return groupMembers.stream()
+                .map(groupMember -> UserResponse.fromEntity(groupMember.getUser()))
+                .collect(Collectors.toList());
     }
 
-    @CacheEvict(value = "groups", key = "#request.username")
     public GroupResponse promoteOrDemoteUser(User user, PromoteDemoteRequest request) {
         Group group = getGroupById(request.getGroupId());
         User userToPromote = getUserById(request.getUserId());
@@ -145,7 +138,6 @@ public class GroupServiceImpl {
     }
 
     @Transactional
-    @Cacheable(value = "groups", key = "#user.username")
     public Group getGroupOfUser(User user) {
         return groupMemberRepository.findByUserId(user.getId())
                 .map(GroupMember::getGroup)

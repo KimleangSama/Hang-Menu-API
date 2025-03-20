@@ -2,8 +2,8 @@ package io.sovann.hang.api.features.users.controllers;
 
 import io.sovann.hang.api.annotations.CurrentUser;
 import io.sovann.hang.api.constants.APIURLs;
-import io.sovann.hang.api.features.commons.controllers.ControllerServiceCallback;
-import io.sovann.hang.api.features.commons.payloads.BaseResponse;
+import io.sovann.hang.api.commons.controllers.ControllerServiceCallback;
+import io.sovann.hang.api.commons.payloads.BaseResponse;
 import io.sovann.hang.api.features.users.payloads.response.RoleResponse;
 import io.sovann.hang.api.features.users.securities.CustomUserDetails;
 import io.sovann.hang.api.features.users.services.RoleServiceImpl;

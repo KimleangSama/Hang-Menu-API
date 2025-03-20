@@ -1,11 +1,11 @@
-package io.sovann.hang.api.features.commons.controllers;
+package io.sovann.hang.api.commons.controllers;
 
 import io.sovann.hang.api.exceptions.ResourceDeletedException;
 import io.sovann.hang.api.exceptions.ResourceException;
 import io.sovann.hang.api.exceptions.ResourceForbiddenException;
 import io.sovann.hang.api.exceptions.ResourceNotFoundException;
-import io.sovann.hang.api.features.commons.payloads.BaseResponse;
-import io.sovann.hang.api.features.commons.payloads.PageInfo;
+import io.sovann.hang.api.commons.payloads.BaseResponse;
+import io.sovann.hang.api.commons.payloads.PageInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;

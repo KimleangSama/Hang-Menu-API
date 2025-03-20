@@ -8,9 +8,8 @@ import io.sovann.hang.api.features.users.entities.Role;
 import io.sovann.hang.api.features.users.entities.User;
 import io.sovann.hang.api.features.users.enums.AuthProvider;
 import io.sovann.hang.api.features.users.enums.AuthRole;
-import io.sovann.hang.api.features.users.payloads.request.LoginBackOfficeRequest;
-import io.sovann.hang.api.features.users.payloads.request.LoginFrontOfficeRequest;
-import io.sovann.hang.api.features.users.payloads.request.RegisterBackOfficeRequest;
+import io.sovann.hang.api.features.users.payloads.request.LoginRequest;
+import io.sovann.hang.api.features.users.payloads.request.RegisterRequest;
 import io.sovann.hang.api.features.users.payloads.response.AuthResponse;
 import io.sovann.hang.api.features.users.repos.GroupMemberRepository;
 import io.sovann.hang.api.features.users.repos.GroupRepository;
@@ -49,33 +48,48 @@ public class AuthServiceImpl {
     private final GroupRepository groupRepository;
 
     @Transactional
-    public User registerUser(RegisterBackOfficeRequest request) {
-        return registerUser(request.getUsername(), RandomString.make(12) + "@email.com", request.getPassword(), request.getRoles());
+    public User register(RegisterRequest request) {
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getUsername());
+        user.setFullname(request.getFullname());
+        user.setRaw(request.getPassword());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        setRoles(user, request.getRoles());
+        user.setProvider(AuthProvider.local);
+        User savedUser = userRepository.save(user);
+        if (!request.isGroupMember()) {
+            Group group = new Group();
+            group.setName(request.getUsername() + "_" + RandomString.make(6));
+            group.setDescription("Group for user " + request.getUsername());
+            group.setCreatedBy(savedUser.getId());
+            groupRepository.save(group);
+            GroupMember groupMember = new GroupMember();
+            groupMember.setGroup(group);
+            groupMember.setUser(user);
+            groupMemberRepository.save(groupMember);
+        }
+        return savedUser;
     }
 
-    private User registerUser(String username, String email, String password, List<AuthRole> roles) {
-        User user = new User();
-        user.setUsername(username);
-        user.setEmail(email);
-        user.setRaw(password);
-        user.setPassword(passwordEncoder.encode(password));
-        setRoles(user, roles);
-        user.setProvider(AuthProvider.local);
-
-        User savedUser = userRepository.save(user);
-
-        Group group = new Group();
-        group.setName(username + "_" + RandomString.make(6));
-        group.setDescription("Group for user " + username);
-        group.setCreatedBy(savedUser.getId());
-        groupRepository.save(group);
-
-        GroupMember groupMember = new GroupMember();
-        groupMember.setGroup(group);
-        groupMember.setUser(user);
-        groupMemberRepository.save(groupMember);
-
-        return savedUser;
+    @Transactional
+    public AuthResponse login(LoginRequest request) {
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User with username " + request.getUsername() + " not found."));
+        Authentication authentication = authenticate(request.getUsername(), request.getPassword());
+        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        user.setLastLoginAt(LocalDateTime.now());
+        user.setUpdatedBy(user.getId());
+        userRepository.save(user);
+        String accessToken = tokenProvider.generateAccessToken(customUserDetails);
+        String refreshToken = tokenProvider.generateRefreshToken(customUserDetails);
+        return new AuthResponse(
+                accessToken,
+                refreshToken,
+                user.getUsername(),
+                tokenProvider.getExpirationDateFromToken(accessToken)
+        );
     }
 
     private void setRoles(User user, List<AuthRole> roles) {
@@ -92,24 +106,6 @@ public class AuthServiceImpl {
         }
     }
 
-    @Transactional
-    public AuthResponse loginUser(String username, String password) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User with username " + username + " not found."));
-        Authentication authentication = authenticate(username, password);
-        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        updateUserLoginDetails(user);
-        String accessToken = tokenProvider.generateAccessToken(customUserDetails);
-        String refreshToken = tokenProvider.generateRefreshToken(customUserDetails);
-        return new AuthResponse(
-                accessToken,
-                refreshToken,
-                user.getUsername(),
-                tokenProvider.getExpirationDateFromToken(accessToken)
-        );
-    }
-
     private Authentication authenticate(String username, String password) {
         try {
             return authenticationManager.authenticate(
@@ -118,22 +114,6 @@ public class AuthServiceImpl {
         } catch (BadCredentialsException e) {
             throw new BadCredentialsException("Username or password are incorrect.");
         }
-    }
-
-    private void updateUserLoginDetails(User user) {
-        user.setLastLoginAt(LocalDateTime.now());
-        user.setUpdatedBy(user.getId());
-        userRepository.save(user);
-    }
-
-    @Transactional
-    public AuthResponse loginBackOfficeUser(LoginBackOfficeRequest request) {
-        return loginUser(request.getUsername(), request.getPassword());
-    }
-
-    @Transactional
-    public AuthResponse loginFrontOfficeUser(LoginFrontOfficeRequest request) {
-        return loginUser(request.getEmail(), request.getPassword());
     }
 
     public AuthResponse refreshToken(HttpServletRequest request) {

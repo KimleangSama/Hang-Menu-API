@@ -2,7 +2,7 @@ package io.sovann.hang.api.features.feedbacks.entities;
 
 import io.sovann.hang.api.features.feedbacks.enums.Rating;
 import io.sovann.hang.api.features.stores.entities.Store;
-import io.sovann.hang.api.features.users.entities.BaseEntityAudit;
+import io.sovann.hang.api.commons.entities.BaseEntityAudit;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

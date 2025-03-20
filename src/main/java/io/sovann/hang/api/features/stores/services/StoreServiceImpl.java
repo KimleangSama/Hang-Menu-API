@@ -1,5 +1,7 @@
 package io.sovann.hang.api.features.stores.services;
 
+import io.sovann.hang.api.constants.CacheValue;
+import io.sovann.hang.api.exceptions.ResourceForbiddenException;
 import io.sovann.hang.api.exceptions.ResourceNotFoundException;
 import io.sovann.hang.api.features.stores.entities.*;
 import io.sovann.hang.api.features.stores.payloads.request.AssignGroupRequest;
@@ -14,6 +16,8 @@ import io.sovann.hang.api.features.users.entities.Group;
 import io.sovann.hang.api.features.users.entities.User;
 import io.sovann.hang.api.features.users.enums.AuthRole;
 import io.sovann.hang.api.features.users.repos.GroupRepository;
+import io.sovann.hang.api.features.users.services.GroupServiceImpl;
+import io.sovann.hang.api.utils.ResourceOwner;
 import io.sovann.hang.api.utils.Slugify;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,16 +25,11 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -43,18 +42,18 @@ public class StoreServiceImpl {
     private final PaymentMethodRepository paymentMethodRepository;
     private final FeeRangeRepository feeRangeRepository;
     private final GroupRepository groupRepository;
-
-    public long count() {
-        return storeRepository.count();
-    }
+    private final GroupServiceImpl groupServiceImpl;
 
     @Caching(evict = {
-            @CacheEvict(value = "store", key = "#user.id"),
-            @CacheEvict(value = "stores", key = "#user.id")
+            @CacheEvict(value = CacheValue.STORE, key = "#user.id"),
+            @CacheEvict(value = CacheValue.STORES, key = "#user.id"),
     })
     public StoreResponse createStore(User user, CreateStoreRequest request) {
         try {
-            Store savedStore = createAndSaveStore(user, request);
+            Store store = CreateStoreRequest.fromRequest(request);
+            store.setSlug(Slugify.slugify(request.getName()));
+            store.setCreatedBy(user.getId());
+            Store savedStore = storeRepository.save(store);
             processOrderingOptions(savedStore, request);
             processOperatingHours(savedStore);
             processPaymentMethods(savedStore);
@@ -65,13 +64,6 @@ public class StoreServiceImpl {
             log.error("Error while creating store", e);
             throw new RuntimeException("Error while creating store", e);
         }
-    }
-
-    private Store createAndSaveStore(User user, CreateStoreRequest request) {
-        Store store = CreateStoreRequest.fromRequest(request);
-        store.setSlug(Slugify.slugify(request.getName()));
-        store.setCreatedBy(user.getId());
-        return storeRepository.save(store);
     }
 
     private void processOrderingOptions(Store store, CreateStoreRequest request) {
@@ -113,15 +105,14 @@ public class StoreServiceImpl {
     }
 
     @Transactional
-    @Cacheable(value = "stores", key = "#user.id")
-    public List<StoreResponse> listStores(User user, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+    @Cacheable(value = CacheValue.STORE, key = "#user.id")
+    public List<StoreResponse> list(User user) {
         boolean isAdmin = user.getRoles().stream()
                 .anyMatch(role -> role.getName().equals(AuthRole.admin));
-        return storeRepository.findAll(pageable).stream()
+        return storeRepository.findAll().stream()
                 .map(store -> {
                     StoreResponse response = StoreResponse.fromEntity(store);
-                    if (isAdmin || user.getId().equals(response.getCreatedBy())) {
+                    if (isAdmin || ResourceOwner.hasPermission(user, store)) {
                         response.setHasPrivilege(true);
                     }
                     return response;
@@ -131,17 +122,23 @@ public class StoreServiceImpl {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "store", key = "#user.id"),
-            @CacheEvict(value = "stores", key = "#user.id")
+            @CacheEvict(value = CacheValue.STORE, key = "#user.id"),
+            @CacheEvict(value = CacheValue.STORES, key = "#user.id"),
     })
     public StoreResponse deleteStore(User user, UUID id) {
-        Store store = storeRepository.findById(id).orElseThrow();
-        storeRepository.delete(store);
-        return StoreResponse.fromEntity(store);
+        Store store = storeRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException("Store", id.toString())
+        );
+        if (ResourceOwner.hasPermission(user, store)) {
+            storeRepository.delete(store);
+            return StoreResponse.fromEntity(store);
+        } else {
+            throw new ResourceForbiddenException(user.getUsername(), Store.class);
+        }
     }
 
     @Transactional
-    @Cacheable(value = "store", key = "#user.id")
+    @Cacheable(value = CacheValue.STORE, key = "#user.id")
     public StoreResponse getStore(User user, UUID id) {
         Store store = storeRepository.findById(id).orElseThrow();
         StoreResponse response = StoreResponse.fromEntity(store);
@@ -154,23 +151,18 @@ public class StoreServiceImpl {
     }
 
     @Transactional
-    @Cacheable(value = "store", key = "#user.id")
+    @Cacheable(value = CacheValue.STORE, key = "#user.id")
     public StoreResponse getMyStore(User user) {
-        UUID groupId = user.getGroupMembers().stream().findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Group Member", user.getId().toString()))
-                .getGroup().getId();
-        List<Store> stores = storeRepository.findAllByGroupIdOrderByCreatedAt(groupId);
-        if (stores.isEmpty()) {
-            throw new ResourceNotFoundException("Store", "Group ID: " + groupId);
+        Group group = groupServiceImpl.getGroupOfUser(user);
+        if (group == null) {
+            throw new ResourceNotFoundException("Group", "User ID: " + user.getId());
         }
-        return StoreResponse.fromEntity(stores.getFirst());
+        Store store = storeRepository.findByGroupId(group.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Store", "Group ID: " + group.getId()));
+        return StoreResponse.fromEntity(store);
     }
 
     @Transactional
-    @Caching(evict = {
-            @CacheEvict(value = "store", key = "#user.id"),
-            @CacheEvict(value = "stores", key = "#user.id")
-    })
     public List<StoreResponse> assignGroup(User user, AssignGroupRequest request) {
         Group group = groupRepository.findById(request.getGroupId())
                 .orElseThrow(() -> new ResourceNotFoundException("Group", request.getGroupId().toString()));
@@ -187,70 +179,75 @@ public class StoreServiceImpl {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "store", key = "#user.id"),
-            @CacheEvict(value = "stores", key = "#user.id")
+            @CacheEvict(value = CacheValue.STORE, key = "#user.id"),
+            @CacheEvict(value = CacheValue.STORES, key = "#user.id"),
+            @CacheEvict(value = CacheValue.STORE, key = "#request.slug"),
     })
     public StoreResponse updateStore(User user, UUID id, UpdateStoreRequest request) {
         Store store = storeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Store", id.toString()));
-        updateStoreDetails(store, request, user);
-
-        operatingHourRepository.deleteAllByStoreId(id);
-        List<OperatingHour> operatingHours = request.getOperatingHours()
-                .stream().map(hour -> {
-                    OperatingHour operatingHour = new OperatingHour();
-                    operatingHour.setStore(store);
-                    operatingHour.setDay(hour.getDay());
-                    operatingHour.setOpenTime(hour.getOpenTime());
-                    operatingHour.setCloseTime(hour.getCloseTime());
-                    return operatingHour;
-                }).toList();
-        operatingHourRepository.saveAll(operatingHours);
-
-        feeRangeRepository.deleteAllByOrderingOptionStoreId(id);
-        orderingOptionRepository.deleteAllByStoreId(id);
-        List<OrderingOption> orderingOptions = request.getOrderOptions()
-                .stream().map(option -> {
-                    OrderingOption orderingOption = new OrderingOption();
-                    orderingOption.setStore(store);
-                    orderingOption.setName(option.getName());
-                    orderingOption.setDescription(option.getDescription());
-                    return orderingOption;
-                }).toList();
-        orderingOptionRepository.saveAll(orderingOptions);
-
-        // Handle fee ranges for ordering options
-        Map<String, OrderingOption> savedOptionsMap = orderingOptions.stream()
-                .collect(Collectors.toMap(OrderingOption::getName, option -> option));
-        List<FeeRange> allFeeRanges = new ArrayList<>();
-        for (int i = 0; i < request.getOrderOptions().size(); i++) {
-            UpdateOrderingOptionRequest optionReq = request.getOrderOptions().get(i);
-            OrderingOption savedOption = savedOptionsMap.get(optionReq.getName());
-            List<FeeRange> feeRanges = optionReq.getFeeRanges()
-                    .stream().map(rangeReq -> {
-                        FeeRange feeRange = new FeeRange();
-                        feeRange.setOrderingOption(savedOption);
-                        feeRange.setCondition(rangeReq.getCondition());
-                        feeRange.setFee(rangeReq.getFee());
-                        return feeRange;
+        log.info(request.toString());
+        if (ResourceOwner.hasPermission(user, store)) {
+            updateStoreDetails(user, store, request);
+            operatingHourRepository.deleteAllByStoreId(id);
+            List<OperatingHour> operatingHours = request.getOperatingHours()
+                    .stream().map(hour -> {
+                        OperatingHour operatingHour = new OperatingHour();
+                        operatingHour.setStore(store);
+                        operatingHour.setDay(hour.getDay());
+                        operatingHour.setOpenTime(hour.getOpenTime());
+                        operatingHour.setCloseTime(hour.getCloseTime());
+                        return operatingHour;
                     }).toList();
-            allFeeRanges.addAll(feeRanges);
-        }
-        feeRangeRepository.saveAll(allFeeRanges);
+            operatingHourRepository.saveAll(operatingHours);
 
-        paymentMethodRepository.deleteAllByStoreId(id);
-        List<PaymentMethod> paymentMethods = request.getPaymentMethods()
-                .stream().map(method -> {
-                    PaymentMethod paymentMethod = new PaymentMethod();
-                    paymentMethod.setStore(store);
-                    paymentMethod.setMethod(method.getMethod());
-                    return paymentMethod;
-                }).toList();
-        paymentMethodRepository.saveAll(paymentMethods);
-        return StoreResponse.fromEntity(store);
+            feeRangeRepository.deleteAllByOrderingOptionStoreId(id);
+            orderingOptionRepository.deleteAllByStoreId(id);
+            List<OrderingOption> orderingOptions = request.getOrderOptions()
+                    .stream().map(option -> {
+                        OrderingOption orderingOption = new OrderingOption();
+                        orderingOption.setStore(store);
+                        orderingOption.setName(option.getName());
+                        orderingOption.setDescription(option.getDescription());
+                        return orderingOption;
+                    }).toList();
+            orderingOptionRepository.saveAll(orderingOptions);
+
+            // Handle fee ranges for ordering options
+            Map<String, OrderingOption> savedOptionsMap = orderingOptions.stream()
+                    .collect(Collectors.toMap(OrderingOption::getName, option -> option));
+            List<FeeRange> allFeeRanges = new ArrayList<>();
+            for (int i = 0; i < request.getOrderOptions().size(); i++) {
+                UpdateOrderingOptionRequest optionReq = request.getOrderOptions().get(i);
+                OrderingOption savedOption = savedOptionsMap.get(optionReq.getName());
+                List<FeeRange> feeRanges = optionReq.getFeeRanges()
+                        .stream().map(rangeReq -> {
+                            FeeRange feeRange = new FeeRange();
+                            feeRange.setOrderingOption(savedOption);
+                            feeRange.setCondition(rangeReq.getCondition());
+                            feeRange.setFee(rangeReq.getFee());
+                            return feeRange;
+                        }).toList();
+                allFeeRanges.addAll(feeRanges);
+            }
+            feeRangeRepository.saveAll(allFeeRanges);
+
+            paymentMethodRepository.deleteAllByStoreId(id);
+            List<PaymentMethod> paymentMethods = request.getPaymentMethods()
+                    .stream().map(method -> {
+                        PaymentMethod paymentMethod = new PaymentMethod();
+                        paymentMethod.setStore(store);
+                        paymentMethod.setMethod(method.getMethod());
+                        return paymentMethod;
+                    }).toList();
+            paymentMethodRepository.saveAll(paymentMethods);
+            return StoreResponse.fromEntity(store);
+        } else {
+            throw new ResourceForbiddenException(user.getUsername(), Store.class);
+        }
     }
 
-    private void updateStoreDetails(Store store, UpdateStoreRequest request, User user) {
+    private void updateStoreDetails(User user, Store store, UpdateStoreRequest request) {
         store.setName(request.getName());
         store.setLogo(request.getLogo());
         store.setColor(request.getColor());
@@ -274,7 +271,7 @@ public class StoreServiceImpl {
     }
 
     @Transactional
-    @Cacheable(value = "store", key = "#slug")
+    @Cacheable(value = CacheValue.STORE, key = "#slug")
     public StoreResponse getStoreByNameSlug(String slug) {
         Store store = storeRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Store", slug));
@@ -282,65 +279,51 @@ public class StoreServiceImpl {
     }
 
     @Transactional
-    @Cacheable(value = "store-entity", key = "#storeId")
+    @Cacheable(value = CacheValue.STORE_ENTITY, key = "#user.id")
     public Store getStoreEntityById(User user, UUID storeId) {
+        if (user == null) throw new ResourceForbiddenException("Unknown user", Store.class);
+        return storeRepository.findById(Optional.ofNullable(storeId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Store", "unknown")))
+                .orElseThrow(() -> new ResourceNotFoundException("Store", storeId.toString()));
+    }
+
+    @Transactional
+    public Store getStoreEntityById(UUID storeId) {
         return storeRepository.findById(storeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Store", storeId.toString()));
     }
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "store", key = "#user.id"),
-            @CacheEvict(value = "store", key = "#slug"),
-            @CacheEvict(value = "stores", key = "#user.id"),
+            @CacheEvict(value = CacheValue.STORE, key = "#user.id"),
+            @CacheEvict(value = CacheValue.STORES, key = "#user.id"),
+            @CacheEvict(value = CacheValue.STORE, key = "#store.slug"),
     })
-    public StoreResponse updateLayout(User user, String slug, String layout) {
-        Store store = storeRepository.findBySlug(slug)
-                .orElseThrow(() -> new ResourceNotFoundException("Store", slug));
-        store.setLayout(layout);
-        store.setUpdatedAt(LocalDateTime.now());
-        store.setUpdatedBy(user.getId());
-        storeRepository.save(store);
-        return StoreResponse.fromEntity(store);
+    public StoreResponse updateStoreLayout(User user, Store store, String layout) {
+        if (ResourceOwner.hasPermission(user, store)) {
+            store.setLayout(layout);
+            store.setUpdatedAt(LocalDateTime.now());
+            store.setUpdatedBy(user.getId());
+            Store saved = storeRepository.save(store);
+            return StoreResponse.fromEntity(saved);
+        } else {
+            throw new ResourceForbiddenException(user.getUsername(), Store.class);
+        }
     }
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "store", key = "#userId"),
-            @CacheEvict(value = "store", key = "#store.id"),
-            @CacheEvict(value = "store", key = "#store.slug"),
-            @CacheEvict(value = "stores", key = "#userId"),
+            @CacheEvict(value = CacheValue.STORE, key = "#userId"),
+            @CacheEvict(value = CacheValue.STORES, key = "#userId"),
+            @CacheEvict(value = CacheValue.STORE, key = "#store.slug"),
     })
-    public void updateStorePromotionImage(UUID userId, Store store, String name) {
-        store.setPromotion(name);
-        store.setUpdatedAt(LocalDateTime.now());
-        store.setUpdatedBy(userId);
-        storeRepository.save(store);
-    }
-
-    @Transactional
-    @Caching(evict = {
-            @CacheEvict(value = "store", key = "#userId"),
-            @CacheEvict(value = "store", key = "#store.id"),
-            @CacheEvict(value = "store", key = "#store.slug"),
-            @CacheEvict(value = "stores", key = "#userId"),
-    })
-    public void updateStoreBanner(UUID userId, Store store, String name) {
-        store.setBanner(name);
-        store.setUpdatedAt(LocalDateTime.now());
-        store.setUpdatedBy(userId);
-        storeRepository.save(store);
-    }
-
-    @Transactional
-    @Caching(evict = {
-            @CacheEvict(value = "store", key = "#userId"),
-            @CacheEvict(value = "store", key = "#store.id"),
-            @CacheEvict(value = "store", key = "#store.slug"),
-            @CacheEvict(value = "stores", key = "#userId"),
-    })
-    public void updateStoreLogo(UUID userId, Store store, String name) {
-        store.setLogo(name);
+    public void updateStoreImage(UUID userId, Store store, String imageType, String name) {
+        switch (imageType) {
+            case "promotion" -> store.setPromotion(name);
+            case "banner" -> store.setBanner(name);
+            case "logo" -> store.setLogo(name);
+            default -> throw new IllegalArgumentException("Invalid image type");
+        }
         store.setUpdatedAt(LocalDateTime.now());
         store.setUpdatedBy(userId);
         storeRepository.save(store);

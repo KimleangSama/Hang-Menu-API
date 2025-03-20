@@ -1,7 +1,8 @@
 package io.sovann.hang.api.features.menus.entities;
 
 import io.sovann.hang.api.features.stores.entities.Store;
-import io.sovann.hang.api.features.users.entities.BaseEntityAudit;
+import io.sovann.hang.api.commons.entities.BaseEntityAudit;
+import io.sovann.hang.api.features.users.entities.Group;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -40,4 +41,8 @@ public class Category extends BaseEntityAudit {
     @ManyToOne
     @JoinColumn(name = "store_id")
     private Store store;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id", unique = true, nullable = false)
+    private Group group;
 }

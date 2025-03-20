@@ -2,9 +2,9 @@ package io.sovann.hang.api.features.menus.controllers;
 
 import io.sovann.hang.api.annotations.CurrentUser;
 import io.sovann.hang.api.annotations.WithRateLimitProtection;
+import io.sovann.hang.api.commons.controllers.ControllerServiceCallback;
+import io.sovann.hang.api.commons.payloads.BaseResponse;
 import io.sovann.hang.api.constants.APIURLs;
-import io.sovann.hang.api.features.commons.controllers.ControllerServiceCallback;
-import io.sovann.hang.api.features.commons.payloads.BaseResponse;
 import io.sovann.hang.api.features.menus.payloads.requests.CreateMenuRequest;
 import io.sovann.hang.api.features.menus.payloads.requests.MenuToggleRequest;
 import io.sovann.hang.api.features.menus.payloads.requests.UpdateMenuCategoryRequest;
@@ -22,9 +22,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -37,9 +35,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MenuController {
     private final MenuServiceImpl menuService;
-    private final ControllerServiceCallback callback;
     private final UserServiceImpl userServiceImpl;
     private final GroupServiceImpl groupServiceImpl;
+    private final ControllerServiceCallback callback;
 
     @PostMapping("/create")
     public BaseResponse<MenuResponse> createMenu(
@@ -47,18 +45,8 @@ public class MenuController {
             @RequestBody CreateMenuRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> menuService.createMenu(user.getUser(), request),
+        return callback.execute(() -> menuService.create(user.getUser(), request),
                 "Menu failed to create",
-                null);
-    }
-
-    @GetMapping("/of-category/{categoryId}/list")
-    public BaseResponse<List<MenuResponse>> listMenusOfCategory(
-            @CurrentUser CustomUserDetails user,
-            @PathVariable UUID categoryId
-    ) {
-        return callback.execute(() -> menuService.listMenusOfCategoryId(user != null ? user.getUser() : null, categoryId),
-                "Menu failed to list",
                 null);
     }
 
@@ -68,7 +56,7 @@ public class MenuController {
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID storeId
     ) {
-        return callback.execute(() -> menuService.listMenusWithCategory(user != null ? user.getUser() : null, storeId),
+        return callback.execute(() -> menuService.list(user != null ? user.getUser() : null, storeId),
                 "Menu failed to list", null);
     }
 
@@ -79,7 +67,7 @@ public class MenuController {
             @PathVariable UUID storeId
     ) {
         return callback.execute(() -> {
-            List<MenuResponse> responses = menuService.listMenusWithCategory(user != null ? user.getUser() : null, storeId);
+            List<MenuResponse> responses = menuService.list(user != null ? user.getUser() : null, storeId);
             Map<UUID, List<MenuResponse>> grouped = responses.stream()
                     .collect(Collectors.groupingBy(MenuResponse::getCategoryId));
             return grouped.entrySet().stream()
@@ -142,7 +130,7 @@ public class MenuController {
             @RequestBody UpdateMenuRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> menuService.updateMenu(user.getUser(), id, request),
+        return callback.execute(() -> menuService.update(user.getUser(), id, request),
                 "Menu failed to update",
                 null);
     }
@@ -155,7 +143,6 @@ public class MenuController {
             @RequestBody UpdateMenuCategoryRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-
         return callback.execute(() -> {
                     Group group = groupServiceImpl.getGroupOfUser(user.getUser());
                     Store store = userServiceImpl.getStoreOfGroup(group);
@@ -166,23 +153,6 @@ public class MenuController {
                     return menuService.updateMenuCategory(user.getUser(), id, request);
                 },
                 "Menu failed to update",
-                null);
-    }
-
-    @PostMapping("/batch-create")
-    public BaseResponse<String> batchMenuCreate(
-            @CurrentUser CustomUserDetails user,
-            @RequestParam("storeId") UUID storeId,
-            @RequestParam("file") MultipartFile file) {
-        SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> {
-                    try {
-                        return menuService.batchMenuCreate(user.getUser(), storeId, file);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                },
-                "Menu failed to batch create",
                 null);
     }
 }

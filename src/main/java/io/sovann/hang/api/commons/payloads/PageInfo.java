@@ -1,4 +1,4 @@
-package io.sovann.hang.api.features.commons.payloads;
+package io.sovann.hang.api.commons.payloads;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

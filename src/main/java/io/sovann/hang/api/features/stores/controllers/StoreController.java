@@ -1,10 +1,10 @@
 package io.sovann.hang.api.features.stores.controllers;
 
 import io.sovann.hang.api.annotations.CurrentUser;
+import io.sovann.hang.api.commons.controllers.ControllerServiceCallback;
+import io.sovann.hang.api.commons.payloads.BaseResponse;
 import io.sovann.hang.api.constants.APIURLs;
-import io.sovann.hang.api.features.commons.controllers.ControllerServiceCallback;
-import io.sovann.hang.api.features.commons.payloads.BaseResponse;
-import io.sovann.hang.api.features.commons.payloads.PageInfo;
+import io.sovann.hang.api.features.stores.entities.Store;
 import io.sovann.hang.api.features.stores.payloads.request.AssignGroupRequest;
 import io.sovann.hang.api.features.stores.payloads.request.CreateStoreRequest;
 import io.sovann.hang.api.features.stores.payloads.request.updates.UpdateStoreRequest;
@@ -25,6 +25,7 @@ import java.util.UUID;
 public class StoreController {
     private final StoreServiceImpl storeService;
     private final ControllerServiceCallback callback;
+    private final StoreServiceImpl storeServiceImpl;
 
     @PostMapping("/create")
     public BaseResponse<StoreResponse> createStore(
@@ -40,15 +41,12 @@ public class StoreController {
     @GetMapping("/list")
     @PreAuthorize("hasRole('admin')")
     public BaseResponse<List<StoreResponse>> listStores(
-            @CurrentUser CustomUserDetails user,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size
+            @CurrentUser CustomUserDetails user
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        PageInfo meta = new PageInfo(page, size, storeService.count());
-        return callback.execute(() -> storeService.listStores(user.getUser(), page, size),
+        return callback.execute(() -> storeService.list(user.getUser()),
                 "Store failed to list",
-                meta);
+                null);
     }
 
     @DeleteMapping("/{id}/delete")
@@ -91,7 +89,7 @@ public class StoreController {
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
         return callback.execute(() -> storeService.updateStore(user.getUser(), id, request),
-                "Store failed to list",
+                "Store failed to update",
                 null);
     }
 
@@ -106,15 +104,18 @@ public class StoreController {
                 null);
     }
 
-    @PatchMapping("/{slug}/layout")
+    @PatchMapping("/{id}/layout")
     public BaseResponse<StoreResponse> updateLayout(
             @CurrentUser CustomUserDetails user,
-            @PathVariable String slug,
+            @PathVariable UUID id,
             @RequestParam String layout
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> storeService.updateLayout(user.getUser(), slug, layout),
-                "Store failed to list",
+        return callback.execute(() -> {
+                    Store store = storeServiceImpl.getStoreEntityById(user.getUser(), id);
+                    return storeService.updateStoreLayout(user.getUser(), store, layout);
+                },
+                "Store failed to update layout",
                 null);
     }
 }

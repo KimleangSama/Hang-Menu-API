@@ -2,8 +2,8 @@ package io.sovann.hang.api.features.feedbacks.controllers;
 
 import io.sovann.hang.api.annotations.CurrentUser;
 import io.sovann.hang.api.constants.APIURLs;
-import io.sovann.hang.api.features.commons.controllers.ControllerServiceCallback;
-import io.sovann.hang.api.features.commons.payloads.BaseResponse;
+import io.sovann.hang.api.commons.controllers.ControllerServiceCallback;
+import io.sovann.hang.api.commons.payloads.BaseResponse;
 import io.sovann.hang.api.features.feedbacks.payloads.CreateFeedbackRequest;
 import io.sovann.hang.api.features.feedbacks.payloads.FeedbackResponse;
 import io.sovann.hang.api.features.feedbacks.payloads.RateResponse;

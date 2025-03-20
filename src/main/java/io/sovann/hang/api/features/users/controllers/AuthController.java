@@ -2,10 +2,10 @@ package io.sovann.hang.api.features.users.controllers;
 
 import io.sovann.hang.api.annotations.CurrentUser;
 import io.sovann.hang.api.constants.APIURLs;
-import io.sovann.hang.api.features.commons.payloads.BaseResponse;
+import io.sovann.hang.api.commons.payloads.BaseResponse;
 import io.sovann.hang.api.features.users.entities.User;
-import io.sovann.hang.api.features.users.payloads.request.LoginBackOfficeRequest;
-import io.sovann.hang.api.features.users.payloads.request.RegisterBackOfficeRequest;
+import io.sovann.hang.api.features.users.payloads.request.LoginRequest;
+import io.sovann.hang.api.features.users.payloads.request.RegisterRequest;
 import io.sovann.hang.api.features.users.payloads.response.AuthResponse;
 import io.sovann.hang.api.features.users.payloads.response.UserResponse;
 import io.sovann.hang.api.features.users.securities.CustomUserDetails;
@@ -30,8 +30,8 @@ public class AuthController {
     private final AuthServiceImpl authService;
 
     @PostMapping("/login")
-    public BaseResponse<AuthResponse> login(@Valid @RequestBody LoginBackOfficeRequest request) {
-        return handleLogin(() -> authService.loginBackOfficeUser(request), request.getUsername());
+    public BaseResponse<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        return handleLogin(() -> authService.login(request), request.getUsername());
     }
 
     private BaseResponse<AuthResponse> handleLogin(AuthenticatedOperation operation, String identifier) {
@@ -48,8 +48,8 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public BaseResponse<UserResponse> registerBackOfficeUser(@Valid @RequestBody RegisterBackOfficeRequest request) {
-        return handleUserRegistration(() -> authService.registerUser(request), request.getUsername());
+    public BaseResponse<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
+        return handleUserRegistration(() -> authService.register(request), request.getUsername());
     }
 
     private BaseResponse<UserResponse> handleUserRegistration(UserRegistrationOperation operation, String identifier) {

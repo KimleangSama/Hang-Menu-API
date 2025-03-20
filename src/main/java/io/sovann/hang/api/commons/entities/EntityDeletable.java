@@ -1,4 +1,4 @@
-package io.sovann.hang.api.features.commons.entities;
+package io.sovann.hang.api.commons.entities;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
