@@ -1,14 +1,17 @@
 package io.sovann.hang.api.features.menus.payloads.responses;
 
+import io.gatling.javaapi.core.internal.errors.ScalaStopLoadGeneratorIf;
 import io.sovann.hang.api.features.menus.entities.Category;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Getter
 @Setter
 @ToString
@@ -26,9 +29,10 @@ public class CategoryResponse {
 
     // This constructor is used to create a response object from an entity
     // DO NOT REMOVE
-    public CategoryResponse(UUID id, String name, int position, long menuCount) {
+    public CategoryResponse(UUID id, String name, String description, int position, long menuCount) {
         this.id = id;
         this.name = name;
+        this.description = description;
         this.position = position;
         this.menuCount = menuCount;
     }

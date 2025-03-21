@@ -40,6 +40,7 @@ public class MenuController {
     private final ControllerServiceCallback callback;
 
     @PostMapping("/create")
+    @PreAuthorize("hasAnyRole('admin', 'manager')")
     public BaseResponse<MenuResponse> createMenu(
             @CurrentUser CustomUserDetails user,
             @RequestBody CreateMenuRequest request
@@ -52,6 +53,7 @@ public class MenuController {
 
     @WithRateLimitProtection
     @GetMapping("/of-store/{storeId}/all/without")
+    @PreAuthorize("hasAnyRole('admin', 'manager')")
     public BaseResponse<List<MenuResponse>> listMenusOfStoreWithoutMappedCategory(
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID storeId
@@ -113,6 +115,7 @@ public class MenuController {
     }
 
     @GetMapping("/{id}/details")
+    @PreAuthorize("hasAnyRole('admin', 'manager')")
     public BaseResponse<MenuResponse> getMenuResponseById(
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID id

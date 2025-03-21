@@ -17,7 +17,7 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
     List<Category> findAllByStoreIdOrderByPosition(UUID storeId);
 
     @Query(value = """
-            SELECT c.id, c.name, c.position, COALESCE(COUNT(m.id), 0) AS menu_count
+            SELECT c.id, c.name, c.description, c.position, COALESCE(COUNT(m.id), 0) AS menu_count
             FROM categories c
             LEFT JOIN menus m ON c.id = m.category_id
             WHERE c.store_id = :storeId

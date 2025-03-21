@@ -12,6 +12,7 @@ import io.sovann.hang.api.features.menus.payloads.responses.CategoryResponse;
 import io.sovann.hang.api.features.menus.repos.CategoryRepository;
 import io.sovann.hang.api.features.stores.entities.Store;
 import io.sovann.hang.api.features.stores.services.StoreServiceImpl;
+import io.sovann.hang.api.features.users.entities.Group;
 import io.sovann.hang.api.features.users.entities.Role;
 import io.sovann.hang.api.features.users.entities.User;
 import io.sovann.hang.api.features.users.enums.AuthRole;
@@ -47,11 +48,16 @@ public class CategoryServiceImpl {
     })
     public CategoryResponse create(User user, CreateCategoryRequest request) {
         Store store = storeServiceImpl.getStoreEntityById(user, request.getStoreId());
-        Category category = CreateCategoryRequest.fromRequest(request);
-        category.setCreatedBy(user.getId());
-        category.setStore(store);
-        categoryRepository.save(category);
-        return CategoryResponse.fromEntity(category);
+        if (ResourceOwner.hasPermission(user, store)) {
+            Group group = store.getGroup();
+            Category category = CreateCategoryRequest.fromRequest(request);
+            category.setGroup(group);
+            category.setCreatedBy(user.getId());
+            category.setStore(store);
+            categoryRepository.save(category);
+            return CategoryResponse.fromEntity(category);
+        }
+        throw new ResourceForbiddenException(user.getUsername(), Store.class);
     }
 
     @Transactional(readOnly = true)
@@ -79,8 +85,8 @@ public class CategoryServiceImpl {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "categories", key = "#request.storeId"),
-            @CacheEvict(value = "category-entities", key = "#request.storeId")
+            @CacheEvict(value = CacheValue.CATEGORIES, key = "#request.storeId"),
+            @CacheEvict(value = CacheValue.CATEGORY_ENTITIES, key = "#request.storeId")
     })
     public CategoryResponse toggleCategoryVisibility(User user, CategoryToggleRequest request) {
         return toggleCategory(user, request, true);
@@ -88,8 +94,8 @@ public class CategoryServiceImpl {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "categories", key = "#request.storeId"),
-            @CacheEvict(value = "category-entities", key = "#request.storeId")
+            @CacheEvict(value = CacheValue.CATEGORIES, key = "#request.storeId"),
+            @CacheEvict(value = CacheValue.CATEGORY_ENTITIES, key = "#request.storeId")
     })
     public CategoryResponse toggleCategoryAvailability(User user, CategoryToggleRequest request) {
         return toggleCategory(user, request, false);
@@ -97,8 +103,8 @@ public class CategoryServiceImpl {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "categories", key = "#request.storeId"),
-            @CacheEvict(value = "category-entities", key = "#request.storeId")
+            @CacheEvict(value = CacheValue.CATEGORIES, key = "#request.storeId"),
+            @CacheEvict(value = CacheValue.CATEGORY_ENTITIES, key = "#request.storeId")
     })
     public CategoryResponse deleteCategory(User user, CategoryToggleRequest request) {
         Category category = getCategoryById(user, request);
@@ -119,13 +125,13 @@ public class CategoryServiceImpl {
     }
 
     @Transactional
-    @Cacheable(value = "category-entities", key = "#storeId")
+    @Cacheable(value = CacheValue.CATEGORY_ENTITIES, key = "#storeId")
     public List<Category> findAllByStoreId(UUID storeId) {
         return categoryRepository.findAllByStoreIdOrderByPosition(storeId);
     }
 
     @Transactional
-    @CacheEvict(value = "categories", key = "#id")
+    @CacheEvict(value = CacheValue.CATEGORIES, allEntries = true)
     public void updateCategoryIcon(UUID id, String icon) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", id.toString()));
@@ -135,31 +141,36 @@ public class CategoryServiceImpl {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "categories", key = "#storeId"),
-            @CacheEvict(value = "category-entities", key = "#storeId"),
-            @CacheEvict(value = "menus", key = "#storeId"),
+            @CacheEvict(value = CacheValue.CATEGORIES, key = "#storeId"),
+            @CacheEvict(value = CacheValue.CATEGORY_ENTITIES, key = "#storeId"),
+            @CacheEvict(value = CacheValue.MENUS, key = "#storeId"),
     })
     public List<CategoryResponse> reorderCategories(User user, UUID storeId, List<CategoryReorderRequest.CategoryPositionUpdate> updates) {
-        List<UUID> categoryIds = updates.stream()
-                .map(CategoryReorderRequest.CategoryPositionUpdate::getId)
-                .toList();
-        List<Category> categories = categoryRepository.findByIdIn(categoryIds);
-        Map<UUID, Integer> updatedPositions = updates.stream()
-                .collect(Collectors.toMap(CategoryReorderRequest.CategoryPositionUpdate::getId,
-                        CategoryReorderRequest.CategoryPositionUpdate::getPosition));
-        categories.forEach(category -> category.setPosition(updatedPositions.get(category.getId())));
-        categoryRepository.saveAll(categories);
-        return CategoryResponse.fromEntities(categories);
+        Store store = storeServiceImpl.getStoreEntityById(user, storeId);
+        if (ResourceOwner.hasPermission(user, store)) {
+            List<UUID> categoryIds = updates.stream()
+                    .map(CategoryReorderRequest.CategoryPositionUpdate::getId)
+                    .toList();
+            List<Category> categories = categoryRepository.findByIdIn(categoryIds);
+            Map<UUID, Integer> updatedPositions = updates.stream()
+                    .collect(Collectors.toMap(CategoryReorderRequest.CategoryPositionUpdate::getId,
+                            CategoryReorderRequest.CategoryPositionUpdate::getPosition));
+            categories.forEach(category -> category.setPosition(updatedPositions.get(category.getId())));
+            categoryRepository.saveAll(categories);
+            return CategoryResponse.fromEntities(categories);
+        }
+        throw new ResourceForbiddenException(user.getUsername(), Store.class);
     }
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "categories", key = "#request.storeId"),
-            @CacheEvict(value = "category-entities", key = "#request.storeId")
+            @CacheEvict(value = CacheValue.CATEGORY, key = "#request.storeId"),
+            @CacheEvict(value = CacheValue.CATEGORIES, key = "#request.storeId"),
+            @CacheEvict(value = CacheValue.CATEGORY_ENTITIES, key = "#request.storeId")
     })
-    public CategoryResponse updateCategory(User user, UpdateCategoryRequest request) {
-        Category category = categoryRepository.findById(request.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Category", request.getId().toString()));
+    public CategoryResponse updateCategory(User user, UUID id, UpdateCategoryRequest request) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category", id.toString()));
         if (ResourceOwner.hasPermission(user, category)) {
             category.setName(request.getName());
             category.setDescription(request.getDescription());

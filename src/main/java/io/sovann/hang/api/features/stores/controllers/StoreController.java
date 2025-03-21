@@ -28,6 +28,7 @@ public class StoreController {
     private final StoreServiceImpl storeServiceImpl;
 
     @PostMapping("/create")
+    @PreAuthorize("hasAnyRole('admin')")
     public BaseResponse<StoreResponse> createStore(
             @CurrentUser CustomUserDetails user,
             @RequestBody CreateStoreRequest request
@@ -62,6 +63,7 @@ public class StoreController {
     }
 
     @GetMapping("/{slug}/get")
+    @PreAuthorize("hasAnyRole('admin', 'manager')")
     public BaseResponse<StoreResponse> getStoreByNameSlug(
             @PathVariable String slug
     ) {
@@ -71,17 +73,19 @@ public class StoreController {
     }
 
     @PatchMapping("/assign-group")
-    public BaseResponse<List<StoreResponse>> assignGroup(
+    @PreAuthorize("hasAnyRole('admin')")
+    public BaseResponse<List<StoreResponse>> assignStoreToGroup(
             @CurrentUser CustomUserDetails user,
             @RequestBody AssignGroupRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> storeService.assignGroup(user.getUser(), request),
+        return callback.execute(() -> storeService.assignStoreToGroup(user.getUser(), request),
                 "Store failed to assign group",
                 null);
     }
 
     @PutMapping("/{id}/update")
+    @PreAuthorize("hasAnyRole('admin', 'manager')")
     public BaseResponse<StoreResponse> updateStore(
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID id,
@@ -105,6 +109,7 @@ public class StoreController {
     }
 
     @PatchMapping("/{id}/layout")
+    @PreAuthorize("hasAnyRole('admin', 'manager')")
     public BaseResponse<StoreResponse> updateLayout(
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID id,

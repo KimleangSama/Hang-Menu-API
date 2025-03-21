@@ -1,9 +1,9 @@
 package io.sovann.hang.api.features.menus.controllers;
 
 import io.sovann.hang.api.annotations.CurrentUser;
-import io.sovann.hang.api.constants.APIURLs;
 import io.sovann.hang.api.commons.controllers.ControllerServiceCallback;
 import io.sovann.hang.api.commons.payloads.BaseResponse;
+import io.sovann.hang.api.constants.APIURLs;
 import io.sovann.hang.api.features.menus.payloads.requests.CategoryReorderRequest;
 import io.sovann.hang.api.features.menus.payloads.requests.CategoryToggleRequest;
 import io.sovann.hang.api.features.menus.payloads.requests.CreateCategoryRequest;
@@ -40,6 +40,7 @@ public class CategoryController {
     }
 
     @GetMapping("/of-store/{storeId}/list")
+    @PreAuthorize("hasAnyRole('admin', 'manager')")
     public BaseResponse<List<CategoryResponse>> listMenuCategories(
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID storeId
@@ -54,11 +55,12 @@ public class CategoryController {
     @PreAuthorize("hasAnyRole('admin', 'manager')")
     public BaseResponse<CategoryResponse> updateCategory(
             @CurrentUser CustomUserDetails user,
+            @PathVariable UUID id,
             @RequestBody UpdateCategoryRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> categoryService.updateCategory(user.getUser(), request),
-                "Category failed to hide",
+        return callback.execute(() -> categoryService.updateCategory(user.getUser(), id, request),
+                "Category failed to update",
                 null);
     }
 

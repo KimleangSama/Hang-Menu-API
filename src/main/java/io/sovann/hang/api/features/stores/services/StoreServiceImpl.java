@@ -163,7 +163,7 @@ public class StoreServiceImpl {
     }
 
     @Transactional
-    public List<StoreResponse> assignGroup(User user, AssignGroupRequest request) {
+    public List<StoreResponse> assignStoreToGroup(User user, AssignGroupRequest request) {
         Group group = groupRepository.findById(request.getGroupId())
                 .orElseThrow(() -> new ResourceNotFoundException("Group", request.getGroupId().toString()));
         return request.getStoreIds().stream()

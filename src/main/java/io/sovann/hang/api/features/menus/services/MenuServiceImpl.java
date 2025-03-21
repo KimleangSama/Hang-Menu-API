@@ -42,7 +42,6 @@ public class MenuServiceImpl {
     private final CategoryServiceImpl categoryServiceImpl;
 
     private final FileStorageServiceImpl fileStorageServiceImpl;
-    private final GroupServiceImpl groupServiceImpl;
 
     @Transactional
     public long count() {
@@ -57,7 +56,7 @@ public class MenuServiceImpl {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category", request.getCategoryId().toString()));
         if (ResourceOwner.hasPermission(user, category)) {
-            Group group = groupServiceImpl.getGroupOfUser(user);
+            Group group = category.getGroup();
             Menu menu = CreateMenuRequest.fromRequest(request);
             menu.setGroup(group);
             menu.setCategory(category);
