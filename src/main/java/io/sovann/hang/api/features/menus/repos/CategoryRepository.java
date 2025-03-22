@@ -2,6 +2,7 @@ package io.sovann.hang.api.features.menus.repos;
 
 import io.sovann.hang.api.features.menus.entities.Category;
 import io.sovann.hang.api.features.menus.payloads.responses.CategoryResponse;
+import io.sovann.hang.api.features.stores.entities.Store;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -27,4 +28,6 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
     List<CategoryResponse> findAllWithMenuCountByStoreId(@Param("storeId") UUID storeId);
 
     List<Category> findAllByStoreId(UUID storeId);
+
+    Integer countByStore(Store store);
 }

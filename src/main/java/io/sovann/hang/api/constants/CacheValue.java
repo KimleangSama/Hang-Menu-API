@@ -15,4 +15,5 @@ public class CacheValue {
     public static final String STORES = "stores";
     public static final String STORE_ENTITY = "store_entity";
     public static final String STORE_ENTITIES = "store_entities";
+    public static final String SYS_PARAM = "sys_param";
 }

@@ -1,6 +1,8 @@
 package io.sovann.hang.api.features.menus.services;
 
 import io.sovann.hang.api.constants.CacheValue;
+import io.sovann.hang.api.constants.SysParamValue;
+import io.sovann.hang.api.exceptions.ResourceExceedLimitException;
 import io.sovann.hang.api.exceptions.ResourceForbiddenException;
 import io.sovann.hang.api.exceptions.ResourceNotFoundException;
 import io.sovann.hang.api.features.menus.entities.Category;
@@ -12,6 +14,9 @@ import io.sovann.hang.api.features.menus.payloads.responses.CategoryResponse;
 import io.sovann.hang.api.features.menus.repos.CategoryRepository;
 import io.sovann.hang.api.features.stores.entities.Store;
 import io.sovann.hang.api.features.stores.services.StoreServiceImpl;
+import io.sovann.hang.api.features.sysparams.entities.SysParam;
+import io.sovann.hang.api.features.sysparams.repos.SysParamRepository;
+import io.sovann.hang.api.features.sysparams.services.SysParamServiceImpl;
 import io.sovann.hang.api.features.users.entities.Group;
 import io.sovann.hang.api.features.users.entities.Role;
 import io.sovann.hang.api.features.users.entities.User;
@@ -36,6 +41,8 @@ import java.util.stream.Collectors;
 public class CategoryServiceImpl {
     private final CategoryRepository categoryRepository;
     private final StoreServiceImpl storeServiceImpl;
+    private final SysParamRepository sysParamRepository;
+    private final SysParamServiceImpl sysParamServiceImpl;
 
     public long count() {
         return categoryRepository.count();
@@ -48,17 +55,24 @@ public class CategoryServiceImpl {
     })
     public CategoryResponse create(User user, CreateCategoryRequest request) {
         Store store = storeServiceImpl.getStoreEntityById(user, request.getStoreId());
-        if (ResourceOwner.hasPermission(user, store)) {
-            Group group = store.getGroup();
-            Category category = CreateCategoryRequest.fromRequest(request);
-            category.setGroup(group);
-            category.setCreatedBy(user.getId());
-            category.setStore(store);
-            categoryRepository.save(category);
-            return CategoryResponse.fromEntity(category);
+        if (!ResourceOwner.hasPermission(user, store)) {
+            throw new ResourceForbiddenException(user.getUsername(), Store.class);
         }
-        throw new ResourceForbiddenException(user.getUsername(), Store.class);
+        SysParam sysParam = sysParamServiceImpl.getSysParamByStoreId(request.getStoreId());
+        Integer maxCategories = (sysParam != null) ? sysParam.getMaxCategoryNumber() : SysParamValue.MAX_CATEGORY;
+        Integer count = categoryRepository.countByStore(store);
+        if (maxCategories != null && count >= maxCategories) {
+            throw new ResourceExceedLimitException("Category", "store", maxCategories);
+        }
+        Group group = store.getGroup();
+        Category category = CreateCategoryRequest.fromRequest(request);
+        category.setGroup(group);
+        category.setCreatedBy(user.getId());
+        category.setStore(store);
+        categoryRepository.save(category);
+        return CategoryResponse.fromEntity(category);
     }
+
 
     @Transactional(readOnly = true)
     @Cacheable(value = CacheValue.CATEGORIES, key = "#storeId")

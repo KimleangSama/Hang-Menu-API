@@ -118,8 +118,16 @@ public class BaseResponse<T> implements Serializable {
         return response;
     }
 
+    public static <T> BaseResponse<T> expectedFailed() {
+        BaseResponse<T> response = new BaseResponse<>();
+        response.setStatus(Status.EXPECTED_FAILED);
+        response.setStatusCode(417);
+        return response;
+    }
+
     public enum Status {
         GENERATION_NOT_AVAILABLE, NOT_ACCEPTABLE, OK, BAD_REQUEST, UNAUTHORIZED, VALIDATION_EXCEPTION, EXCEPTION,
         WRONG_CREDENTIALS, ACCESS_DENIED, NOT_FOUND, CREATED, DUPLICATE_ENTITY, TOO_MANY_REQUESTS,
+        EXPECTED_FAILED
     }
 }

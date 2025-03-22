@@ -1,6 +1,7 @@
 package io.sovann.hang.api.features.stores.services;
 
 import io.sovann.hang.api.constants.CacheValue;
+import io.sovann.hang.api.constants.SysParamValue;
 import io.sovann.hang.api.exceptions.ResourceForbiddenException;
 import io.sovann.hang.api.exceptions.ResourceNotFoundException;
 import io.sovann.hang.api.features.stores.entities.*;
@@ -12,6 +13,8 @@ import io.sovann.hang.api.features.stores.payloads.request.updates.UpdateOrderin
 import io.sovann.hang.api.features.stores.payloads.request.updates.UpdateStoreRequest;
 import io.sovann.hang.api.features.stores.payloads.response.StoreResponse;
 import io.sovann.hang.api.features.stores.repos.*;
+import io.sovann.hang.api.features.sysparams.entities.SysParam;
+import io.sovann.hang.api.features.sysparams.repos.SysParamRepository;
 import io.sovann.hang.api.features.users.entities.Group;
 import io.sovann.hang.api.features.users.entities.User;
 import io.sovann.hang.api.features.users.enums.AuthRole;
@@ -43,6 +46,7 @@ public class StoreServiceImpl {
     private final FeeRangeRepository feeRangeRepository;
     private final GroupRepository groupRepository;
     private final GroupServiceImpl groupServiceImpl;
+    private final SysParamRepository sysParamRepository;
 
     @Caching(evict = {
             @CacheEvict(value = CacheValue.STORE, key = "#user.id"),
@@ -54,6 +58,11 @@ public class StoreServiceImpl {
             store.setSlug(Slugify.slugify(request.getName()));
             store.setCreatedBy(user.getId());
             Store savedStore = storeRepository.save(store);
+            SysParam sysParam = new SysParam();
+            sysParam.setMaxCategoryNumber(SysParamValue.MAX_CATEGORY);
+            sysParam.setMaxMenuNumber(SysParamValue.MAX_MENU);
+            sysParam.setStoreId(savedStore.getId());
+            sysParamRepository.save(sysParam);
             processOrderingOptions(savedStore, request);
             processOperatingHours(savedStore);
             processPaymentMethods(savedStore);

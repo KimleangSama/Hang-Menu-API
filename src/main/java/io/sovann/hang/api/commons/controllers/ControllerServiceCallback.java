@@ -1,11 +1,8 @@
 package io.sovann.hang.api.commons.controllers;
 
-import io.sovann.hang.api.exceptions.ResourceDeletedException;
-import io.sovann.hang.api.exceptions.ResourceException;
-import io.sovann.hang.api.exceptions.ResourceForbiddenException;
-import io.sovann.hang.api.exceptions.ResourceNotFoundException;
 import io.sovann.hang.api.commons.payloads.BaseResponse;
 import io.sovann.hang.api.commons.payloads.PageInfo;
+import io.sovann.hang.api.exceptions.*;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -29,6 +26,9 @@ public class ControllerServiceCallback {
         } catch (ResourceDeletedException | ConstraintViolationException e) {
             log.error(LOG_ERROR, errorMessage, e.getMessage(), e);
             return BaseResponse.<T>badRequest().setError(e.getMessage());
+        } catch (ResourceExceedLimitException e) {
+            log.error(LOG_ERROR, errorMessage, e.getMessage(), e);
+            return BaseResponse.<T>expectedFailed().setError(e.getMessage());
         } catch (DataIntegrityViolationException e) {
             String getMessage = "Duplicate entity on unique field with details: " + e.getMessage();
             log.error(LOG_ERROR, errorMessage, getMessage, e);

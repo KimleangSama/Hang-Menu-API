@@ -1,6 +1,8 @@
 package io.sovann.hang.api.features.menus.services;
 
 import io.sovann.hang.api.constants.CacheValue;
+import io.sovann.hang.api.constants.SysParamValue;
+import io.sovann.hang.api.exceptions.ResourceExceedLimitException;
 import io.sovann.hang.api.exceptions.ResourceForbiddenException;
 import io.sovann.hang.api.exceptions.ResourceNotFoundException;
 import io.sovann.hang.api.features.files.services.FileStorageServiceImpl;
@@ -13,9 +15,11 @@ import io.sovann.hang.api.features.menus.payloads.responses.MenuResponse;
 import io.sovann.hang.api.features.menus.repos.CategoryRepository;
 import io.sovann.hang.api.features.menus.repos.MenuImageRepository;
 import io.sovann.hang.api.features.menus.repos.MenuRepository;
+import io.sovann.hang.api.features.sysparams.entities.SysParam;
+import io.sovann.hang.api.features.sysparams.repos.SysParamRepository;
+import io.sovann.hang.api.features.sysparams.services.SysParamServiceImpl;
 import io.sovann.hang.api.features.users.entities.Group;
 import io.sovann.hang.api.features.users.entities.User;
-import io.sovann.hang.api.features.users.services.GroupServiceImpl;
 import io.sovann.hang.api.utils.ResourceOwner;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -42,6 +46,8 @@ public class MenuServiceImpl {
     private final CategoryServiceImpl categoryServiceImpl;
 
     private final FileStorageServiceImpl fileStorageServiceImpl;
+    private final SysParamRepository sysParamRepository;
+    private final SysParamServiceImpl sysParamServiceImpl;
 
     @Transactional
     public long count() {
@@ -55,17 +61,23 @@ public class MenuServiceImpl {
     public MenuResponse create(User user, CreateMenuRequest request) {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category", request.getCategoryId().toString()));
-        if (ResourceOwner.hasPermission(user, category)) {
-            Group group = category.getGroup();
-            Menu menu = CreateMenuRequest.fromRequest(request);
-            menu.setGroup(group);
-            menu.setCategory(category);
-            menu.setCreatedBy(user.getId());
-            Menu savedMenu = menuRepository.save(menu);
-            saveMenuImages(savedMenu, request.getImages());
-            return MenuResponse.fromEntity(savedMenu);
+        if (!ResourceOwner.hasPermission(user, category)) {
+            throw new ResourceForbiddenException(user.getUsername(), Category.class);
         }
-        throw new ResourceForbiddenException(user.getUsername(), Category.class);
+        SysParam sysParam = sysParamServiceImpl.getSysParamByStoreId(request.getStoreId());
+        Integer maxMenus = (sysParam != null) ? sysParam.getMaxMenuNumber() : SysParamValue.MAX_MENU;
+        Integer count = menuRepository.countByCategory(category);
+        if (maxMenus != null && count >= maxMenus) {
+            throw new ResourceExceedLimitException("Menu", "category", maxMenus);
+        }
+        Group group = category.getGroup();
+        Menu menu = CreateMenuRequest.fromRequest(request);
+        menu.setGroup(group);
+        menu.setCategory(category);
+        menu.setCreatedBy(user.getId());
+        Menu savedMenu = menuRepository.save(menu);
+        saveMenuImages(savedMenu, request.getImages());
+        return MenuResponse.fromEntity(savedMenu);
     }
 
     private void saveMenuImages(Menu menu, List<String> imageRequests) {

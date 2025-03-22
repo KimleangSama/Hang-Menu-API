@@ -19,4 +19,6 @@ public interface MenuRepository extends JpaRepository<Menu, UUID> {
     Integer countByCategoryIn(List<Category> categories);
 
     Integer countByCategoryInAndCreatedAtBetween(Collection<Category> category, LocalDateTime startDateOfLastWeek, LocalDateTime endDateOfLastWeek);
+
+    Integer countByCategory(Category category);
 }
