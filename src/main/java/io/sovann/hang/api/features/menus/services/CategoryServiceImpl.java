@@ -41,7 +41,6 @@ import java.util.stream.Collectors;
 public class CategoryServiceImpl {
     private final CategoryRepository categoryRepository;
     private final StoreServiceImpl storeServiceImpl;
-    private final SysParamRepository sysParamRepository;
     private final SysParamServiceImpl sysParamServiceImpl;
 
     public long count() {

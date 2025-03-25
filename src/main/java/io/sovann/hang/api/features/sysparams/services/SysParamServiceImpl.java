@@ -21,4 +21,5 @@ public class SysParamServiceImpl {
         return sysParamRepository.findByStoreId(storeId)
                 .orElse(null);
     }
+
 }

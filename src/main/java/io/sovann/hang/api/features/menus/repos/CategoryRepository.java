@@ -9,7 +9,9 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, UUID> {
@@ -30,4 +32,7 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
     List<Category> findAllByStoreId(UUID storeId);
 
     Integer countByStore(Store store);
+
+    @Query("SELECT c FROM Category c WHERE c.store.id = :storeId AND c.id = :categoryId")
+    CompletableFuture<Optional<Category>> asyncFindById(UUID storeId, UUID categoryId);
 }

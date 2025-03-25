@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -46,7 +47,6 @@ public class MenuServiceImpl {
     private final CategoryServiceImpl categoryServiceImpl;
 
     private final FileStorageServiceImpl fileStorageServiceImpl;
-    private final SysParamRepository sysParamRepository;
     private final SysParamServiceImpl sysParamServiceImpl;
 
     @Transactional
@@ -56,28 +56,38 @@ public class MenuServiceImpl {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = CacheValue.MENUS, key = "#request.storeId", allEntries = true),
+            @CacheEvict(value = CacheValue.MENUS, key = "#request.storeId"),
+            @CacheEvict(value = CacheValue.MENU_ENTITIES, key = "#request.storeId")
     })
     public MenuResponse create(User user, CreateMenuRequest request) {
-        Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Category", request.getCategoryId().toString()));
-        if (!ResourceOwner.hasPermission(user, category)) {
-            throw new ResourceForbiddenException(user.getUsername(), Category.class);
-        }
-        SysParam sysParam = sysParamServiceImpl.getSysParamByStoreId(request.getStoreId());
-        Integer maxMenus = (sysParam != null) ? sysParam.getMaxMenuNumber() : SysParamValue.MAX_MENU;
-        Integer count = menuRepository.countByCategory(category);
-        if (maxMenus != null && count >= maxMenus) {
-            throw new ResourceExceedLimitException("Menu", "category", maxMenus);
-        }
-        Group group = category.getGroup();
-        Menu menu = CreateMenuRequest.fromRequest(request);
-        menu.setGroup(group);
-        menu.setCategory(category);
-        menu.setCreatedBy(user.getId());
-        Menu savedMenu = menuRepository.save(menu);
-        saveMenuImages(savedMenu, request.getImages());
-        return MenuResponse.fromEntity(savedMenu);
+        CompletableFuture<Optional<Category>> categoryFuture =
+                categoryRepository.asyncFindById(request.getStoreId(), request.getCategoryId());
+        CompletableFuture<Integer> countFuture = categoryFuture.thenCompose(optionalCategory -> {
+            Category category = optionalCategory.orElseThrow(() ->
+                    new ResourceNotFoundException("Category", request.getCategoryId().toString()));
+            if (!ResourceOwner.hasPermission(user, category)) {
+                throw new ResourceForbiddenException(user.getUsername(), Category.class);
+            }
+            return menuRepository.asyncCountByCategory(category);
+        });
+        return categoryFuture.thenCombine(countFuture, (optionalCategory, count) -> {
+            Category category = optionalCategory.orElseThrow(() ->
+                    new ResourceNotFoundException("Category", request.getCategoryId().toString()));
+            SysParam sysParam = sysParamServiceImpl.getSysParamByStoreId(request.getStoreId());
+            Integer maxMenus = (sysParam != null) ? sysParam.getMaxMenuNumber() : SysParamValue.MAX_MENU;
+            if (maxMenus != null && count >= maxMenus) {
+                throw new ResourceExceedLimitException("Menu", "category", maxMenus);
+            }
+            // Process menu creation
+            Group group = category.getGroup();
+            Menu menu = CreateMenuRequest.fromRequest(request);
+            menu.setGroup(group);
+            menu.setCategory(category);
+            menu.setCreatedBy(user.getId());
+            Menu savedMenu = menuRepository.save(menu);
+            saveMenuImages(savedMenu, request.getImages());
+            return MenuResponse.fromEntity(savedMenu);
+        }).join();
     }
 
     private void saveMenuImages(Menu menu, List<String> imageRequests) {

@@ -8,6 +8,8 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.CompletionException;
+
 @Slf4j
 @Component
 public class ControllerServiceCallback {
@@ -26,7 +28,7 @@ public class ControllerServiceCallback {
         } catch (ResourceDeletedException | ConstraintViolationException e) {
             log.error(LOG_ERROR, errorMessage, e.getMessage(), e);
             return BaseResponse.<T>badRequest().setError(e.getMessage());
-        } catch (ResourceExceedLimitException e) {
+        } catch (ResourceExceedLimitException | CompletionException e) {
             log.error(LOG_ERROR, errorMessage, e.getMessage(), e);
             return BaseResponse.<T>expectedFailed().setError(e.getMessage());
         } catch (DataIntegrityViolationException e) {

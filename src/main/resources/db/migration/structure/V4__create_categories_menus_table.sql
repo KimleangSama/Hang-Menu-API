@@ -70,6 +70,7 @@ ALTER TABLE menus
     ADD CONSTRAINT FK_MENUS_ON_GROUP FOREIGN KEY (group_id) REFERENCES groups (id);
 
 CREATE INDEX idx_menu_name ON menus (name);
+CREATE INDEX idx_menu_category ON menus (category_id);
 
 ALTER TABLE menu_images
     ADD CONSTRAINT FK_MENU_IMAGES_ON_MENU FOREIGN KEY (menu_id) REFERENCES menus (id);
