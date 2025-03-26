@@ -33,7 +33,6 @@ public class OrderServiceImpl {
     private final OrderRepository orderRepository;
     private final RabbitTemplate rabbitTemplate;
     private final StoreServiceImpl storeServiceImpl;
-    private final OrderMenuRepository orderMenuRepository;
 
     @Transactional
     @CacheEvict(value = "orders", key = "#request.storeId")
@@ -43,7 +42,6 @@ public class OrderServiceImpl {
             UUID code = UUID.randomUUID();
             request.setCode(code);
             rabbitTemplate.convertAndSend("order.exchange", "order.created", request);
-            log.info("Order request sent to RabbitMQ: {}", request);
             setResponse(response, code, "Order request sent to store.", "200");
         } catch (Exception e) {
             log.error("Failed to send order request to RabbitMQ: {}", e.getMessage());

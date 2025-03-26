@@ -12,7 +12,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@RedisHash("OrderNotification")
+@RedisHash("Notifications")
 @Getter
 @Setter
 @ToString
@@ -22,7 +22,7 @@ import java.util.UUID;
         @Index(name = "idx_notification_read", columnList = "read"),
         @Index(name = "idx_notification_time", columnList = "time"),
 })
-public class OrderNotification implements Serializable {
+public class Notification implements Serializable {
     @Serial
     private final static long serialVersionUID = 1L;
 
@@ -41,7 +41,7 @@ public class OrderNotification implements Serializable {
     private String icon;
 
     @Column(length = 12)
-    private String phoneNumber;
+    private String receiver;
 
     @Column(nullable = false)
     private boolean read = false;

@@ -17,4 +17,5 @@ public class APIURLs {
     public static final String TRANSLATION = BASE + "/translations";
     public static final String DASHBOARD = BASE + "/dashboards";
     public static final String SYS_PARAMS = BASE + "/sys-params";
+    public static final String NOTIFICATIONS = BASE + "/notifications";
 }
