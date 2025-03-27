@@ -177,7 +177,7 @@ public class MenuServiceImpl {
 
     @Transactional
     @Cacheable(value = CacheValue.MENU_ENTITY, key = "#menuId")
-    public Optional<Menu> getMenuEntityById(UUID menuId) {
+    public Optional<Menu> findMenuEntityById(UUID menuId) {
         return menuRepository.findById(menuId);
     }
 

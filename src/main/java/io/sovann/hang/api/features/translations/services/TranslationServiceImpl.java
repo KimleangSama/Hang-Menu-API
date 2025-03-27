@@ -23,7 +23,7 @@ public class TranslationServiceImpl {
     @Transactional
     @CacheEvict(value = "translations", key = "#request.menuId")
     public MenuResponse createTranslation(User user, CreateTranslationRequest request) {
-        Menu menu = menuService.getMenuEntityById(request.getMenuId())
+        Menu menu = menuService.findMenuEntityById(request.getMenuId())
                 .orElseThrow(() -> new ResourceNotFoundException("Menu", request.getMenuId().toString()));
         boolean isLanguageExist = languageServiceImpl.isLanguageExist(request.getLanguageCode());
         if (!isLanguageExist) {

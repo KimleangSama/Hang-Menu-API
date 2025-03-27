@@ -31,16 +31,14 @@ public class OrderEventListener {
     @Transactional
     @RabbitListener(queues = RabbitMQConfig.ORDER_QUEUE)
     public void handleOrderCreation(CreateOrderRequest request) {
-        log.info("Handling order creation");
         Store store = storeServiceImpl.findStoreEntityById(request.getStoreId());
-        // Initialize totals
+
         double totalAmountInRiel = 0;
         double totalAmountInDollar = 0;
 
         List<OrderMenu> orderMenus = new ArrayList<>();
-        // Process order menus first
         for (CreateOrderMenuRequest orderMenuRequest : request.getOrderMenus()) {
-            Menu menu = menuService.getMenuEntityById(orderMenuRequest.getMenuId())
+            Menu menu = menuService.findMenuEntityById(orderMenuRequest.getMenuId())
                     .orElse(null);
             if (menu == null) {
                 log.error("Menu not found with id: {}", orderMenuRequest.getMenuId());
@@ -50,13 +48,16 @@ public class OrderEventListener {
             MMConfig.mapper().map(menu, orderMenu);
             orderMenu.setMenuId(menu.getId());
             orderMenu.setQuantity(orderMenuRequest.getQuantity());
-            // Calculate total amount
             if ("riel".equalsIgnoreCase(menu.getCurrency())) {
                 totalAmountInRiel += menu.getPrice() * orderMenuRequest.getQuantity();
             } else {
                 totalAmountInDollar += menu.getPrice() * orderMenuRequest.getQuantity();
             }
             orderMenus.add(orderMenu);
+        }
+        if (orderMenus.isEmpty()) {
+            log.error("No order menus found for order: {}", request.getCode());
+            return;
         }
         // Create order after all calculations
         Order order = new Order();

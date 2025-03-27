@@ -179,7 +179,7 @@ public class FileStorageController {
             }
             List<String> filenames = fileStorageService.saveAll(user.getUser(), files);
             if (type.equalsIgnoreCase("menu")) {
-                Menu menu = menuService.getMenuEntityById(id)
+                Menu menu = menuService.findMenuEntityById(id)
                         .orElseThrow(() -> new EntityNotFoundException("Menu not found"));
                 List<MenuImage> menuImages = filenames.stream()
                         .map(filename -> new MenuImage(menu, filename, APIURLs.BASE + "/view/" + filename))
