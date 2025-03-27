@@ -1,33 +1,21 @@
 package io.sovann.hang.api.features.menus.controllers;
 
-import io.sovann.hang.api.annotations.CurrentUser;
-import io.sovann.hang.api.annotations.WithRateLimitProtection;
-import io.sovann.hang.api.commons.controllers.ControllerServiceCallback;
-import io.sovann.hang.api.commons.payloads.BaseResponse;
-import io.sovann.hang.api.constants.APIURLs;
-import io.sovann.hang.api.features.menus.payloads.requests.CreateMenuRequest;
-import io.sovann.hang.api.features.menus.payloads.requests.MenuToggleRequest;
-import io.sovann.hang.api.features.menus.payloads.requests.UpdateMenuCategoryRequest;
-import io.sovann.hang.api.features.menus.payloads.requests.UpdateMenuRequest;
-import io.sovann.hang.api.features.menus.payloads.responses.CategoryMenuResponse;
-import io.sovann.hang.api.features.menus.payloads.responses.MenuResponse;
-import io.sovann.hang.api.features.menus.services.MenuServiceImpl;
-import io.sovann.hang.api.features.stores.entities.Store;
-import io.sovann.hang.api.features.users.entities.Group;
-import io.sovann.hang.api.features.users.securities.CustomUserDetails;
-import io.sovann.hang.api.features.users.services.GroupServiceImpl;
-import io.sovann.hang.api.features.users.services.UserServiceImpl;
-import io.sovann.hang.api.utils.SoftEntityDeletable;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
+import io.sovann.hang.api.annotations.*;
+import io.sovann.hang.api.commons.controllers.*;
+import io.sovann.hang.api.commons.payloads.*;
+import io.sovann.hang.api.constants.*;
+import io.sovann.hang.api.features.menus.payloads.requests.*;
+import io.sovann.hang.api.features.menus.payloads.responses.*;
+import io.sovann.hang.api.features.menus.services.*;
+import io.sovann.hang.api.features.users.securities.*;
+import io.sovann.hang.api.features.users.services.*;
+import io.sovann.hang.api.utils.*;
+import java.util.*;
+import java.util.stream.*;
+import lombok.*;
+import lombok.extern.slf4j.*;
+import org.springframework.security.access.prepost.*;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -54,22 +42,22 @@ public class MenuController {
     @WithRateLimitProtection
     @GetMapping("/of-store/{storeId}/all/without")
     @PreAuthorize("hasAnyRole('admin', 'manager')")
-    public BaseResponse<List<MenuResponse>> listMenusOfStoreWithoutMappedCategory(
+    public BaseResponse<List<MenuResponse>> findAllMenusByStoreIdWithoutMapping(
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID storeId
     ) {
-        return callback.execute(() -> menuService.list(user != null ? user.getUser() : null, storeId),
+        return callback.execute(() -> menuService.findAllMenusByStoreId(user != null ? user.getUser() : null, storeId),
                 "Menu failed to list", null);
     }
 
-    // @WithRateLimitProtection
+    @WithRateLimitProtection
     @GetMapping("/of-store/{storeId}/all/with")
-    public BaseResponse<List<CategoryMenuResponse>> listMenusOfStoreWithMappedCategory(
+    public BaseResponse<List<CategoryMenuResponse>> findAllMenusByStoreIdWithMapping(
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID storeId
     ) {
         return callback.execute(() -> {
-            List<MenuResponse> responses = menuService.list(user != null ? user.getUser() : null, storeId);
+            List<MenuResponse> responses = menuService.findAllMenusByStoreId(user != null ? user.getUser() : null, storeId);
             Map<UUID, List<MenuResponse>> grouped = responses.stream()
                     .collect(Collectors.groupingBy(MenuResponse::getCategoryId));
             return grouped.entrySet().stream()
@@ -96,7 +84,7 @@ public class MenuController {
             @CurrentUser CustomUserDetails user,
             @RequestBody MenuToggleRequest request
     ) {
-        SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user);
         return callback.execute(() -> menuService.toggleMenuVisibility(user.getUser(), request),
                 "Menu failed to set hide",
                 null);
@@ -104,57 +92,49 @@ public class MenuController {
 
     @DeleteMapping("/delete")
     @PreAuthorize("hasAnyRole('admin', 'manager')")
-    public BaseResponse<MenuResponse> deleteMenu(
+    public BaseResponse<MenuResponse> deleteMenuById(
             @CurrentUser CustomUserDetails user,
             @RequestBody MenuToggleRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> menuService.deleteMenu(user.getUser(), request),
+        return callback.execute(() -> menuService.deleteMenuById(user.getUser(), request),
                 "Menu failed to delete",
                 null);
     }
 
     @GetMapping("/{id}/details")
     @PreAuthorize("hasAnyRole('admin', 'manager')")
-    public BaseResponse<MenuResponse> getMenuResponseById(
+    public BaseResponse<MenuResponse> findMenuById(
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID id
     ) {
-        return callback.execute(() -> menuService.getMenuResponseById(user != null ? user.getUser() : null, id),
+        return callback.execute(() -> menuService.findMenuById(user != null ? user.getUser() : null, id),
                 "Menu failed to get",
                 null);
     }
 
     @PutMapping("/{id}/update")
     @PreAuthorize("hasAnyRole('admin', 'manager')")
-    public BaseResponse<MenuResponse> updateMenu(
+    public BaseResponse<MenuResponse> updateMenuById(
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID id,
             @RequestBody UpdateMenuRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> menuService.update(user.getUser(), id, request),
+        return callback.execute(() -> menuService.updateMenuById(user.getUser(), id, request),
                 "Menu failed to update",
                 null);
     }
 
     @PatchMapping("/{id}/update-category")
     @PreAuthorize("hasAnyRole('admin', 'manager')")
-    public BaseResponse<MenuResponse> updateMenuCategory(
+    public BaseResponse<MenuResponse> updateCategoryOfMenuById(
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID id,
             @RequestBody UpdateMenuCategoryRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> {
-                    Group group = groupServiceImpl.getGroupOfUser(user.getUser());
-                    Store store = userServiceImpl.getStoreOfGroup(group);
-                    if (store == null) {
-                        throw new RuntimeException("Store not found");
-                    }
-                    request.setStoreId(store.getId());
-                    return menuService.updateMenuCategory(user.getUser(), id, request);
-                },
+        return callback.execute(() -> menuService.updateCategoryOfMenuById(user.getUser(), id, request),
                 "Menu failed to update",
                 null);
     }

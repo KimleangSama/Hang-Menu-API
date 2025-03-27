@@ -115,7 +115,7 @@ public class StoreServiceImpl {
 
     @Transactional
     @Cacheable(value = CacheValue.STORE, key = "#user.id")
-    public List<StoreResponse> list(User user) {
+    public List<StoreResponse> findAllStoresByUser(User user) {
         boolean isAdmin = user.getRoles().stream()
                 .anyMatch(role -> role.getName().equals(AuthRole.admin));
         return storeRepository.findAll().stream()
@@ -134,7 +134,7 @@ public class StoreServiceImpl {
             @CacheEvict(value = CacheValue.STORE, key = "#user.id"),
             @CacheEvict(value = CacheValue.STORES, key = "#user.id"),
     })
-    public StoreResponse deleteStore(User user, UUID id) {
+    public StoreResponse deleteStoreById(User user, UUID id) {
         Store store = storeRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Store", id.toString())
         );
@@ -161,8 +161,8 @@ public class StoreServiceImpl {
 
     @Transactional
     @Cacheable(value = CacheValue.STORE, key = "#user.id")
-    public StoreResponse getMyStore(User user) {
-        Group group = groupServiceImpl.getGroupOfUser(user);
+    public StoreResponse findMyStore(User user) {
+        Group group = groupServiceImpl.findGroupByUser(user);
         if (group == null) {
             throw new ResourceNotFoundException("Group", "User ID: " + user.getId());
         }
@@ -172,7 +172,7 @@ public class StoreServiceImpl {
     }
 
     @Transactional
-    public List<StoreResponse> assignStoreToGroup(User user, AssignGroupRequest request) {
+    public List<StoreResponse> assignStoreToUserGroup(User user, AssignGroupRequest request) {
         Group group = groupRepository.findById(request.getGroupId())
                 .orElseThrow(() -> new ResourceNotFoundException("Group", request.getGroupId().toString()));
         return request.getStoreIds().stream()
@@ -192,7 +192,7 @@ public class StoreServiceImpl {
             @CacheEvict(value = CacheValue.STORES, key = "#user.id"),
             @CacheEvict(value = CacheValue.STORE, key = "#request.slug"),
     })
-    public StoreResponse updateStore(User user, UUID id, UpdateStoreRequest request) {
+    public StoreResponse updateStoreById(User user, UUID id, UpdateStoreRequest request) {
         Store store = storeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Store", id.toString()));
         log.info(request.toString());
@@ -281,7 +281,7 @@ public class StoreServiceImpl {
 
     @Transactional
     @Cacheable(value = CacheValue.STORE, key = "#slug")
-    public StoreResponse getStoreByNameSlug(String slug) {
+    public StoreResponse findByStoreSlug(String slug) {
         Store store = storeRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Store", slug));
         return StoreResponse.fromEntity(store);
@@ -289,7 +289,7 @@ public class StoreServiceImpl {
 
     @Transactional
     @Cacheable(value = CacheValue.STORE_ENTITY, key = "#user.id")
-    public Store getStoreEntityById(User user, UUID storeId) {
+    public Store findStoreEntityById(User user, UUID storeId) {
         if (user == null) throw new ResourceForbiddenException("Unknown user", Store.class);
         return storeRepository.findById(Optional.ofNullable(storeId)
                         .orElseThrow(() -> new ResourceNotFoundException("Store", "unknown")))
@@ -297,7 +297,7 @@ public class StoreServiceImpl {
     }
 
     @Transactional
-    public Store getStoreEntityById(UUID storeId) {
+    public Store findStoreEntityById(UUID storeId) {
         return storeRepository.findById(storeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Store", storeId.toString()));
     }
@@ -308,7 +308,7 @@ public class StoreServiceImpl {
             @CacheEvict(value = CacheValue.STORES, key = "#user.id"),
             @CacheEvict(value = CacheValue.STORE, key = "#store.slug"),
     })
-    public StoreResponse updateStoreLayout(User user, Store store, String layout) {
+    public StoreResponse updateStoreLayoutById(User user, Store store, String layout) {
         if (ResourceOwner.hasPermission(user, store)) {
             store.setLayout(layout);
             store.setUpdatedAt(LocalDateTime.now());

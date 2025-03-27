@@ -53,7 +53,7 @@ public class GroupServiceImpl {
     }
 
     @Transactional
-    public List<UserResponse> getUsers(User user, UUID groupId) {
+    public List<UserResponse> findAllUsersOfGroupId(User user, UUID groupId) {
         Group group = getGroupById(groupId);
         if (!isManagerOrCreator(user, group)) {
             throw new ResourceForbiddenException(user.getUsername(), Group.class);
@@ -64,7 +64,7 @@ public class GroupServiceImpl {
                 .collect(Collectors.toList());
     }
 
-    public GroupResponse promoteOrDemoteUser(User user, PromoteDemoteRequest request) {
+    public GroupResponse promoteOrDemoteUserInGroup(User user, PromoteDemoteRequest request) {
         Group group = getGroupById(request.getGroupId());
         User userToPromote = getUserById(request.getUserId());
 
@@ -84,7 +84,7 @@ public class GroupServiceImpl {
     }
 
     @CacheEvict(value = "groups", key = "#request.username")
-    public GroupMemberResponse removeUser(User user, AddOrRemoveGroupMemberRequest request) {
+    public GroupMemberResponse removeUserFromGroup(User user, AddOrRemoveGroupMemberRequest request) {
         Group group = getGroupById(request.getGroupId());
         User userToRemove = getUserById(request.getUserId());
 
@@ -97,7 +97,7 @@ public class GroupServiceImpl {
     }
 
     @CacheEvict(value = "groups", key = "#request.username")
-    public GroupMemberResponse addUser(User user, AddOrRemoveGroupMemberRequest request) {
+    public GroupMemberResponse addUserToGroup(User user, AddOrRemoveGroupMemberRequest request) {
         Group group = getGroupById(request.getGroupId());
         User userToAdd = getUserById(request.getUserId());
         return addGroupMember(group, userToAdd);
@@ -105,7 +105,7 @@ public class GroupServiceImpl {
 
     @Transactional
     @CacheEvict(value = "groups", key = "#request.username")
-    public GroupMemberResponse registerUser(User user, RegisterToGroupRequest request) {
+    public GroupMemberResponse registerUserToGroup(User user, RegisterToGroupRequest request) {
         Group group = getGroupById(request.getGroupId());
         List<Role> roles = roleServiceImpl.findByIds(request.getRoles());
         request.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -138,7 +138,7 @@ public class GroupServiceImpl {
     }
 
     @Transactional
-    public Group getGroupOfUser(User user) {
+    public Group findGroupByUser(User user) {
         return groupMemberRepository.findByUserId(user.getId())
                 .map(GroupMember::getGroup)
                 .orElseThrow(() -> new ResourceNotFoundException("Group", user.getId().toString()));

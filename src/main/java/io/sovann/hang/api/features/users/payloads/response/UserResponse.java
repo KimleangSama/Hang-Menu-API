@@ -1,16 +1,14 @@
 package io.sovann.hang.api.features.users.payloads.response;
 
-import io.sovann.hang.api.features.users.entities.User;
-import io.sovann.hang.api.features.users.enums.AuthProvider;
-import io.sovann.hang.api.utils.SoftEntityDeletable;
+import io.sovann.hang.api.configs.*;
+import io.sovann.hang.api.features.users.entities.*;
+import io.sovann.hang.api.features.users.enums.*;
+import io.sovann.hang.api.utils.*;
+import java.io.*;
+import java.time.*;
+import java.util.*;
 import lombok.*;
-import lombok.extern.slf4j.Slf4j;
-
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import lombok.extern.slf4j.*;
 
 @Slf4j
 @Getter
@@ -29,17 +27,12 @@ public class UserResponse implements Serializable {
     private LocalDateTime updatedAt;
     private Set<RoleResponse> roles;
 
-    public static UserResponse fromUser(User user) {
+    public static UserResponse fromEntity(User user) {
         UserResponse userResponse = new UserResponse();
-        userResponse.setId(user.getId());
-        userResponse.setUsername(user.getUsername());
-        userResponse.setFullname(user.getFullname());
-        userResponse.setEmail(user.getEmail());
-        userResponse.setProfileUrl(user.getProfileUrl());
-        userResponse.setProvider(user.getProvider());
-        userResponse.setRoles(RoleResponse.fromRoles(user.getRoles()));
-        userResponse.setCreatedAt(user.getCreatedAt());
-        userResponse.setUpdatedAt(user.getUpdatedAt());
+        MMConfig.mapper().map(user, userResponse);
+        if (user.getRoles() != null) {
+            userResponse.setRoles(RoleResponse.fromRoles(user.getRoles()));
+        }
         return userResponse;
     }
 
@@ -53,12 +46,7 @@ public class UserResponse implements Serializable {
                         log.debug(e.getMessage());
                         return false;
                     }
-                })
-                .map(UserResponse::fromUser)
+                }).map(UserResponse::fromEntity)
                 .toList();
-    }
-
-    public static UserResponse fromEntity(User user) {
-        return fromUser(user);
     }
 }

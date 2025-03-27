@@ -1,29 +1,23 @@
 package io.sovann.hang.api.configs;
 
 
-import io.sovann.hang.api.configs.properties.CORSProperties;
-import io.sovann.hang.api.configs.properties.LokiProperties;
-import io.sovann.hang.api.configs.properties.RSAKeyProperties;
-import io.sovann.hang.api.configs.properties.TokenProperties;
-import lombok.RequiredArgsConstructor;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import io.sovann.hang.api.configs.properties.*;
+import lombok.*;
+import org.springframework.boot.context.properties.*;
+import org.springframework.context.annotation.*;
+import org.springframework.security.authentication.*;
+import org.springframework.security.authentication.dao.*;
+import org.springframework.security.config.annotation.authentication.configuration.*;
+import org.springframework.security.core.userdetails.*;
+import org.springframework.security.crypto.bcrypt.*;
+import org.springframework.security.crypto.password.*;
 
 @Configuration
 @RequiredArgsConstructor
 @EnableConfigurationProperties(value = {
-        RSAKeyProperties.class,
         TokenProperties.class,
         CORSProperties.class,
-        LokiProperties.class
+        LogProperties.class
 })
 public class ApplicationConfig {
     private final UserDetailsService userDetailsService;

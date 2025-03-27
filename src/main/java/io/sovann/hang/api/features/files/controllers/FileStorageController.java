@@ -147,7 +147,7 @@ public class FileStorageController {
     }
 
     private BaseResponse<FileResponse> handleStoreImageUpdate(User user, UUID id, String type, String filename) {
-        Store store = storeService.getStoreEntityById(user, id);
+        Store store = storeService.findStoreEntityById(user, id);
         if (!ResourceOwner.hasPermission(user, store)) {
             fileStorageServiceImpl.delete(user, filename);
             return BaseResponse.<FileResponse>accessDenied().setError("User is not permitted to upload file.");

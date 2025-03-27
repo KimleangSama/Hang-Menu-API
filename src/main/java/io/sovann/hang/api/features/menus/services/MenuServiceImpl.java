@@ -1,40 +1,23 @@
 package io.sovann.hang.api.features.menus.services;
 
-import io.sovann.hang.api.constants.CacheValue;
-import io.sovann.hang.api.constants.SysParamValue;
-import io.sovann.hang.api.exceptions.ResourceExceedLimitException;
-import io.sovann.hang.api.exceptions.ResourceForbiddenException;
-import io.sovann.hang.api.exceptions.ResourceNotFoundException;
-import io.sovann.hang.api.features.files.services.FileStorageServiceImpl;
-import io.sovann.hang.api.features.menus.entities.Category;
-import io.sovann.hang.api.features.menus.entities.Menu;
-import io.sovann.hang.api.features.menus.entities.MenuImage;
+import io.sovann.hang.api.constants.*;
+import io.sovann.hang.api.exceptions.*;
+import io.sovann.hang.api.features.files.services.*;
+import io.sovann.hang.api.features.menus.entities.*;
 import io.sovann.hang.api.features.menus.payloads.requests.*;
-import io.sovann.hang.api.features.menus.payloads.responses.FavoriteResponse;
-import io.sovann.hang.api.features.menus.payloads.responses.MenuResponse;
-import io.sovann.hang.api.features.menus.repos.CategoryRepository;
-import io.sovann.hang.api.features.menus.repos.MenuImageRepository;
-import io.sovann.hang.api.features.menus.repos.MenuRepository;
-import io.sovann.hang.api.features.sysparams.entities.SysParam;
-import io.sovann.hang.api.features.sysparams.repos.SysParamRepository;
-import io.sovann.hang.api.features.sysparams.services.SysParamServiceImpl;
-import io.sovann.hang.api.features.users.entities.Group;
-import io.sovann.hang.api.features.users.entities.User;
-import io.sovann.hang.api.utils.ResourceOwner;
-import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+import io.sovann.hang.api.features.menus.payloads.responses.*;
+import io.sovann.hang.api.features.menus.repos.*;
+import io.sovann.hang.api.features.sysparams.entities.*;
+import io.sovann.hang.api.features.sysparams.services.*;
+import io.sovann.hang.api.features.users.entities.*;
+import io.sovann.hang.api.utils.*;
+import java.util.*;
+import java.util.concurrent.*;
+import lombok.*;
+import org.slf4j.*;
+import org.springframework.cache.annotation.*;
+import org.springframework.stereotype.*;
+import org.springframework.transaction.annotation.*;
 
 @Service
 @RequiredArgsConstructor
@@ -73,7 +56,7 @@ public class MenuServiceImpl {
         return categoryFuture.thenCombine(countFuture, (optionalCategory, count) -> {
             Category category = optionalCategory.orElseThrow(() ->
                     new ResourceNotFoundException("Category", request.getCategoryId().toString()));
-            SysParam sysParam = sysParamServiceImpl.getSysParamByStoreId(request.getStoreId());
+            SysParam sysParam = sysParamServiceImpl.findSysParamByStoreId(request.getStoreId());
             Integer maxMenus = (sysParam != null) ? sysParam.getMaxMenuNumber() : SysParamValue.MAX_MENU;
             if (maxMenus != null && count >= maxMenus) {
                 throw new ResourceExceedLimitException("Menu", "category", maxMenus);
@@ -104,7 +87,7 @@ public class MenuServiceImpl {
             @CacheEvict(value = CacheValue.MENU, key = "#id"),
             @CacheEvict(value = CacheValue.MENUS, key = "#request.storeId")
     })
-    public MenuResponse update(User user, UUID id, UpdateMenuRequest request) {
+    public MenuResponse updateMenuById(User user, UUID id, UpdateMenuRequest request) {
         Menu menu = menuRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Menu", id.toString()));
         if (ResourceOwner.hasPermission(user, menu)) {
@@ -147,7 +130,7 @@ public class MenuServiceImpl {
 
     @Transactional
     @Cacheable(value = CacheValue.MENUS, key = "#storeId")
-    public List<MenuResponse> list(User user, UUID storeId) {
+    public List<MenuResponse> findAllMenusByStoreId(User user, UUID storeId) {
         List<Category> categories = categoryServiceImpl.findAllByStoreId(storeId);
         List<Menu> menus = menuRepository.findAllByCategoryInOrderByCreatedAtDesc(categories);
         if (user == null) {
@@ -180,7 +163,7 @@ public class MenuServiceImpl {
             @CacheEvict(value = CacheValue.MENU, key = "#request.menuId"),
             @CacheEvict(value = CacheValue.MENUS, key = "#request.storeId"),
     })
-    public MenuResponse deleteMenu(User user, MenuToggleRequest request) {
+    public MenuResponse deleteMenuById(User user, MenuToggleRequest request) {
         Menu menu = menuRepository.findById(request.getMenuId())
                 .orElseThrow(() -> new ResourceNotFoundException("Menu", request.getMenuId().toString()));
         if (ResourceOwner.hasPermission(user, menu)) {
@@ -200,7 +183,7 @@ public class MenuServiceImpl {
 
     @Transactional
     @Cacheable(value = CacheValue.MENU, key = "#id")
-    public MenuResponse getMenuResponseById(User user, UUID id) {
+    public MenuResponse findMenuById(User user, UUID id) {
         Menu menu = menuRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Menu", id.toString()));
         if (user == null) {
@@ -231,7 +214,7 @@ public class MenuServiceImpl {
             @CacheEvict(value = CacheValue.MENUS, key = "#request.storeId"),
             @CacheEvict(value = CacheValue.CATEGORIES, key = "#request.storeId"),
     })
-    public MenuResponse updateMenuCategory(User user, UUID id, UpdateMenuCategoryRequest request) {
+    public MenuResponse updateCategoryOfMenuById(User user, UUID id, UpdateMenuCategoryRequest request) {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category", request.getCategoryId().toString()));
         Menu menu = menuRepository.findById(id)

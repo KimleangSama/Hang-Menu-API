@@ -1,20 +1,17 @@
 package io.sovann.hang.api.features.users.controllers;
 
-import io.sovann.hang.api.annotations.CurrentUser;
-import io.sovann.hang.api.constants.APIURLs;
-import io.sovann.hang.api.commons.controllers.ControllerServiceCallback;
-import io.sovann.hang.api.commons.payloads.BaseResponse;
-import io.sovann.hang.api.features.users.payloads.response.RoleResponse;
-import io.sovann.hang.api.features.users.securities.CustomUserDetails;
-import io.sovann.hang.api.features.users.services.RoleServiceImpl;
-import io.sovann.hang.api.utils.SoftEntityDeletable;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
+import io.sovann.hang.api.annotations.*;
+import io.sovann.hang.api.commons.controllers.*;
+import io.sovann.hang.api.commons.payloads.*;
+import io.sovann.hang.api.constants.*;
+import io.sovann.hang.api.features.users.payloads.response.*;
+import io.sovann.hang.api.features.users.securities.*;
+import io.sovann.hang.api.features.users.services.*;
+import io.sovann.hang.api.utils.*;
+import java.util.*;
+import lombok.*;
+import org.springframework.security.access.prepost.*;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(APIURLs.ROLE)
@@ -25,7 +22,7 @@ public class RoleController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('admin', 'manager')")
-    public BaseResponse<List<RoleResponse>> getRoles(
+    public BaseResponse<List<RoleResponse>> findRolesOfUser(
             @CurrentUser CustomUserDetails user
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());

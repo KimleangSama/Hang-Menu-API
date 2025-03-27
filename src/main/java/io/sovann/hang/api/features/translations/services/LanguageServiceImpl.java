@@ -26,7 +26,7 @@ public class LanguageServiceImpl {
     @Transactional
     @CacheEvict(value = "languages", key = "#request.storeId")
     public LanguageResponse createLanguage(User user, CreateLanguageRequest request) {
-        Store store = storeService.getStoreEntityById(user, request.getStoreId());
+        Store store = storeService.findStoreEntityById(user, request.getStoreId());
         if (store == null) {
             throw new ResourceNotFoundException("Store", request.getStoreId().toString());
         }

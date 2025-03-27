@@ -15,7 +15,6 @@ import io.sovann.hang.api.features.menus.repos.CategoryRepository;
 import io.sovann.hang.api.features.stores.entities.Store;
 import io.sovann.hang.api.features.stores.services.StoreServiceImpl;
 import io.sovann.hang.api.features.sysparams.entities.SysParam;
-import io.sovann.hang.api.features.sysparams.repos.SysParamRepository;
 import io.sovann.hang.api.features.sysparams.services.SysParamServiceImpl;
 import io.sovann.hang.api.features.users.entities.Group;
 import io.sovann.hang.api.features.users.entities.Role;
@@ -53,11 +52,11 @@ public class CategoryServiceImpl {
             @CacheEvict(value = CacheValue.CATEGORY_ENTITIES, key = "#request.storeId")
     })
     public CategoryResponse create(User user, CreateCategoryRequest request) {
-        Store store = storeServiceImpl.getStoreEntityById(user, request.getStoreId());
+        Store store = storeServiceImpl.findStoreEntityById(user, request.getStoreId());
         if (!ResourceOwner.hasPermission(user, store)) {
             throw new ResourceForbiddenException(user.getUsername(), Store.class);
         }
-        SysParam sysParam = sysParamServiceImpl.getSysParamByStoreId(request.getStoreId());
+        SysParam sysParam = sysParamServiceImpl.findSysParamByStoreId(request.getStoreId());
         Integer maxCategories = (sysParam != null) ? sysParam.getMaxCategoryNumber() : SysParamValue.MAX_CATEGORY;
         Integer count = categoryRepository.countByStore(store);
         if (maxCategories != null && count >= maxCategories) {
@@ -75,8 +74,8 @@ public class CategoryServiceImpl {
 
     @Transactional(readOnly = true)
     @Cacheable(value = CacheValue.CATEGORIES, key = "#storeId")
-    public List<CategoryResponse> list(User user, UUID storeId) {
-        Store store = storeServiceImpl.getStoreEntityById(user, storeId);
+    public List<CategoryResponse> findAllCategoriesByStoreId(User user, UUID storeId) {
+        Store store = storeServiceImpl.findStoreEntityById(user, storeId);
         if (ResourceOwner.hasPermission(user, store)) {
             return categoryRepository.findAllWithMenuCountByStoreId(storeId);
         } else {
@@ -119,7 +118,7 @@ public class CategoryServiceImpl {
             @CacheEvict(value = CacheValue.CATEGORIES, key = "#request.storeId"),
             @CacheEvict(value = CacheValue.CATEGORY_ENTITIES, key = "#request.storeId")
     })
-    public CategoryResponse deleteCategory(User user, CategoryToggleRequest request) {
+    public CategoryResponse deleteCategoryById(User user, CategoryToggleRequest request) {
         Category category = getCategoryById(user, request);
         categoryRepository.delete(category);
         return CategoryResponse.fromEntity(category);
@@ -158,8 +157,8 @@ public class CategoryServiceImpl {
             @CacheEvict(value = CacheValue.CATEGORY_ENTITIES, key = "#storeId"),
             @CacheEvict(value = CacheValue.MENUS, key = "#storeId"),
     })
-    public List<CategoryResponse> reorderCategories(User user, UUID storeId, List<CategoryReorderRequest.CategoryPositionUpdate> updates) {
-        Store store = storeServiceImpl.getStoreEntityById(user, storeId);
+    public List<CategoryResponse> orderCategoriesPositions(User user, UUID storeId, List<CategoryReorderRequest.CategoryPositionUpdate> updates) {
+        Store store = storeServiceImpl.findStoreEntityById(user, storeId);
         if (ResourceOwner.hasPermission(user, store)) {
             List<UUID> categoryIds = updates.stream()
                     .map(CategoryReorderRequest.CategoryPositionUpdate::getId)
@@ -181,7 +180,7 @@ public class CategoryServiceImpl {
             @CacheEvict(value = CacheValue.CATEGORIES, key = "#request.storeId"),
             @CacheEvict(value = CacheValue.CATEGORY_ENTITIES, key = "#request.storeId")
     })
-    public CategoryResponse updateCategory(User user, UUID id, UpdateCategoryRequest request) {
+    public CategoryResponse updateCategoryById(User user, UUID id, UpdateCategoryRequest request) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", id.toString()));
         if (ResourceOwner.hasPermission(user, category)) {

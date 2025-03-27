@@ -1,18 +1,18 @@
 package io.sovann.hang.api.features.users.services;
 
 
-import io.sovann.hang.api.features.stores.entities.Store;
-import io.sovann.hang.api.features.stores.repos.StoreRepository;
-import io.sovann.hang.api.features.users.entities.Group;
+import io.sovann.hang.api.features.stores.entities.*;
+import io.sovann.hang.api.features.stores.repos.*;
 import io.sovann.hang.api.features.users.entities.User;
-import io.sovann.hang.api.features.users.repos.UserRepository;
-import io.sovann.hang.api.utils.SoftEntityDeletable;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import io.sovann.hang.api.features.users.entities.*;
+import io.sovann.hang.api.features.users.repos.*;
+import io.sovann.hang.api.utils.*;
+import lombok.*;
+import lombok.extern.slf4j.*;
+import org.springframework.cache.annotation.*;
+import org.springframework.security.core.userdetails.*;
+import org.springframework.stereotype.*;
+import org.springframework.transaction.annotation.*;
 
 @Slf4j
 @Service
@@ -29,16 +29,8 @@ public class UserServiceImpl {
         return found;
     }
 
-    @Cacheable(value = "users", key = "#email")
-    public User findByEmail(String email) {
-        User found = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User with email: " + email + " not found."));
-        SoftEntityDeletable.throwErrorIfSoftDeleted(found);
-        return found;
-    }
-
     @Transactional
-    public Store getStoreOfGroup(Group group) {
+    public Store findStoreByGroup(Group group) {
         return storeRepository.findByGroupId(group.getId())
                 .orElseThrow(() -> new UsernameNotFoundException("Store of group: " + group.getId() + " not found."));
     }

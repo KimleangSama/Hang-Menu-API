@@ -1,14 +1,13 @@
 package io.sovann.hang.api.features.sysparams.services;
 
-import io.sovann.hang.api.constants.CacheValue;
-import io.sovann.hang.api.features.sysparams.entities.SysParam;
-import io.sovann.hang.api.features.sysparams.repos.SysParamRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.UUID;
+import io.sovann.hang.api.constants.*;
+import io.sovann.hang.api.features.sysparams.entities.*;
+import io.sovann.hang.api.features.sysparams.repos.*;
+import java.util.*;
+import lombok.*;
+import org.springframework.cache.annotation.*;
+import org.springframework.stereotype.*;
+import org.springframework.transaction.annotation.*;
 
 @Service
 @RequiredArgsConstructor
@@ -17,7 +16,7 @@ public class SysParamServiceImpl {
 
     @Transactional(readOnly = true)
     @Cacheable(value = CacheValue.SYS_PARAM, key = "#storeId")
-    public SysParam getSysParamByStoreId(UUID storeId) {
+    public SysParam findSysParamByStoreId(UUID storeId) {
         return sysParamRepository.findByStoreId(storeId)
                 .orElse(null);
     }

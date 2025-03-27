@@ -24,7 +24,7 @@ public class FeedbackServiceImpl {
 
     @Transactional
     public FeedbackResponse createFeedback(User user, CreateFeedbackRequest request) {
-        Store store = storeServiceImpl.getStoreEntityById(user, request.getStoreId());
+        Store store = storeServiceImpl.findStoreEntityById(user, request.getStoreId());
         Feedback feedback = CreateFeedbackRequest.fromRequest(request);
         feedback.setStore(store);
         if (user != null) {

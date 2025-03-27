@@ -2,42 +2,30 @@ package io.sovann.hang.api.configs;
 
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.support.converter.*;
-import org.springframework.beans.factory.annotation.*;
 import org.springframework.context.annotation.*;
 
 @Configuration
 public class RabbitMQConfig {
-    @Value("${rabbitmq.exchange}")
-    private String exchange;
-    @Value("${rabbitmq.queue}")
-    private String queue;
-    @Value("${rabbitmq.routing-key}")
-    private String routingKey;
-
-    public static final String BATCH_MENU_QUEUE = "batch-menu-queue";
-    public static final String BATCH_MENU_EXCHANGE = "batch-menu-exchange";
+    public static final String ORDER_QUEUE = "order-queue";
+    public static final String ORDER_EXCHANGE = "order-exchange";
+    public static final String ORDER_ROUTING_KEY = "order-routing-key";
     public static final String NOTIFICATION_QUEUE = "notification-queue";
     public static final String NOTIFICATION_EXCHANGE = "notification-exchange";
     public static final String NOTIFICATION_ROUTING_KEY = "notification-routing-key";
 
     @Bean
     public DirectExchange orderExchange() {
-        return new DirectExchange(exchange);
+        return new DirectExchange(ORDER_EXCHANGE);
     }
 
     @Bean
     public Queue orderQueue() {
-        return new Queue(queue, true);
+        return new Queue(ORDER_QUEUE, true);
     }
 
     @Bean
-    public Binding binding(Queue orderQueue, DirectExchange orderExchange) {
-        return BindingBuilder.bind(orderQueue).to(orderExchange).with(routingKey);
-    }
-
-    @Bean
-    public Queue batchMenuQueue() {
-        return new Queue(BATCH_MENU_QUEUE, true);
+    public Binding orderBinding(Queue orderQueue, DirectExchange orderExchange) {
+        return BindingBuilder.bind(orderQueue).to(orderExchange).with(ORDER_ROUTING_KEY);
     }
 
     @Bean

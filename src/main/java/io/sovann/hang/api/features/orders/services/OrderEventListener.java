@@ -1,27 +1,22 @@
 package io.sovann.hang.api.features.orders.services;
 
-import io.sovann.hang.api.configs.RabbitMQConfig;
-import io.sovann.hang.api.features.menus.entities.Menu;
-import io.sovann.hang.api.features.menus.services.MenuServiceImpl;
-import io.sovann.hang.api.features.notifications.payloads.NotificationRequest;
-import io.sovann.hang.api.features.orders.entities.Order;
-import io.sovann.hang.api.features.orders.entities.OrderMenu;
-import io.sovann.hang.api.features.orders.payloads.requests.CreateOrderMenuRequest;
-import io.sovann.hang.api.features.orders.payloads.requests.CreateOrderRequest;
-import io.sovann.hang.api.features.orders.repos.OrderMenuRepository;
-import io.sovann.hang.api.features.orders.repos.OrderRepository;
-import io.sovann.hang.api.features.stores.entities.Store;
-import io.sovann.hang.api.features.stores.services.StoreServiceImpl;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import io.sovann.hang.api.configs.*;
+import io.sovann.hang.api.features.menus.entities.*;
+import io.sovann.hang.api.features.menus.services.*;
+import io.sovann.hang.api.features.notifications.payloads.*;
+import io.sovann.hang.api.features.orders.entities.*;
+import io.sovann.hang.api.features.orders.payloads.requests.*;
+import io.sovann.hang.api.features.orders.repos.*;
+import io.sovann.hang.api.features.stores.entities.*;
+import io.sovann.hang.api.features.stores.services.*;
+import java.time.*;
+import java.util.*;
+import lombok.*;
+import lombok.extern.slf4j.*;
+import org.springframework.amqp.rabbit.annotation.*;
+import org.springframework.amqp.rabbit.core.*;
+import org.springframework.stereotype.*;
+import org.springframework.transaction.annotation.*;
 
 @Slf4j
 @Service
@@ -34,9 +29,9 @@ public class OrderEventListener {
     private final RabbitTemplate rabbitTemplate;
 
     @Transactional
-    @RabbitListener(queues = "order.queue")
+    @RabbitListener(queues = RabbitMQConfig.ORDER_QUEUE)
     public void handleOrderCreation(CreateOrderRequest request) {
-        Store store = storeServiceImpl.getStoreEntityById(request.getStoreId());
+        Store store = storeServiceImpl.findStoreEntityById(request.getStoreId());
         // Initialize totals
         double totalAmountInRiel = 0;
         double totalAmountInDollar = 0;
@@ -51,15 +46,9 @@ public class OrderEventListener {
                 continue;
             }
             OrderMenu orderMenu = new OrderMenu();
+            MMConfig.mapper().map(menu, orderMenu);
             orderMenu.setMenuId(menu.getId());
-            orderMenu.setCode(menu.getCode());
-            orderMenu.setName(menu.getName());
-            orderMenu.setImage(menu.getImage());
-            orderMenu.setDescription(menu.getDescription());
             orderMenu.setQuantity(orderMenuRequest.getQuantity());
-            orderMenu.setPrice(menu.getPrice());
-            orderMenu.setCurrency(menu.getCurrency());
-            orderMenu.setDiscount(menu.getDiscount());
             // Calculate total amount
             if ("riel".equalsIgnoreCase(menu.getCurrency())) {
                 totalAmountInRiel += menu.getPrice() * orderMenuRequest.getQuantity();

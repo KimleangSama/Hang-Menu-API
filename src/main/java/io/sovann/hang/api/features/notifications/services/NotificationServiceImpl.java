@@ -1,27 +1,21 @@
 package io.sovann.hang.api.features.notifications.services;
 
-import io.sovann.hang.api.configs.MMConfig;
-import io.sovann.hang.api.configs.RabbitMQConfig;
-import io.sovann.hang.api.constants.CacheValue;
-import io.sovann.hang.api.features.notifications.entities.Notification;
-import io.sovann.hang.api.features.notifications.payloads.MarkAsReadNotificationRequest;
-import io.sovann.hang.api.features.notifications.payloads.NotificationRequest;
-import io.sovann.hang.api.features.notifications.payloads.NotificationResponse;
-import io.sovann.hang.api.features.notifications.repos.NotificationRepository;
-import io.sovann.hang.api.features.stores.entities.Store;
-import io.sovann.hang.api.features.stores.services.StoreServiceImpl;
-import io.sovann.hang.api.features.users.entities.User;
-import io.sovann.hang.api.utils.ResourceOwner;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
+import io.sovann.hang.api.configs.*;
+import io.sovann.hang.api.constants.*;
+import io.sovann.hang.api.features.notifications.entities.*;
+import io.sovann.hang.api.features.notifications.payloads.*;
+import io.sovann.hang.api.features.notifications.repos.*;
+import io.sovann.hang.api.features.stores.entities.*;
+import io.sovann.hang.api.features.stores.services.*;
+import io.sovann.hang.api.features.users.entities.*;
+import io.sovann.hang.api.utils.*;
+import java.util.*;
+import lombok.*;
+import lombok.extern.slf4j.*;
+import org.springframework.amqp.rabbit.annotation.*;
+import org.springframework.cache.annotation.*;
+import org.springframework.stereotype.*;
+import org.springframework.transaction.annotation.*;
 
 @Slf4j
 @Service
@@ -30,12 +24,12 @@ public class NotificationServiceImpl {
     private final NotificationRepository notificationRepository;
     private final StoreServiceImpl storeServiceImpl;
 
+    @Transactional
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
     @CacheEvict(value = CacheValue.NOTIFICATIONS, key = "#request.storeId")
-    @Transactional
-    public void handleOrderCreation(NotificationRequest request) {
+    public void handleNotificationCreation(NotificationRequest request) {
         log.info("Received notification request: {}", request);
-        Store store = storeServiceImpl.getStoreEntityById(request.getStoreId());
+        Store store = storeServiceImpl.findStoreEntityById(request.getStoreId());
         var notification = new Notification();
         MMConfig.mapper().map(request, notification);
         notification.setStore(store);
@@ -44,14 +38,18 @@ public class NotificationServiceImpl {
 
     @Transactional
     @Cacheable(value = CacheValue.NOTIFICATIONS, key = "#storeId")
-    public List<NotificationResponse> getAllByStoreId(User user, UUID storeId) {
+    public List<NotificationResponse> findAllNotificationsByStoreId(User user, UUID storeId) {
+        Store store = storeServiceImpl.findStoreEntityById(storeId);
+        if (!ResourceOwner.hasPermission(user, store)) {
+            throw new RuntimeException("You don't have permission to view notifications of this store");
+        }
         List<Notification> notifs = notificationRepository.findAllByStoreIdOrderByTimeDesc(storeId);
         return NotificationResponse.fromEntities(notifs);
     }
 
     @Transactional
     @CacheEvict(value = CacheValue.NOTIFICATIONS, key = "#request.storeId")
-    public NotificationResponse markAsRead(User user, MarkAsReadNotificationRequest request) {
+    public NotificationResponse markAsReadById(User user, MarkAsReadNotificationRequest request) {
         Notification notification = notificationRepository.findById(request.getNotificationId())
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
         if (ResourceOwner.hasPermission(user, notification.getStore())) {
@@ -65,7 +63,7 @@ public class NotificationServiceImpl {
     @Transactional
     @CacheEvict(value = CacheValue.NOTIFICATIONS, key = "#storeId")
     public Void deleteAllByStoreId(User user, UUID storeId) {
-        if (ResourceOwner.hasPermission(user, storeServiceImpl.getStoreEntityById(storeId))) {
+        if (ResourceOwner.hasPermission(user, storeServiceImpl.findStoreEntityById(storeId))) {
             notificationRepository.deleteAllByStoreId(storeId);
             return null;
         }

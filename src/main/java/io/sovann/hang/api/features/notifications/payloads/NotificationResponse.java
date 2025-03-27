@@ -1,5 +1,6 @@
 package io.sovann.hang.api.features.notifications.payloads;
 
+import io.sovann.hang.api.configs.*;
 import io.sovann.hang.api.features.notifications.entities.*;
 import java.time.*;
 import java.util.*;
@@ -23,14 +24,7 @@ public class NotificationResponse {
 
     public static NotificationResponse fromEntity(Notification notification) {
         var response = new NotificationResponse();
-        response.setId(notification.getId());
-        response.setMessage(notification.getMessage());
-        response.setTime(notification.getTime());
-        response.setIcon(notification.getIcon());
-        response.setReceiver(notification.getReceiver());
-        response.setRead(notification.isRead());
-        response.setType(notification.getType());
-        response.setLink(notification.getLink());
+        MMConfig.mapper().map(notification, response);
         if (notification.getStore() != null) {
             response.setStoreId(notification.getStore().getId());
         }

@@ -1,11 +1,11 @@
 package io.sovann.hang.api.features.orders.services;
 
+import io.sovann.hang.api.configs.*;
 import io.sovann.hang.api.features.orders.entities.Order;
 import io.sovann.hang.api.features.orders.enums.OrderStatus;
 import io.sovann.hang.api.features.orders.payloads.requests.CreateOrderRequest;
 import io.sovann.hang.api.features.orders.payloads.responses.OrderQResponse;
 import io.sovann.hang.api.features.orders.payloads.responses.OrderResponse;
-import io.sovann.hang.api.features.orders.repos.OrderMenuRepository;
 import io.sovann.hang.api.features.orders.repos.OrderRepository;
 import io.sovann.hang.api.features.stores.entities.Store;
 import io.sovann.hang.api.features.stores.services.StoreServiceImpl;
@@ -41,7 +41,7 @@ public class OrderServiceImpl {
         try {
             UUID code = UUID.randomUUID();
             request.setCode(code);
-            rabbitTemplate.convertAndSend("order.exchange", "order.created", request);
+            rabbitTemplate.convertAndSend(RabbitMQConfig.ORDER_EXCHANGE, RabbitMQConfig.ORDER_QUEUE, request);
             setResponse(response, code, "Order request sent to store.", "200");
         } catch (Exception e) {
             log.error("Failed to send order request to RabbitMQ: {}", e.getMessage());
@@ -64,7 +64,7 @@ public class OrderServiceImpl {
 
     @Transactional
     @Cacheable(value = "order", key = "#orderId")
-    public OrderResponse getOrderById(User user, UUID orderId) {
+    public OrderResponse findOrderById(User user, UUID orderId) {
         return getOrderEntityById(orderId)
                 .filter(order -> isUserAuthorizedForStore(user, order.getStore().getId()))
                 .map(order -> OrderResponse.fromEntity(order, true))
@@ -73,7 +73,7 @@ public class OrderServiceImpl {
 
     @Transactional
     @Cacheable(value = "orders", key = "#storeId")
-    public List<OrderResponse> getOrdersByStoreId(User user, UUID storeId) {
+    public List<OrderResponse> findAllOrdersByStoreId(User user, UUID storeId) {
         return isUserAuthorizedForStore(user, storeId)
                 ? OrderResponse.fromEntities(orderRepository.findByStoreIdOrderByCreatedAt(storeId), false)
                 : Collections.emptyList();
@@ -83,7 +83,7 @@ public class OrderServiceImpl {
         if (user.getRoles().contains(new Role(AuthRole.admin))) {
             return true;
         }
-        Store store = storeServiceImpl.getStoreEntityById(user, storeId);
+        Store store = storeServiceImpl.findStoreEntityById(user, storeId);
         if (store.getGroup() == null) {
             return false;
         }
@@ -93,7 +93,7 @@ public class OrderServiceImpl {
 
     @Transactional
     @Cacheable(value = "order", key = "#code")
-    public OrderResponse getOrderByCode(UUID code) {
+    public OrderResponse findOrderByCode(UUID code) {
         return orderRepository.findByCode(code)
                 .map(order -> OrderResponse.fromEntity(order, true))
                 .orElse(null);
@@ -105,7 +105,7 @@ public class OrderServiceImpl {
             @CacheEvict(value = "order", key = "#orderId"),
             @CacheEvict(value = "orders", allEntries = true),
     })
-    public OrderResponse updateOrderStatus(User user, UUID orderId, String status) {
+    public OrderResponse updateOrderStatusById(User user, UUID orderId, String status) {
         Order order = orderRepository.findById(orderId)
                 .filter(o -> isUserAuthorizedForStore(user, o.getStore().getId()))
                 .orElse(null);
