@@ -1,5 +1,6 @@
 package io.sovann.hang.api.features.sysparams.entities;
 
+import com.redis.om.spring.annotations.*;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,6 +17,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "sys_params")
 public class SysParam implements Serializable {
+    @Indexed
     @Id
     @GeneratedValue
     @Column(columnDefinition = "UUID", updatable = false, nullable = false)

@@ -1,5 +1,6 @@
 package io.sovann.hang.api.features.menus.entities;
 
+import com.redis.om.spring.annotations.*;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,6 +23,7 @@ public class MenuImage implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    @Indexed
     @Id
     @GeneratedValue
     @Column(columnDefinition = "UUID", updatable = false, nullable = false)

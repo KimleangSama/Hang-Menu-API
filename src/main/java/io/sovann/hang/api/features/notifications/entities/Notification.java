@@ -1,5 +1,6 @@
 package io.sovann.hang.api.features.notifications.entities;
 
+import com.redis.om.spring.annotations.*;
 import io.sovann.hang.api.features.stores.entities.Store;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -26,6 +27,7 @@ public class Notification implements Serializable {
     @Serial
     private final static long serialVersionUID = 1L;
 
+    @Indexed
     @Id
     @GeneratedValue
     @Column(columnDefinition = "UUID", updatable = false, nullable = false)

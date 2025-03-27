@@ -1,6 +1,5 @@
 package io.sovann.hang.api.commons.entities;
 
-import com.redis.om.spring.annotations.Indexed;
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -11,6 +10,7 @@ import lombok.Setter;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.UUID;
+import org.springframework.data.redis.core.index.*;
 
 @Getter
 @Setter

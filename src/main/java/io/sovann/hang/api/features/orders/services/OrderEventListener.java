@@ -31,6 +31,7 @@ public class OrderEventListener {
     @Transactional
     @RabbitListener(queues = RabbitMQConfig.ORDER_QUEUE)
     public void handleOrderCreation(CreateOrderRequest request) {
+        log.info("Handling order creation");
         Store store = storeServiceImpl.findStoreEntityById(request.getStoreId());
         // Initialize totals
         double totalAmountInRiel = 0;
