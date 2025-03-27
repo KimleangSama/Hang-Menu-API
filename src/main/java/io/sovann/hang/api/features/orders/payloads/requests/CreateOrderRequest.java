@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -12,7 +13,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @ToString
-public class CreateOrderRequest {
+public class CreateOrderRequest implements Serializable {
     private UUID code;
     private UUID storeId;
     private LocalDateTime orderTime;
