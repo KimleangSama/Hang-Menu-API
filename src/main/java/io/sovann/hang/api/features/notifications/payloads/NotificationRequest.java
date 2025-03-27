@@ -2,6 +2,8 @@ package io.sovann.hang.api.features.notifications.payloads;
 
 import java.io.*;
 import java.time.*;
+import java.util.UUID;
+
 import lombok.*;
 
 @Getter
@@ -15,4 +17,5 @@ public class NotificationRequest implements Serializable {
     private boolean read;
     private String type;
     private String link;
+    private UUID storeId;
 }

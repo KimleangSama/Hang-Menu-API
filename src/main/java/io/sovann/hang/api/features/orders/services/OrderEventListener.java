@@ -1,22 +1,27 @@
 package io.sovann.hang.api.features.orders.services;
 
-import io.sovann.hang.api.configs.*;
-import io.sovann.hang.api.features.menus.entities.*;
-import io.sovann.hang.api.features.menus.services.*;
-import io.sovann.hang.api.features.notifications.payloads.*;
-import io.sovann.hang.api.features.orders.entities.*;
-import io.sovann.hang.api.features.orders.payloads.requests.*;
-import io.sovann.hang.api.features.orders.repos.*;
-import io.sovann.hang.api.features.stores.entities.*;
-import io.sovann.hang.api.features.stores.services.*;
-import java.time.*;
-import java.util.*;
-import lombok.*;
-import lombok.extern.slf4j.*;
-import org.springframework.amqp.rabbit.annotation.*;
-import org.springframework.amqp.rabbit.core.*;
-import org.springframework.stereotype.*;
-import org.springframework.transaction.annotation.*;
+import io.sovann.hang.api.configs.RabbitMQConfig;
+import io.sovann.hang.api.features.menus.entities.Menu;
+import io.sovann.hang.api.features.menus.services.MenuServiceImpl;
+import io.sovann.hang.api.features.notifications.payloads.NotificationRequest;
+import io.sovann.hang.api.features.orders.entities.Order;
+import io.sovann.hang.api.features.orders.entities.OrderMenu;
+import io.sovann.hang.api.features.orders.payloads.requests.CreateOrderMenuRequest;
+import io.sovann.hang.api.features.orders.payloads.requests.CreateOrderRequest;
+import io.sovann.hang.api.features.orders.repos.OrderMenuRepository;
+import io.sovann.hang.api.features.orders.repos.OrderRepository;
+import io.sovann.hang.api.features.stores.entities.Store;
+import io.sovann.hang.api.features.stores.services.StoreServiceImpl;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -90,7 +95,8 @@ public class OrderEventListener {
         notificationRequest.setReceiver(order.getPhoneNumber());
         notificationRequest.setRead(false);
         notificationRequest.setType("order");
-        notificationRequest.setLink("/orders/" + order.getCode());
+        notificationRequest.setLink("/orders/" + order.getId());
+        notificationRequest.setStoreId(store.getId());
         rabbitTemplate.convertAndSend(
                 RabbitMQConfig.NOTIFICATION_EXCHANGE,
                 RabbitMQConfig.NOTIFICATION_ROUTING_KEY,
