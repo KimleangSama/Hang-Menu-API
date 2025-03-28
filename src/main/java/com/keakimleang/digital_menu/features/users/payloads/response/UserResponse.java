@@ -1,14 +1,16 @@
 package com.keakimleang.digital_menu.features.users.payloads.response;
 
-import com.keakimleang.digital_menu.configs.*;
-import com.keakimleang.digital_menu.features.users.entities.*;
-import com.keakimleang.digital_menu.features.users.enums.*;
-import com.keakimleang.digital_menu.utils.*;
-import java.io.*;
-import java.time.*;
-import java.util.*;
+import com.keakimleang.digital_menu.features.users.entities.User;
+import com.keakimleang.digital_menu.features.users.enums.AuthProvider;
+import com.keakimleang.digital_menu.utils.SoftEntityDeletable;
 import lombok.*;
-import lombok.extern.slf4j.*;
+import lombok.extern.slf4j.Slf4j;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 @Slf4j
 @Getter
@@ -28,12 +30,20 @@ public class UserResponse implements Serializable {
     private Set<RoleResponse> roles;
 
     public static UserResponse fromEntity(User user) {
-        UserResponse userResponse = new UserResponse();
-        MMConfig.mapper().map(user, userResponse);
+        UserResponse response = new UserResponse();
+        response.setId(user.getId());
+        response.setUsername(user.getUsername());
+        response.setFullname(user.getFullname());
+        response.setEmail(user.getEmail());
+        response.setProfileUrl(user.getProfileUrl());
+        response.setProvider(user.getProvider());
+        response.setRoles(RoleResponse.fromRoles(user.getRoles()));
+        response.setCreatedAt(user.getCreatedAt());
+        response.setUpdatedAt(user.getUpdatedAt());
         if (user.getRoles() != null) {
-            userResponse.setRoles(RoleResponse.fromRoles(user.getRoles()));
+            response.setRoles(RoleResponse.fromRoles(user.getRoles()));
         }
-        return userResponse;
+        return response;
     }
 
     public static List<UserResponse> fromEntities(List<User> users) {

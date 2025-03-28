@@ -1,10 +1,15 @@
 package com.keakimleang.digital_menu.features.menus.payloads.responses;
 
-import com.keakimleang.digital_menu.configs.*;
-import com.keakimleang.digital_menu.features.menus.entities.*;
-import java.util.*;
-import lombok.*;
-import lombok.extern.slf4j.*;
+import com.keakimleang.digital_menu.configs.MMConfig;
+import com.keakimleang.digital_menu.features.menus.entities.Menu;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Getter
@@ -20,7 +25,6 @@ public class MenuResponse {
     private String currency;
     private String image;
     private boolean isAvailable;
-    private boolean isDeleted;
     private boolean isFavorite;
 
     private UUID categoryId;
@@ -34,6 +38,7 @@ public class MenuResponse {
         MenuResponse response = new MenuResponse();
         MMConfig.mapper().map(menu, response);
         response.setBadges(menu.getBadges());
+        response.setAvailable(menu.getIsAvailable());
         if (menu.getImages() != null && !menu.getImages().isEmpty()) {
             response.setImages(MenuImageResponse.fromEntities(menu.getImages()));
         }

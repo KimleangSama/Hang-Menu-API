@@ -1,12 +1,15 @@
 package com.keakimleang.digital_menu.features.menus.entities;
 
-import com.keakimleang.digital_menu.commons.entities.*;
-import com.keakimleang.digital_menu.features.users.entities.*;
+import com.keakimleang.digital_menu.commons.entities.BaseEntityAudit;
+import com.keakimleang.digital_menu.features.users.entities.Group;
 import jakarta.persistence.*;
-import java.io.*;
-import java.util.*;
-import lombok.*;
-import org.springframework.data.redis.core.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import org.springframework.data.redis.core.RedisHash;
+
+import java.io.Serial;
+import java.util.List;
 
 @RedisHash("Menu")
 @Getter

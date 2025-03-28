@@ -168,6 +168,7 @@ public class MenuServiceImpl {
                 .orElseThrow(() -> new ResourceNotFoundException("Menu", request.getMenuId().toString()));
         if (ResourceOwner.hasPermission(user, menu)) {
             menuImageRepository.deleteAllByMenu(menu);
+            menuRepository.deleteMenuBadgesById(menu.getId());
             menuRepository.delete(menu);
             return MenuResponse.fromEntity(menu);
         } else {

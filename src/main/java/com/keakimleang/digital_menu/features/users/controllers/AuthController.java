@@ -1,21 +1,24 @@
 package com.keakimleang.digital_menu.features.users.controllers;
 
-import com.keakimleang.digital_menu.annotations.*;
-import com.keakimleang.digital_menu.commons.payloads.*;
-import com.keakimleang.digital_menu.constants.*;
+import com.keakimleang.digital_menu.annotations.CurrentUser;
+import com.keakimleang.digital_menu.commons.payloads.BaseResponse;
+import com.keakimleang.digital_menu.constants.APIURLs;
 import com.keakimleang.digital_menu.features.users.entities.User;
-import com.keakimleang.digital_menu.features.users.payloads.request.*;
-import com.keakimleang.digital_menu.features.users.payloads.response.*;
-import com.keakimleang.digital_menu.features.users.securities.*;
-import com.keakimleang.digital_menu.features.users.services.*;
-import com.keakimleang.digital_menu.utils.*;
-import jakarta.servlet.http.*;
-import jakarta.validation.*;
-import lombok.*;
-import lombok.extern.slf4j.*;
-import org.springframework.security.access.prepost.*;
-import org.springframework.security.authentication.*;
-import org.springframework.security.core.userdetails.*;
+import com.keakimleang.digital_menu.features.users.payloads.request.LoginRequest;
+import com.keakimleang.digital_menu.features.users.payloads.request.RegisterRequest;
+import com.keakimleang.digital_menu.features.users.payloads.response.AuthResponse;
+import com.keakimleang.digital_menu.features.users.payloads.response.UserResponse;
+import com.keakimleang.digital_menu.features.users.securities.CustomUserDetails;
+import com.keakimleang.digital_menu.features.users.services.AuthServiceImpl;
+import com.keakimleang.digital_menu.features.users.services.UserServiceImpl;
+import com.keakimleang.digital_menu.utils.SoftEntityDeletable;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j

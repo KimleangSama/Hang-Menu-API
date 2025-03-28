@@ -33,22 +33,21 @@ CREATE TABLE menu_images
 
 CREATE TABLE menus
 (
-    id          UUID NOT NULL,
-    created_by  UUID,
-    updated_by  UUID,
-    created_at  TIMESTAMP WITHOUT TIME ZONE,
-    updated_at  TIMESTAMP WITHOUT TIME ZONE,
-    code        VARCHAR(255),
-    name        VARCHAR(255),
-    description VARCHAR(255),
-    price       DOUBLE PRECISION,
-    discount    DOUBLE PRECISION,
-    currency    VARCHAR(255),
-    image       VARCHAR(255),
+    id           UUID NOT NULL,
+    created_by   UUID,
+    updated_by   UUID,
+    created_at   TIMESTAMP WITHOUT TIME ZONE,
+    updated_at   TIMESTAMP WITHOUT TIME ZONE,
+    code         VARCHAR(255),
+    name         VARCHAR(255),
+    description  VARCHAR(255),
+    price        DOUBLE PRECISION,
+    discount     DOUBLE PRECISION,
+    currency     VARCHAR(255),
+    image        VARCHAR(255),
     is_available BOOLEAN,
-    deleted      BOOLEAN,
-    category_id UUID,
-    group_id    UUID NOT NULL,
+    category_id  UUID,
+    group_id     UUID NOT NULL,
     CONSTRAINT pk_menus PRIMARY KEY (id)
 );
 

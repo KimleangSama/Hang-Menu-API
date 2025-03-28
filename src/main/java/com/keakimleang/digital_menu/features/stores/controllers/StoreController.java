@@ -60,7 +60,6 @@ public class StoreController {
     }
 
     @GetMapping("/{slug}/get")
-    @PreAuthorize("hasAnyRole('admin', 'manager')")
     public BaseResponse<StoreResponse> findByStoreSlug(
             @PathVariable String slug
     ) {
