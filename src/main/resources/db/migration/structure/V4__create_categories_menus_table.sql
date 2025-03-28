@@ -45,7 +45,8 @@ CREATE TABLE menus
     discount    DOUBLE PRECISION,
     currency    VARCHAR(255),
     image       VARCHAR(255),
-    is_hidden   BOOLEAN,
+    is_available BOOLEAN,
+    deleted      BOOLEAN,
     category_id UUID,
     group_id    UUID NOT NULL,
     CONSTRAINT pk_menus PRIMARY KEY (id)
