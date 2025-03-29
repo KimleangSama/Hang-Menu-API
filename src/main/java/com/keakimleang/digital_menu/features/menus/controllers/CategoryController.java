@@ -29,7 +29,7 @@ public class CategoryController {
             @RequestBody CreateCategoryRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> categoryService.create(user.getUser(), request),
+        return callback.execute(() -> categoryService.create(user.user(), request),
                 "Category failed to create",
                 null);
     }
@@ -40,7 +40,7 @@ public class CategoryController {
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID storeId
     ) {
-        User authUser = user == null ? null : user.getUser();
+        User authUser = user == null ? null : user.user();
         return callback.execute(() -> categoryService.findAllCategoriesByStoreId(authUser, storeId),
                 "Category failed to list",
                 null);
@@ -54,7 +54,7 @@ public class CategoryController {
             @RequestBody UpdateCategoryRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> categoryService.updateCategoryById(user.getUser(), id, request),
+        return callback.execute(() -> categoryService.updateCategoryById(user.user(), id, request),
                 "Category failed to update",
                 null);
     }
@@ -66,7 +66,7 @@ public class CategoryController {
             @RequestBody CategoryToggleRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> categoryService.toggleCategoryVisibility(user.getUser(), request),
+        return callback.execute(() -> categoryService.toggleCategoryVisibility(user.user(), request),
                 "Failed to toggle category visibility",
                 null);
     }
@@ -78,7 +78,7 @@ public class CategoryController {
             @RequestBody CategoryToggleRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> categoryService.toggleCategoryAvailability(user.getUser(), request),
+        return callback.execute(() -> categoryService.toggleCategoryAvailability(user.user(), request),
                 "Failed to toggle category availability",
                 null);
     }
@@ -90,7 +90,7 @@ public class CategoryController {
             @RequestBody CategoryToggleRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> categoryService.deleteCategoryById(user.getUser(), request),
+        return callback.execute(() -> categoryService.deleteCategoryById(user.user(), request),
                 "Category failed to delete",
                 null);
     }
@@ -103,7 +103,7 @@ public class CategoryController {
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
         return callback.execute(() -> categoryService.orderCategoriesPositions(
-                        user.getUser(),
+                        user.user(),
                         request.getStoreId(),
                         request.getCategories()
                 ),

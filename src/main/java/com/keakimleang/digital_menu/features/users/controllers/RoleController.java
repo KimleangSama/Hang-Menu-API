@@ -25,8 +25,8 @@ public class RoleController {
     public BaseResponse<List<RoleResponse>> findRolesOfUser(
             @CurrentUser CustomUserDetails user
     ) {
-        SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
-        return callback.execute(() -> roleService.getRolesBasedOnUserRole(user.getUser()),
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user.user());
+        return callback.execute(() -> roleService.getRolesBasedOnUserRole(user.user()),
                 "Roles failed to fetch",
                 null);
     }

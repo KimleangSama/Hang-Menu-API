@@ -37,7 +37,7 @@ public class OrderController {
             @PathVariable UUID orderId
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> orderService.findOrderById(user.getUser(), orderId),
+        return callback.execute(() -> orderService.findOrderById(user.user(), orderId),
                 "Failed to get order",
                 null);
     }
@@ -58,7 +58,7 @@ public class OrderController {
             @PathVariable UUID storeId
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> orderService.findAllOrdersByStoreId(user.getUser(), storeId),
+        return callback.execute(() -> orderService.findAllOrdersByStoreId(user.user(), storeId),
                 "Failed to get orders",
                 null);
     }
@@ -71,7 +71,7 @@ public class OrderController {
             @RequestParam String status
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> orderService.updateOrderStatusById(user.getUser(), orderId, status),
+        return callback.execute(() -> orderService.updateOrderStatusById(user.user(), orderId, status),
                 "Failed to update order status",
                 null);
     }

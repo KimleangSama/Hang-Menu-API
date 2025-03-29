@@ -28,7 +28,7 @@ public class GroupController {
             @RequestBody CreateGroupRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> groupService.createGroup(user.getUser(), request),
+        return callback.execute(() -> groupService.createGroup(user.user(), request),
                 "Group failed to create",
                 null);
     }
@@ -40,7 +40,7 @@ public class GroupController {
             @PathVariable UUID id
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> groupService.findAllUsersOfGroupId(user.getUser(), id),
+        return callback.execute(() -> groupService.findAllUsersOfGroupId(user.user(), id),
                 "Groups failed to fetch",
                 null);
     }
@@ -52,7 +52,7 @@ public class GroupController {
             @RequestBody AddOrRemoveGroupMemberRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> groupService.removeUserFromGroup(user.getUser(), request),
+        return callback.execute(() -> groupService.removeUserFromGroup(user.user(), request),
                 "Failed to remove user from group",
                 null);
     }
@@ -64,7 +64,7 @@ public class GroupController {
             @RequestBody AddOrRemoveGroupMemberRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> groupService.addUserToGroup(user.getUser(), request),
+        return callback.execute(() -> groupService.addUserToGroup(user.user(), request),
                 "Failed to add user to group",
                 null);
     }
@@ -75,8 +75,8 @@ public class GroupController {
             @CurrentUser CustomUserDetails user,
             @RequestBody PromoteDemoteRequest request
     ) {
-        SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
-        return callback.execute(() -> groupService.promoteOrDemoteUserInGroup(user.getUser(), request),
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user.user());
+        return callback.execute(() -> groupService.promoteOrDemoteUserInGroup(user.user(), request),
                 "User failed to promote",
                 null);
     }
@@ -87,8 +87,8 @@ public class GroupController {
             @CurrentUser CustomUserDetails user,
             @RequestBody RegisterToGroupRequest request
     ) {
-        SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
-        return callback.execute(() -> groupService.registerUserToGroup(user.getUser(), request),
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user.user());
+        return callback.execute(() -> groupService.registerUserToGroup(user.user(), request),
                 "Failed to register user to group",
                 null);
     }

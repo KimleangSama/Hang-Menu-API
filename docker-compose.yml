@@ -1,7 +1,7 @@
 services:
-  postgresql:
+  postgres:
     image: postgres:17.2
-    container_name: postgresql
+    container_name: postgres
     restart: on-failure
     ports:
       - "5432:5432"
@@ -9,18 +9,40 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: hang
+      TZ: Asia/Phnom_Penh
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d hang -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     command: postgres -c shared_preload_libraries=pg_stat_statements -c pg_stat_statements.track=all -c max_connections=200
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
     networks:
       - backend
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.17.1
+    container_name: postgres-exporter
+    ports:
+      - "9187:9187"
+    environment:
+      DATA_SOURCE_NAME: postgresql://postgres:postgres@postgres:5432/hang?sslmode=disable
+      TZ: Asia/Phnom_Penh
+    depends_on:
+      prometheus:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - backend
+      - monitoring
   redis:
     image: redis/redis-stack:latest
     container_name: redis
     restart: on-failure
     ports:
       - "6379:6379"
-      - "8001:8001"  # Optional: Redis Insight UI
     volumes:
       - ./data/redis:/data
     networks:
@@ -104,16 +126,6 @@ services:
     container_name: node-exporter
     ports:
       - "9100:9100"
-    networks:
-      - backend
-      - monitoring
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
-    container_name: cadvisor
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    ports:
-      - "8080:8080"
     networks:
       - backend
       - monitoring

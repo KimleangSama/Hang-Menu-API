@@ -25,7 +25,7 @@ public class TranslationController {
             @RequestBody CreateTranslationRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> translationService.createTranslation(user.getUser(), request),
+        return callback.execute(() -> translationService.createTranslation(user.user(), request),
                 "Language failed to create",
                 null);
     }

@@ -25,7 +25,7 @@ public class NotificationController {
             @PathVariable("storeId") UUID storeId
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> notificationService.findAllNotificationsByStoreId(user.getUser(), storeId),
+        return callback.execute(() -> notificationService.findAllNotificationsByStoreId(user.user(), storeId),
                 "Failed to get notifications of store", null);
     }
 
@@ -35,7 +35,7 @@ public class NotificationController {
             @RequestBody MarkAsReadNotificationRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> notificationService.markAsReadById(user.getUser(), request),
+        return callback.execute(() -> notificationService.markAsReadById(user.user(), request),
                 "Failed to mark notification as read", null);
     }
 
@@ -45,7 +45,7 @@ public class NotificationController {
             @PathVariable("storeId") UUID storeId
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> notificationService.deleteAllByStoreId(user.getUser(), storeId),
+        return callback.execute(() -> notificationService.deleteAllByStoreId(user.user(), storeId),
                 "Failed to delete all notifications of store", null);
     }
 }
