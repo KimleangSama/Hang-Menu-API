@@ -14,12 +14,12 @@ scrape_configs:
     static_configs:
       - targets: [ 'prometheus:9090' ]
 
-  - job_name: "HangMenuAPI"
+  - job_name: "DigitalMenu"
     metrics_path: "/actuator/prometheus"
     static_configs:
       - targets: [ "host.docker.internal:10000" ]
         labels:
-          application: "HangMenuAPI"
+          application: "DigitalMenu"
 
   - job_name: "NodeExporter"
     static_configs:
