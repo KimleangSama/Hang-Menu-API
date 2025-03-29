@@ -62,7 +62,7 @@ public class User extends BaseEntityAudit implements EntityDeletable {
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<GroupMember> groupMembers = new HashSet<>();
 
     private LocalDateTime deletedAt;

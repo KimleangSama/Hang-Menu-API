@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -67,6 +68,7 @@ public class AuthController {
         }
     }
 
+    @Cacheable(value = "me", key = "#user.username")
     @GetMapping("/me")
     @PreAuthorize("authenticated")
     public BaseResponse<UserResponse> me(@CurrentUser CustomUserDetails user) {

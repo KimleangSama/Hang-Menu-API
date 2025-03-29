@@ -1,15 +1,13 @@
 package com.keakimleang.digital_menu.features.users.repos;
 
-import com.keakimleang.digital_menu.features.users.entities.*;
-import java.util.*;
-import org.springframework.data.jpa.repository.*;
-import org.springframework.stereotype.*;
+import com.keakimleang.digital_menu.features.users.entities.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, UUID> {
-    Optional<User> findByEmail(String email);
-
     Optional<User> findByUsername(String username);
-
-    List<User> findByIdIn(List<UUID> ids);
 }

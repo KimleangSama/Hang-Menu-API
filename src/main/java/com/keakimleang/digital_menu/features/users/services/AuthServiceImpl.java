@@ -1,28 +1,39 @@
 package com.keakimleang.digital_menu.features.users.services;
 
 
-import com.keakimleang.digital_menu.exceptions.*;
+import com.keakimleang.digital_menu.exceptions.ResourceNotFoundException;
+import com.keakimleang.digital_menu.features.users.entities.Group;
+import com.keakimleang.digital_menu.features.users.entities.GroupMember;
+import com.keakimleang.digital_menu.features.users.entities.Role;
 import com.keakimleang.digital_menu.features.users.entities.User;
-import com.keakimleang.digital_menu.features.users.entities.*;
-import com.keakimleang.digital_menu.features.users.enums.*;
-import com.keakimleang.digital_menu.features.users.payloads.request.*;
-import com.keakimleang.digital_menu.features.users.payloads.response.*;
-import com.keakimleang.digital_menu.features.users.repos.*;
-import com.keakimleang.digital_menu.features.users.securities.*;
-import com.keakimleang.digital_menu.utils.*;
-import jakarta.servlet.http.*;
-import jakarta.transaction.*;
-import java.time.*;
-import java.util.*;
-import lombok.*;
-import lombok.extern.slf4j.*;
-import org.springframework.http.*;
-import org.springframework.security.authentication.*;
-import org.springframework.security.core.*;
-import org.springframework.security.core.context.*;
-import org.springframework.security.core.userdetails.*;
-import org.springframework.security.crypto.password.*;
-import org.springframework.stereotype.*;
+import com.keakimleang.digital_menu.features.users.enums.AuthProvider;
+import com.keakimleang.digital_menu.features.users.enums.AuthRole;
+import com.keakimleang.digital_menu.features.users.payloads.request.LoginRequest;
+import com.keakimleang.digital_menu.features.users.payloads.request.RegisterRequest;
+import com.keakimleang.digital_menu.features.users.payloads.response.AuthResponse;
+import com.keakimleang.digital_menu.features.users.repos.GroupMemberRepository;
+import com.keakimleang.digital_menu.features.users.repos.GroupRepository;
+import com.keakimleang.digital_menu.features.users.repos.UserRepository;
+import com.keakimleang.digital_menu.features.users.securities.CustomUserDetails;
+import com.keakimleang.digital_menu.utils.RandomString;
+import com.keakimleang.digital_menu.utils.SoftEntityDeletable;
+import com.keakimleang.digital_menu.utils.TokenProvider;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -35,6 +46,7 @@ public class AuthServiceImpl {
     private final AuthenticationManager authenticationManager;
     private final GroupMemberRepository groupMemberRepository;
     private final GroupRepository groupRepository;
+    private final UserServiceImpl userServiceImpl;
 
     @Transactional
     public User register(RegisterRequest request) {
@@ -62,9 +74,9 @@ public class AuthServiceImpl {
     }
 
     @Transactional
+    @Cacheable(value = "auth", key = "#request.username")
     public AuthResponse login(LoginRequest request) {
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new UsernameNotFoundException("User with username " + request.getUsername() + " not found."));
+        User user = userServiceImpl.findByUsername(request.getUsername());
         Authentication authentication = authenticate(request.getUsername(), request.getPassword());
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
         SecurityContextHolder.getContext().setAuthentication(authentication);

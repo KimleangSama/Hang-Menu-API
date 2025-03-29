@@ -18,4 +18,5 @@ public class CacheValue {
     public static final String SYS_PARAM = "sys_param";
 
     public static final String NOTIFICATIONS = "notifications";
+    public static final String USERS = "users";
 }
