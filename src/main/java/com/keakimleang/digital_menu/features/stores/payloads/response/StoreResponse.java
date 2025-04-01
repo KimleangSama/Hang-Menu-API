@@ -3,6 +3,7 @@ package com.keakimleang.digital_menu.features.stores.payloads.response;
 import com.keakimleang.digital_menu.configs.*;
 import com.keakimleang.digital_menu.features.stores.entities.*;
 import java.io.*;
+import java.time.*;
 import java.util.*;
 import lombok.*;
 import org.modelmapper.*;
@@ -31,6 +32,9 @@ public class StoreResponse implements Serializable {
     private Double lat;
     private Double lng;
     private Boolean showGoogleMap;
+
+    private Boolean isArchived;
+    private LocalDateTime expiredAt;
 
     private UUID createdBy;
     private boolean hasPrivilege = false;

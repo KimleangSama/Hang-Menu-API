@@ -157,6 +157,7 @@ public class StoreServiceImpl {
         }
         Store store = storeRepository.findByGroupId(group.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Store", "Group ID: " + group.getId()));
+        store.checkAndUpdateStatus();
         return StoreResponse.fromEntity(store);
     }
 

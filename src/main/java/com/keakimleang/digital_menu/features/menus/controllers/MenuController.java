@@ -8,7 +8,6 @@ import com.keakimleang.digital_menu.features.menus.payloads.requests.*;
 import com.keakimleang.digital_menu.features.menus.payloads.responses.*;
 import com.keakimleang.digital_menu.features.menus.services.*;
 import com.keakimleang.digital_menu.features.users.securities.*;
-import com.keakimleang.digital_menu.features.users.services.*;
 import com.keakimleang.digital_menu.utils.*;
 import java.util.*;
 import java.util.stream.*;
@@ -23,8 +22,6 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class MenuController {
     private final MenuServiceImpl menuService;
-    private final UserServiceImpl userServiceImpl;
-    private final GroupServiceImpl groupServiceImpl;
     private final ControllerServiceCallback callback;
 
     @PostMapping("/create")
