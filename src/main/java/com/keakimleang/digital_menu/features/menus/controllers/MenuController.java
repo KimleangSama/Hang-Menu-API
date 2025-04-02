@@ -41,7 +41,7 @@ public class MenuController {
 
     @WithRateLimitProtection
     @GetMapping("/of-store/{storeId}/all/without")
-    @PreAuthorize("hasAnyRole('admin', 'manager')")
+    @PreAuthorize("hasAnyRole('admin', 'manager', 'staff')")
     public BaseResponse<List<MenuResponse>> findAllMenusByStoreIdWithoutMapping(
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID storeId
@@ -103,7 +103,7 @@ public class MenuController {
     }
 
     @GetMapping("/{id}/details")
-    @PreAuthorize("hasAnyRole('admin', 'manager')")
+    @PreAuthorize("hasAnyRole('admin', 'manager', 'staff', 'cashier')")
     public BaseResponse<MenuResponse> findMenuById(
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID id

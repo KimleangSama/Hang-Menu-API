@@ -35,7 +35,7 @@ public class CategoryController {
     }
 
     @GetMapping("/of-store/{storeId}/list")
-    @PreAuthorize("hasAnyRole('admin', 'manager')")
+    @PreAuthorize("hasAnyRole('admin', 'manager', 'staff', 'cashier')")
     public BaseResponse<List<CategoryResponse>> findAllCategoriesByStoreId(
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID storeId

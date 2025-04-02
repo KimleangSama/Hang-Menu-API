@@ -38,7 +38,7 @@ services:
       - backend
       - monitoring
   redis:
-    image: redis/redis-stack:latest
+    image: redis/redis-stack-server:6.2.6-v19
     container_name: redis
     restart: on-failure
     ports:
@@ -63,7 +63,7 @@ services:
       - backend
 
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki:main-755de6b
     container_name: loki
     restart: on-failure
     command: [ "-config.file=/etc/loki/local-config.yaml" ]
@@ -72,7 +72,7 @@ services:
     networks:
       - monitoring
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.3.0-rc.0
     container_name: prometheus
     restart: on-failure
     command:
@@ -86,7 +86,7 @@ services:
     networks:
       - monitoring
   tempo:
-    image: grafana/tempo:latest
+    image: grafana/tempo:main-c5e5978
     container_name: tempo
     restart: on-failure
     command: [ "-config.file=/etc/tempo.yaml" ]
@@ -99,7 +99,7 @@ services:
     networks:
       - monitoring
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:11.6.0-ubuntu
     container_name: grafana
     restart: on-failure
     volumes:
@@ -110,7 +110,7 @@ services:
     networks:
       - monitoring
   alertmanager:
-    image: prom/alertmanager:latest
+    image: prom/alertmanager:v0.28.1
     container_name: alertmanager
     restart: on-failure
     command:
@@ -122,7 +122,7 @@ services:
     networks:
       - monitoring
   node-exporter:
-    image: prom/node-exporter:latest
+    image: prom/node-exporter:v1.9.0
     container_name: node-exporter
     ports:
       - "9100:9100"

@@ -94,7 +94,7 @@ public class StoreController {
     }
 
     @GetMapping("/mine")
-    @PreAuthorize("hasAnyRole('admin', 'manager')")
+    @PreAuthorize("isAuthenticated()")
     public BaseResponse<StoreResponse> findMyStore(
             @CurrentUser CustomUserDetails user
     ) {
