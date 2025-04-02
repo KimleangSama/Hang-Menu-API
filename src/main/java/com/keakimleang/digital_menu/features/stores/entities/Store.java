@@ -48,6 +48,7 @@ public class Store extends BaseEntityAudit {
 
     private Boolean isArchived = false;
     private LocalDateTime expiredAt;
+    private String extendReason;
 
     @OneToMany(mappedBy = "store", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OperatingHour> operatingHours;

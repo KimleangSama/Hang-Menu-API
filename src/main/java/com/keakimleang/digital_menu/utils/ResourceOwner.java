@@ -31,4 +31,9 @@ public class ResourceOwner {
             return false;
         }
     }
+
+    public static boolean isAdmin(User user) {
+        return user != null && user.getRoles().stream()
+                .anyMatch(role -> role.getName().name().equalsIgnoreCase("admin"));
+    }
 }

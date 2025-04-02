@@ -4,6 +4,7 @@ import com.keakimleang.digital_menu.annotations.*;
 import com.keakimleang.digital_menu.commons.controllers.*;
 import com.keakimleang.digital_menu.commons.payloads.*;
 import com.keakimleang.digital_menu.constants.*;
+import com.keakimleang.digital_menu.exceptions.*;
 import com.keakimleang.digital_menu.features.stores.entities.*;
 import com.keakimleang.digital_menu.features.stores.payloads.request.*;
 import com.keakimleang.digital_menu.features.stores.payloads.request.updates.*;
@@ -117,6 +118,25 @@ public class StoreController {
                     return storeService.updateStoreLayoutById(user.user(), store, layout);
                 },
                 "Failed to update store layout by id",
+                null);
+    }
+
+    @PatchMapping("/{id}/expiration")
+    @PreAuthorize("hasRole('admin')")
+    public BaseResponse<StoreResponse> extendExpirationDate(
+            @CurrentUser CustomUserDetails user,
+            @PathVariable UUID id,
+            @RequestBody ExtendExpirationDateRequest request
+    ) {
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user);
+        if (!ResourceOwner.isAdmin(user.user())) {
+            throw new ResourceForbiddenException(user.getUsername(), Store.class);
+        }
+        Store store = storeServiceImpl.findStoreEntityById(user.user(), id);
+        request.setStoreId(store.getId());
+        request.setSlug(store.getSlug());
+        return callback.execute(() -> storeService.extendExpirationDate(user.user(), id, request),
+                "Failed to extend expiration date",
                 null);
     }
 }

@@ -1,31 +1,41 @@
-CREATE TABLE stores
+create table stores
 (
-    id               UUID         NOT NULL,
-    created_by       UUID,
-    updated_by       UUID,
-    created_at       TIMESTAMP WITHOUT TIME ZONE,
-    updated_at       TIMESTAMP WITHOUT TIME ZONE,
-    name             VARCHAR(255) NOT NULL,
-    slug             VARCHAR(255) NOT NULL,
-    logo             VARCHAR(255),
-    color            VARCHAR(255),
-    description      VARCHAR(255),
-    physical_address VARCHAR(255),
-    virtual_address  VARCHAR(255),
-    phone            VARCHAR(255),
-    email            VARCHAR(255),
-    website          VARCHAR(255),
-    facebook         VARCHAR(255),
-    telegram         VARCHAR(255),
-    instagram        VARCHAR(255),
-    promotion        VARCHAR(255),
-    banner           VARCHAR(255),
-    layout           VARCHAR(255),
-    lat              DOUBLE PRECISION,
-    lng              DOUBLE PRECISION,
-    show_google_map  BOOLEAN,
-    group_id         UUID         NOT NULL,
-    CONSTRAINT pk_stores PRIMARY KEY (id)
+    id               uuid         not null
+        primary key,
+    created_at       timestamp(6),
+    created_by       uuid,
+    updated_at       timestamp(6),
+    updated_by       uuid,
+    banner           varchar(255),
+    color            varchar(255),
+    description      varchar(255),
+    email            varchar(255),
+    expired_at       timestamp(6),
+    facebook         varchar(255),
+    instagram        varchar(255),
+    is_archived      boolean,
+    lat              double precision,
+    layout           varchar(255),
+    lng              double precision,
+    logo             varchar(255),
+    name             varchar(255) not null
+        constraint ukki78gykrclic213ssuw4s7xq9
+            unique,
+    phone            varchar(255),
+    physical_address varchar(255),
+    promotion        varchar(255),
+    show_google_map  boolean,
+    slug             varchar(255) not null
+        constraint uk5keqpfxnufhwlsn1c2eg9kbx2
+            unique,
+    telegram         varchar(255),
+    virtual_address  varchar(255),
+    website          varchar(255),
+    group_id         uuid
+        constraint ukiuwp3nhdhgj07a18qm2vlh9cl
+            unique
+        constraint fkfymk9mqeegtsw2dluhx1xnsjy
+            references groups
 );
 
 CREATE TABLE fee_ranges
