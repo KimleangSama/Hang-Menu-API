@@ -1,10 +1,18 @@
 package com.keakimleang.digital_menu.features.users.payloads.request;
 
-import com.keakimleang.digital_menu.features.users.entities.*;
-import com.keakimleang.digital_menu.features.users.enums.*;
-import jakarta.validation.constraints.*;
-import java.util.*;
-import lombok.*;
+import com.keakimleang.digital_menu.features.users.entities.Role;
+import com.keakimleang.digital_menu.features.users.entities.User;
+import com.keakimleang.digital_menu.features.users.enums.AuthRole;
+import com.keakimleang.digital_menu.features.users.enums.AuthStatus;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -25,7 +33,7 @@ public class RegisterToGroupRequest {
     private String emergencyRelation;
     private String profileUrl;
     private AuthStatus status = AuthStatus.pending;
-    private List<UUID> roles;
+    private List<AuthRole> roles;
 
     public static User fromRequest(RegisterToGroupRequest request, Set<Role> roles) {
         User user = new User();

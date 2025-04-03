@@ -10,6 +10,7 @@ import com.keakimleang.digital_menu.utils.*;
 import java.util.*;
 import lombok.*;
 import org.springframework.cache.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,6 +22,7 @@ public class DashboardController {
     private final OrderRepository orderRepository;
 
     @GetMapping("/overview")
+    @PreAuthorize("hasAnyRole('admin', 'manager', 'staff', 'cashier')")
     @Cacheable(value = "overview", key = "#storeId", sync = true, cacheNames = "overview")
     public BaseResponse<OverviewResponse> getOverview(@RequestParam UUID storeId) {
         List<Category> categories = categoryRepository.findAllByStoreId(storeId);
