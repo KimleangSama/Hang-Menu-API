@@ -49,6 +49,6 @@ public class Menu extends BaseEntityAudit {
     private List<String> badges;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id", unique = true, nullable = false)
+    @JoinColumn(name = "group_id")
     private Group group;
 }
