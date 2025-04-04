@@ -1,36 +1,20 @@
 package com.keakimleang.digital_menu.features.users.services;
 
-import com.keakimleang.digital_menu.exceptions.ResourceForbiddenException;
-import com.keakimleang.digital_menu.exceptions.ResourceNotFoundException;
-import com.keakimleang.digital_menu.features.users.entities.Group;
-import com.keakimleang.digital_menu.features.users.entities.GroupMember;
-import com.keakimleang.digital_menu.features.users.entities.Role;
-import com.keakimleang.digital_menu.features.users.entities.User;
-import com.keakimleang.digital_menu.features.users.enums.AuthRole;
-import com.keakimleang.digital_menu.features.users.payloads.request.AddOrRemoveGroupMemberRequest;
-import com.keakimleang.digital_menu.features.users.payloads.request.CreateGroupRequest;
-import com.keakimleang.digital_menu.features.users.payloads.request.PromoteDemoteRequest;
-import com.keakimleang.digital_menu.features.users.payloads.request.RegisterToGroupRequest;
-import com.keakimleang.digital_menu.features.users.payloads.response.GroupMemberResponse;
-import com.keakimleang.digital_menu.features.users.payloads.response.GroupResponse;
-import com.keakimleang.digital_menu.features.users.payloads.response.UserResponse;
-import com.keakimleang.digital_menu.features.users.repos.GroupMemberRepository;
-import com.keakimleang.digital_menu.features.users.repos.GroupRepository;
-import com.keakimleang.digital_menu.features.users.repos.UserRepository;
-import com.keakimleang.digital_menu.utils.RandomString;
-import com.keakimleang.digital_menu.utils.ResourceOwner;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import com.keakimleang.digital_menu.exceptions.*;
+import com.keakimleang.digital_menu.features.users.entities.*;
+import com.keakimleang.digital_menu.features.users.enums.*;
+import com.keakimleang.digital_menu.features.users.payloads.request.*;
+import com.keakimleang.digital_menu.features.users.payloads.response.*;
+import com.keakimleang.digital_menu.features.users.repos.*;
+import com.keakimleang.digital_menu.utils.*;
+import java.util.*;
+import java.util.stream.*;
+import lombok.*;
+import lombok.extern.slf4j.*;
+import org.springframework.cache.annotation.*;
+import org.springframework.security.crypto.password.*;
+import org.springframework.stereotype.*;
+import org.springframework.transaction.annotation.*;
 
 @Slf4j
 @Service
@@ -151,5 +135,15 @@ public class GroupServiceImpl {
         return groupMemberRepository.findByUserId(user.getId())
                 .map(GroupMember::getGroup)
                 .orElseThrow(() -> new ResourceNotFoundException("Group", user.getId().toString()));
+    }
+
+    @Transactional
+    @Cacheable(value = "groups", key = "#id")
+    public UserResponse findMemberOfUserId(User user, UUID id) {
+        Group group = findGroupByUser(user);
+        GroupMember groupMember = groupMemberRepository.findByGroupIdAndUserId(group.getId(), id)
+                .orElseThrow(() -> new ResourceNotFoundException("GroupMember",
+                        id.toString() + " and " + group.getId().toString()));
+        return UserResponse.fromEntity(groupMember.getUser());
     }
 }

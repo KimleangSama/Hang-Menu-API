@@ -34,7 +34,6 @@ public class StoreResponse implements Serializable {
     private Boolean showGoogleMap;
 
     private Boolean isArchived;
-    private LocalDateTime expiredAt;
 
     private UUID createdBy;
     private boolean hasPrivilege = false;
@@ -47,6 +46,12 @@ public class StoreResponse implements Serializable {
         StoreResponse response = mm.map(store, StoreResponse.class);
         if (store.getGroup() != null) {
             response.setGroupId(store.getGroup().getId());
+        }
+        if (store.getExpiredAt() != null) {
+            response.setIsArchived(
+                    store.getExpiredAt().minusDays(7)
+                            .isBefore(LocalDateTime.now())
+            );
         }
         response.setStoreInfoResponse(StoreInfoResponse.fromEntity(store));
         return response;

@@ -54,6 +54,18 @@ public class GroupController {
                 null);
     }
 
+    @GetMapping("/{id}/user")
+    @PreAuthorize("hasAnyRole('admin', 'manager', 'staff')")
+    public BaseResponse<UserResponse> findMemberOfUserId(
+            @CurrentUser CustomUserDetails user,
+            @PathVariable UUID id
+    ) {
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user);
+        return callback.execute(() -> groupService.findMemberOfUserId(user.user(), id),
+                "Group failed to fetch",
+                null);
+    }
+
     @PostMapping("/remove")
     @PreAuthorize("hasAnyRole('admin', 'manager', 'staff')")
     public BaseResponse<GroupMemberResponse> removeUserFromGroup(

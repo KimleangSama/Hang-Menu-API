@@ -157,7 +157,6 @@ public class StoreServiceImpl {
         }
         Store store = storeRepository.findByGroupId(group.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Store", "Group ID: " + group.getId()));
-        store.checkAndUpdateStatus();
         return StoreResponse.fromEntity(store);
     }
 
@@ -342,7 +341,6 @@ public class StoreServiceImpl {
             store.setExtendReason(request.getExtendReason());
             store.setUpdatedAt(LocalDateTime.now());
             store.setUpdatedBy(user.getId());
-            store.setIsArchived(false);
             return StoreResponse.fromEntity(store);
         } else {
             throw new ResourceForbiddenException(user.getUsername(), Store.class);

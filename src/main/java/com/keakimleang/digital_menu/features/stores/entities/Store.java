@@ -46,7 +46,6 @@ public class Store extends BaseEntityAudit {
     private Double lng;
     private Boolean showGoogleMap = true;
 
-    private Boolean isArchived = false;
     private LocalDateTime expiredAt;
     private String extendReason;
 
@@ -63,14 +62,11 @@ public class Store extends BaseEntityAudit {
     @JoinColumn(name = "group_id", unique = true)
     private Group group;
 
-    public void checkAndUpdateStatus() {
+    public boolean isExpired() {
         LocalDateTime now = LocalDateTime.now();
         if (expiredAt != null) {
-            // Check if expired
-            boolean expired = expiredAt.isBefore(now);
-
-            // Check if should be archived (7 days before expiration)
-            this.isArchived = expiredAt.minusDays(7).isBefore(now);
+            return expiredAt.minusDays(7).isBefore(now);
         }
+        return false;
     }
 }

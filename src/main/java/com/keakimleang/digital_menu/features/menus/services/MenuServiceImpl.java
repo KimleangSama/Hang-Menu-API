@@ -7,6 +7,8 @@ import com.keakimleang.digital_menu.features.menus.entities.*;
 import com.keakimleang.digital_menu.features.menus.payloads.requests.*;
 import com.keakimleang.digital_menu.features.menus.payloads.responses.*;
 import com.keakimleang.digital_menu.features.menus.repos.*;
+import com.keakimleang.digital_menu.features.stores.entities.*;
+import com.keakimleang.digital_menu.features.stores.repos.*;
 import com.keakimleang.digital_menu.features.sysparams.entities.*;
 import com.keakimleang.digital_menu.features.sysparams.services.*;
 import com.keakimleang.digital_menu.features.users.entities.*;
@@ -31,6 +33,7 @@ public class MenuServiceImpl {
 
     private final FileStorageServiceImpl fileStorageServiceImpl;
     private final SysParamServiceImpl sysParamServiceImpl;
+    private final StoreRepository storeRepository;
 
     @Transactional
     public long count() {
@@ -56,6 +59,9 @@ public class MenuServiceImpl {
         return categoryFuture.thenCombine(countFuture, (optionalCategory, count) -> {
             Category category = optionalCategory.orElseThrow(() ->
                     new ResourceNotFoundException("Category", request.getCategoryId().toString()));
+            if (category.getStore() != null && category.getStore().isExpired()) {
+                throw new ResourceForbiddenException(user.getUsername(), Store.class);
+            }
             SysParam sysParam = sysParamServiceImpl.findSysParamByStoreId(request.getStoreId());
             Integer maxMenus = (sysParam != null) ? sysParam.getMaxMenuNumber() : SysParamValue.MAX_MENU;
             if (maxMenus != null && count >= maxMenus) {
