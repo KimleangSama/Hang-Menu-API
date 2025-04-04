@@ -40,7 +40,7 @@ public class CategoryServiceImpl {
     })
     public CategoryResponse create(User user, CreateCategoryRequest request) {
         Store store = storeServiceImpl.findStoreEntityById(user, request.getStoreId());
-        if (!ResourceOwner.hasPermission(user, store)) {
+        if (!ResourceOwner.hasPermission(user, store) || store.isExpired()) {
             throw new ResourceForbiddenException(user.getUsername(), Store.class);
         }
         SysParam sysParam = sysParamServiceImpl.findSysParamByStoreId(request.getStoreId());

@@ -4,6 +4,7 @@ import com.keakimleang.digital_menu.annotations.*;
 import com.keakimleang.digital_menu.commons.controllers.*;
 import com.keakimleang.digital_menu.commons.payloads.*;
 import com.keakimleang.digital_menu.constants.*;
+import com.keakimleang.digital_menu.exceptions.*;
 import com.keakimleang.digital_menu.features.stores.entities.*;
 import com.keakimleang.digital_menu.features.stores.payloads.request.*;
 import com.keakimleang.digital_menu.features.stores.payloads.request.updates.*;
@@ -31,7 +32,7 @@ public class StoreController {
             @RequestBody CreateStoreRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> storeService.createStore(user.getUser(), request),
+        return callback.execute(() -> storeService.createStore(user.user(), request),
                 "Failed to create store",
                 null);
     }
@@ -42,7 +43,7 @@ public class StoreController {
             @CurrentUser CustomUserDetails user
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> storeService.findAllStoresByUser(user.getUser()),
+        return callback.execute(() -> storeService.findAllStoresByUser(user.user()),
                 "Failed to get all stores by user",
                 null);
     }
@@ -54,7 +55,7 @@ public class StoreController {
             @PathVariable UUID id
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> storeService.deleteStoreById(user.getUser(), id),
+        return callback.execute(() -> storeService.deleteStoreById(user.user(), id),
                 "Failed to delete store by id",
                 null);
     }
@@ -75,7 +76,7 @@ public class StoreController {
             @RequestBody AssignGroupRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> storeService.assignStoreToUserGroup(user.getUser(), request),
+        return callback.execute(() -> storeService.assignStoreToUserGroup(user.user(), request),
                 "Failed to assign store to user group",
                 null);
     }
@@ -88,18 +89,18 @@ public class StoreController {
             @RequestBody UpdateStoreRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> storeService.updateStoreById(user.getUser(), id, request),
+        return callback.execute(() -> storeService.updateStoreById(user.user(), id, request),
                 "Failed to update store by id",
                 null);
     }
 
     @GetMapping("/mine")
-    @PreAuthorize("hasAnyRole('admin', 'manager')")
+    @PreAuthorize("isAuthenticated()")
     public BaseResponse<StoreResponse> findMyStore(
             @CurrentUser CustomUserDetails user
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> storeService.findMyStore(user.getUser()),
+        return callback.execute(() -> storeService.findMyStore(user.user()),
                 "Failed to get my store",
                 null);
     }
@@ -113,10 +114,29 @@ public class StoreController {
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
         return callback.execute(() -> {
-                    Store store = storeServiceImpl.findStoreEntityById(user.getUser(), id);
-                    return storeService.updateStoreLayoutById(user.getUser(), store, layout);
+                    Store store = storeServiceImpl.findStoreEntityById(user.user(), id);
+                    return storeService.updateStoreLayoutById(user.user(), store, layout);
                 },
                 "Failed to update store layout by id",
+                null);
+    }
+
+    @PatchMapping("/{id}/expiration")
+    @PreAuthorize("hasRole('admin')")
+    public BaseResponse<StoreResponse> extendExpirationDate(
+            @CurrentUser CustomUserDetails user,
+            @PathVariable UUID id,
+            @RequestBody ExtendExpirationDateRequest request
+    ) {
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user);
+        if (!ResourceOwner.isAdmin(user.user())) {
+            throw new ResourceForbiddenException(user.getUsername(), Store.class);
+        }
+        Store store = storeServiceImpl.findStoreEntityById(user.user(), id);
+        request.setStoreId(store.getId());
+        request.setSlug(store.getSlug());
+        return callback.execute(() -> storeService.extendExpirationDate(user.user(), id, request),
+                "Failed to extend expiration date",
                 null);
     }
 }

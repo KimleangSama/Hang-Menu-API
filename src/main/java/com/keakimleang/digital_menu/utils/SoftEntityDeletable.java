@@ -27,7 +27,7 @@ public class SoftEntityDeletable {
         if (user == null) {
             throw new ResourceNotFoundException("User", "id: " + "unknown");
         }
-        throwErrorIfSoftDeleted(user.getUser());
+        throwErrorIfSoftDeleted(user.user());
     }
 
     public static void throwErrorIfSoftDeleted(User user) {

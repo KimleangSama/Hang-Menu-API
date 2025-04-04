@@ -87,9 +87,9 @@ public class FileStorageController {
     ) {
         try {
             SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-            String filename = fileStorageService.save(user.getUser(), file);
+            String filename = fileStorageService.save(user.user(), file);
             FileResponse fileResponse = FileResponse.fromEntity(filename);
-            fileResponse.setCreatedBy(user.getUser().getId());
+            fileResponse.setCreatedBy(user.user().getId());
             return BaseResponse.<FileResponse>ok()
                     .setPayload(fileResponse);
         } catch (FileStorageException e) {
@@ -111,11 +111,11 @@ public class FileStorageController {
             @RequestParam("id") UUID id,
             @RequestParam("type") String type
     ) {
-        if (currentUser == null || currentUser.getUser() == null) {
+        if (currentUser == null || currentUser.user() == null) {
             return BaseResponse.<FileResponse>accessDenied()
                     .setError("User is not permitted to upload file.");
         }
-        User user = currentUser.getUser();
+        User user = currentUser.user();
         try {
             String filename = fileStorageService.save(user, file);
             FileResponse fileResponse = FileResponse.fromEntity(filename);
@@ -165,11 +165,11 @@ public class FileStorageController {
             @RequestParam("type") String type
     ) {
         try {
-            if (user == null || user.getUser() == null) {
+            if (user == null || user.user() == null) {
                 return BaseResponse.<List<FileResponse>>accessDenied()
                         .setError("User is not permitted to upload files.");
             }
-            List<String> filenames = fileStorageService.saveAll(user.getUser(), files);
+            List<String> filenames = fileStorageService.saveAll(user.user(), files);
             if (type.equalsIgnoreCase("menu")) {
                 Menu menu = menuService.findMenuEntityById(id)
                         .orElseThrow(() -> new EntityNotFoundException("Menu not found"));

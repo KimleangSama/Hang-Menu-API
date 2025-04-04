@@ -8,7 +8,6 @@ import com.keakimleang.digital_menu.features.menus.payloads.requests.*;
 import com.keakimleang.digital_menu.features.menus.payloads.responses.*;
 import com.keakimleang.digital_menu.features.menus.services.*;
 import com.keakimleang.digital_menu.features.users.securities.*;
-import com.keakimleang.digital_menu.features.users.services.*;
 import com.keakimleang.digital_menu.utils.*;
 import java.util.*;
 import java.util.stream.*;
@@ -23,8 +22,6 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class MenuController {
     private final MenuServiceImpl menuService;
-    private final UserServiceImpl userServiceImpl;
-    private final GroupServiceImpl groupServiceImpl;
     private final ControllerServiceCallback callback;
 
     @PostMapping("/create")
@@ -34,19 +31,19 @@ public class MenuController {
             @RequestBody CreateMenuRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> menuService.create(user.getUser(), request),
+        return callback.execute(() -> menuService.create(user.user(), request),
                 "Menu failed to create",
                 null);
     }
 
     @WithRateLimitProtection
     @GetMapping("/of-store/{storeId}/all/without")
-    @PreAuthorize("hasAnyRole('admin', 'manager')")
+    @PreAuthorize("hasAnyRole('admin', 'manager', 'staff')")
     public BaseResponse<List<MenuResponse>> findAllMenusByStoreIdWithoutMapping(
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID storeId
     ) {
-        return callback.execute(() -> menuService.findAllMenusByStoreId(user != null ? user.getUser() : null, storeId),
+        return callback.execute(() -> menuService.findAllMenusByStoreId(user != null ? user.user() : null, storeId),
                 "Menu failed to list", null);
     }
 
@@ -57,7 +54,7 @@ public class MenuController {
             @PathVariable UUID storeId
     ) {
         return callback.execute(() -> {
-            List<MenuResponse> responses = menuService.findAllMenusByStoreId(user != null ? user.getUser() : null, storeId);
+            List<MenuResponse> responses = menuService.findAllMenusByStoreId(user != null ? user.user() : null, storeId);
             Map<UUID, List<MenuResponse>> grouped = responses.stream()
                     .collect(Collectors.groupingBy(MenuResponse::getCategoryId));
             return grouped.entrySet().stream()
@@ -85,7 +82,7 @@ public class MenuController {
             @RequestBody MenuToggleRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> menuService.toggleMenuAvailability(user.getUser(), request),
+        return callback.execute(() -> menuService.toggleMenuAvailability(user.user(), request),
                 "Menu failed to set hide",
                 null);
     }
@@ -97,18 +94,18 @@ public class MenuController {
             @RequestBody MenuToggleRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> menuService.deleteMenuById(user.getUser(), request),
+        return callback.execute(() -> menuService.deleteMenuById(user.user(), request),
                 "Menu failed to delete",
                 null);
     }
 
     @GetMapping("/{id}/details")
-    @PreAuthorize("hasAnyRole('admin', 'manager')")
+    @PreAuthorize("hasAnyRole('admin', 'manager', 'staff', 'cashier')")
     public BaseResponse<MenuResponse> findMenuById(
             @CurrentUser CustomUserDetails user,
             @PathVariable UUID id
     ) {
-        return callback.execute(() -> menuService.findMenuById(user != null ? user.getUser() : null, id),
+        return callback.execute(() -> menuService.findMenuById(user != null ? user.user() : null, id),
                 "Menu failed to get",
                 null);
     }
@@ -121,7 +118,7 @@ public class MenuController {
             @RequestBody UpdateMenuRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> menuService.updateMenuById(user.getUser(), id, request),
+        return callback.execute(() -> menuService.updateMenuById(user.user(), id, request),
                 "Menu failed to update",
                 null);
     }
@@ -134,7 +131,7 @@ public class MenuController {
             @RequestBody UpdateMenuCategoryRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> menuService.updateCategoryOfMenuById(user.getUser(), id, request),
+        return callback.execute(() -> menuService.updateCategoryOfMenuById(user.user(), id, request),
                 "Menu failed to update",
                 null);
     }

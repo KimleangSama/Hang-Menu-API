@@ -6,6 +6,7 @@ import com.keakimleang.digital_menu.features.users.enums.*;
 import com.keakimleang.digital_menu.features.users.payloads.request.*;
 import com.keakimleang.digital_menu.features.users.payloads.response.*;
 import com.keakimleang.digital_menu.features.users.repos.*;
+import com.keakimleang.digital_menu.utils.*;
 import java.util.*;
 import java.util.stream.*;
 import lombok.*;
@@ -40,7 +41,7 @@ public class GroupServiceImpl {
     @Transactional
     public List<UserResponse> findAllUsersOfGroupId(User user, UUID groupId) {
         Group group = getGroupById(groupId);
-        if (!isManagerOrCreator(user, group)) {
+        if (isManagerOrStaffOrCreator(user, group)) {
             throw new ResourceForbiddenException(user.getUsername(), Group.class);
         }
         List<GroupMember> groupMembers = groupMemberRepository.findByGroupId(group.getId());
@@ -71,12 +72,13 @@ public class GroupServiceImpl {
     @CacheEvict(value = "groups", key = "#request.username")
     public GroupMemberResponse removeUserFromGroup(User user, AddOrRemoveGroupMemberRequest request) {
         Group group = getGroupById(request.getGroupId());
+        if (isManagerOrStaffOrCreator(user, group)) {
+            throw new ResourceForbiddenException(user.getUsername(), Group.class);
+        }
         User userToRemove = getUserById(request.getUserId());
-
         GroupMember groupMember = groupMemberRepository.findByGroupIdAndUserId(group.getId(), userToRemove.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("GroupMember",
                         request.getUserId().toString() + " and " + request.getGroupId().toString()));
-
         groupMemberRepository.delete(groupMember);
         return GroupMemberResponse.fromEntities(userToRemove, group);
     }
@@ -92,9 +94,15 @@ public class GroupServiceImpl {
     @CacheEvict(value = "groups", key = "#request.username")
     public GroupMemberResponse registerUserToGroup(User user, RegisterToGroupRequest request) {
         Group group = getGroupById(request.getGroupId());
-        List<Role> roles = roleServiceImpl.findByIds(request.getRoles());
-        request.setPassword(passwordEncoder.encode(request.getPassword()));
+        if (!ResourceOwner.hasPermission(user, group)) {
+            throw new ResourceForbiddenException(user.getUsername(), Group.class);
+        }
+        List<Role> roles = roleServiceImpl.findByNames(request.getRoles());
         User userToRegister = RegisterToGroupRequest.fromRequest(request, new HashSet<>(roles));
+        userToRegister.setCreatedBy(user.getId());
+        userToRegister.setEmail(RandomString.make(12) + "@email.com");
+        userToRegister.setRaw(request.getPassword());
+        userToRegister.setPassword(passwordEncoder.encode(request.getPassword()));
         userRepository.save(userToRegister);
         return addGroupMember(group, userToRegister);
     }
@@ -109,9 +117,9 @@ public class GroupServiceImpl {
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId.toString()));
     }
 
-    private boolean isManagerOrCreator(User user, Group group) {
-        return user.getRoles().stream().anyMatch(role -> role.getName().equals(AuthRole.manager))
-                || group.getCreatedBy().equals(user.getId());
+    private boolean isManagerOrStaffOrCreator(User user, Group group) {
+        return user.getRoles().stream().noneMatch(role -> role.getName().equals(AuthRole.manager) || role.getName().equals(AuthRole.staff))
+                && !group.getCreatedBy().equals(user.getId());
     }
 
     private GroupMemberResponse addGroupMember(Group group, User user) {
@@ -127,5 +135,15 @@ public class GroupServiceImpl {
         return groupMemberRepository.findByUserId(user.getId())
                 .map(GroupMember::getGroup)
                 .orElseThrow(() -> new ResourceNotFoundException("Group", user.getId().toString()));
+    }
+
+    @Transactional
+    @Cacheable(value = "groups", key = "#id")
+    public UserResponse findMemberOfUserId(User user, UUID id) {
+        Group group = findGroupByUser(user);
+        GroupMember groupMember = groupMemberRepository.findByGroupIdAndUserId(group.getId(), id)
+                .orElseThrow(() -> new ResourceNotFoundException("GroupMember",
+                        id.toString() + " and " + group.getId().toString()));
+        return UserResponse.fromEntity(groupMember.getUser());
     }
 }

@@ -27,8 +27,8 @@ public class FavoriteController {
             @CurrentUser CustomUserDetails user,
             @RequestBody CreateFavoriteRequest request
     ) {
-        SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
-        return callback.execute(() -> favoriteService.createFavorite(user.getUser(), request),
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user.user());
+        return callback.execute(() -> favoriteService.createFavorite(user.user(), request),
                 "Favorite failed to create",
                 null);
     }
@@ -39,8 +39,8 @@ public class FavoriteController {
             @CurrentUser CustomUserDetails user,
             @RequestBody CreateFavoriteRequest request
     ) {
-        SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
-        return callback.execute(() -> favoriteService.deleteFavorite(user.getUser(), request),
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user.user());
+        return callback.execute(() -> favoriteService.deleteFavorite(user.user(), request),
                 "Favorite failed to delete",
                 null);
     }
@@ -50,8 +50,8 @@ public class FavoriteController {
     public BaseResponse<List<FavoriteResponse>> listMenuFavorites(
             @CurrentUser CustomUserDetails user
     ) {
-        SoftEntityDeletable.throwErrorIfSoftDeleted(user.getUser());
-        return callback.execute(() -> favoriteService.listMenuFavorites(user.getUser()),
+        SoftEntityDeletable.throwErrorIfSoftDeleted(user.user());
+        return callback.execute(() -> favoriteService.listMenuFavorites(user.user()),
                 "Favorite failed to list",
                 null);
     }

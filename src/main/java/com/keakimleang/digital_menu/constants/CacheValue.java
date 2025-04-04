@@ -19,4 +19,5 @@ public class CacheValue {
 
     public static final String NOTIFICATIONS = "notifications";
     public static final String USERS = "users";
+    public static final String USER_DETAILS = "user_details";
 }

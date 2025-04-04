@@ -3,6 +3,7 @@ package com.keakimleang.digital_menu.features.stores.payloads.response;
 import com.keakimleang.digital_menu.configs.*;
 import com.keakimleang.digital_menu.features.stores.entities.*;
 import java.io.*;
+import java.time.*;
 import java.util.*;
 import lombok.*;
 import org.modelmapper.*;
@@ -32,6 +33,8 @@ public class StoreResponse implements Serializable {
     private Double lng;
     private Boolean showGoogleMap;
 
+    private Boolean isArchived;
+
     private UUID createdBy;
     private boolean hasPrivilege = false;
     private UUID groupId;
@@ -43,6 +46,12 @@ public class StoreResponse implements Serializable {
         StoreResponse response = mm.map(store, StoreResponse.class);
         if (store.getGroup() != null) {
             response.setGroupId(store.getGroup().getId());
+        }
+        if (store.getExpiredAt() != null) {
+            response.setIsArchived(
+                    store.getExpiredAt().minusDays(7)
+                            .isBefore(LocalDateTime.now())
+            );
         }
         response.setStoreInfoResponse(StoreInfoResponse.fromEntity(store));
         return response;

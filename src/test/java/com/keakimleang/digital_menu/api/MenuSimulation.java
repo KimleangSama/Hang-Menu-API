@@ -20,7 +20,7 @@ public class MenuSimulation extends Simulation {
 
     {
         setUp(
-                scn.injectOpen(rampUsersPerSec(1).to(5).during(Duration.ofMinutes(1)))
+                scn.injectOpen(rampUsersPerSec(1).to(50).during(Duration.ofMinutes(1)))
         ).protocols(httpProtocol);
     }
 

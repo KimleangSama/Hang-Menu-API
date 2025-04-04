@@ -326,4 +326,24 @@ public class StoreServiceImpl {
         store.setUpdatedBy(userId);
         storeRepository.save(store);
     }
+
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = CacheValue.STORE, key = "#user.id"),
+            @CacheEvict(value = CacheValue.STORES, key = "#user.id"),
+            @CacheEvict(value = CacheValue.STORE, key = "#request.slug"),
+    })
+    public StoreResponse extendExpirationDate(User user, UUID id, ExtendExpirationDateRequest request) {
+        Store store = storeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Store", id.toString()));
+        if (ResourceOwner.isAdmin(user)) {
+            store.setExpiredAt(request.getExpiredAt());
+            store.setExtendReason(request.getExtendReason());
+            store.setUpdatedAt(LocalDateTime.now());
+            store.setUpdatedBy(user.getId());
+            return StoreResponse.fromEntity(store);
+        } else {
+            throw new ResourceForbiddenException(user.getUsername(), Store.class);
+        }
+    }
 }

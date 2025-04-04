@@ -2,24 +2,20 @@ package com.keakimleang.digital_menu.features.users.securities;
 
 
 import com.keakimleang.digital_menu.features.users.entities.User;
-import com.keakimleang.digital_menu.features.users.enums.*;
-import java.io.*;
-import java.util.*;
-import lombok.*;
-import org.springframework.security.core.*;
-import org.springframework.security.core.authority.*;
-import org.springframework.security.core.userdetails.*;
+import com.keakimleang.digital_menu.features.users.enums.AuthStatus;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
-public class CustomUserDetails implements UserDetails, Serializable {
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+public record CustomUserDetails(User user) implements UserDetails, Serializable {
     @Serial
     private static final long serialVersionUID = 5630699925975073133L;
-
-    @Getter
-    private final User user;
-
-    public CustomUserDetails(User user) {
-        this.user = user;
-    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

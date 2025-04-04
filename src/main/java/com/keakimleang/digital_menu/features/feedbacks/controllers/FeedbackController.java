@@ -24,7 +24,7 @@ public class FeedbackController {
             @CurrentUser CustomUserDetails user,
             @RequestBody CreateFeedbackRequest request
     ) {
-        return callback.execute(() -> feedbackService.createFeedback(user != null ? user.getUser() : null, request),
+        return callback.execute(() -> feedbackService.createFeedback(user != null ? user.user() : null, request),
                 "Feedback failed to create",
                 null);
     }
@@ -35,7 +35,7 @@ public class FeedbackController {
             @CurrentUser CustomUserDetails user,
             @RequestParam UUID storeId
     ) {
-        return callback.execute(() -> feedbackService.listFeedbacksOfStore(user != null ? user.getUser() : null, storeId),
+        return callback.execute(() -> feedbackService.listFeedbacksOfStore(user != null ? user.user() : null, storeId),
                 "Feedbacks failed to list",
                 null);
     }
@@ -45,7 +45,7 @@ public class FeedbackController {
             @CurrentUser CustomUserDetails user,
             @RequestParam(required = false) UUID tableId
     ) {
-        return callback.execute(() -> feedbackService.getAverageRateOfFeedbacks(user != null ? user.getUser() : null, tableId),
+        return callback.execute(() -> feedbackService.getAverageRateOfFeedbacks(user != null ? user.user() : null, tableId),
                 "Feedbacks failed to list",
                 null);
     }

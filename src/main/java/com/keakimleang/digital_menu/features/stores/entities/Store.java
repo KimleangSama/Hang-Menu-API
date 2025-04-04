@@ -5,6 +5,7 @@ import com.keakimleang.digital_menu.features.translations.entities.*;
 import com.keakimleang.digital_menu.features.users.entities.*;
 import jakarta.persistence.*;
 import java.io.*;
+import java.time.*;
 import java.util.*;
 import lombok.*;
 import org.springframework.data.redis.core.*;
@@ -40,9 +41,13 @@ public class Store extends BaseEntityAudit {
     private String promotion;
     private String banner;
     private String layout;
+
     private Double lat;
     private Double lng;
     private Boolean showGoogleMap = true;
+
+    private LocalDateTime expiredAt;
+    private String extendReason;
 
     @OneToMany(mappedBy = "store", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OperatingHour> operatingHours;
@@ -54,6 +59,14 @@ public class Store extends BaseEntityAudit {
     private List<Language> languages;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "group_id", unique = true, nullable = false)
+    @JoinColumn(name = "group_id", unique = true)
     private Group group;
+
+    public boolean isExpired() {
+        LocalDateTime now = LocalDateTime.now();
+        if (expiredAt != null) {
+            return expiredAt.minusDays(7).isBefore(now);
+        }
+        return false;
+    }
 }

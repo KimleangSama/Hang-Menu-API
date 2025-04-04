@@ -26,7 +26,7 @@ public class LanguageController {
             @RequestBody CreateLanguageRequest request
     ) {
         SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-        return callback.execute(() -> languageService.createLanguage(user.getUser(), request),
+        return callback.execute(() -> languageService.createLanguage(user.user(), request),
                 "Language failed to create",
                 null);
     }

@@ -22,6 +22,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @Slf4j
 @AllArgsConstructor
 @RestController
@@ -74,7 +76,7 @@ public class AuthController {
     public BaseResponse<UserResponse> me(@CurrentUser CustomUserDetails user) {
         try {
             SoftEntityDeletable.throwErrorIfSoftDeleted(user);
-            return BaseResponse.<UserResponse>ok().setPayload(UserResponse.fromEntity(user.getUser()));
+            return BaseResponse.<UserResponse>ok().setPayload(UserResponse.fromEntity(user.user()));
         } catch (Exception e) {
             return BaseResponse.<UserResponse>exception().setError("Failed to get current user. Reason: " + e.getMessage());
         }
@@ -89,4 +91,26 @@ public class AuthController {
             return BaseResponse.<AuthResponse>exception().setError("Failed to refresh token. Reason: " + e.getMessage());
         }
     }
+
+    @DeleteMapping("/{id}/delete")
+    @PreAuthorize("hasRole('admin')")
+    public BaseResponse<UserResponse> deleteUser(
+            @CurrentUser CustomUserDetails user,
+            @PathVariable UUID id
+    ) {
+        try {
+            SoftEntityDeletable.throwErrorIfSoftDeleted(user);
+            User userToDelete = userService.findById(id);
+            if (userToDelete == null) {
+                return BaseResponse.<UserResponse>notFound()
+                        .setError("User with id: " + id + " not found.");
+            } else {
+                userService.deleteUser(user.user().getId(), id);
+            }
+            return BaseResponse.<UserResponse>ok().setPayload(UserResponse.fromEntity(userToDelete));
+        } catch (Exception e) {
+            return BaseResponse.<UserResponse>exception().setError("Failed to delete user. Reason: " + e.getMessage());
+        }
+    }
+
 }
