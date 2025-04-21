@@ -1,26 +1,38 @@
-CREATE TABLE users
+create table users
 (
-    id                 UUID         NOT NULL,
-    created_by         UUID,
-    updated_by         UUID,
-    created_at         TIMESTAMP WITHOUT TIME ZONE,
-    updated_at         TIMESTAMP WITHOUT TIME ZONE,
-    username           VARCHAR(255) NOT NULL,
-    password           VARCHAR(255) NOT NULL,
-    raw                VARCHAR(255) NOT NULL,
-    fullname           VARCHAR(255),
-    email              VARCHAR(255),
-    phone              VARCHAR(255),
-    address            VARCHAR(255),
-    emergency_contact  VARCHAR(255),
-    emergency_relation VARCHAR(255),
-    profile_url        VARCHAR(255),
-    last_login_at      TIMESTAMP WITHOUT TIME ZONE,
-    provider           VARCHAR(255) NOT NULL,
-    status             VARCHAR(255) NOT NULL,
-    deleted_at         TIMESTAMP WITHOUT TIME ZONE,
-    deleted_by         UUID,
-    CONSTRAINT pk_users PRIMARY KEY (id)
+    id                 uuid         not null
+        primary key,
+    created_at         timestamp(6),
+    created_by         uuid,
+    updated_at         timestamp(6),
+    updated_by         uuid,
+    address            varchar(255),
+    deleted_at         timestamp(6),
+    deleted_by         uuid,
+    email              varchar(255)
+        constraint uk6dotkott2kjsp8vw4d0m25fb7
+            unique,
+    emergency_contact  varchar(255),
+    emergency_relation varchar(255),
+    fullname           varchar(255),
+    last_login_at      timestamp(6),
+    password           varchar(255) not null,
+    phone              varchar(255)
+        constraint ukdu5v5sr43g5bfnji4vb8hg5s3
+            unique,
+    profile_url        varchar(255),
+    provider           varchar(255) not null
+        constraint users_provider_check
+            check ((provider)::text = ANY
+                   ((ARRAY ['local'::character varying, 'facebook'::character varying, 'google'::character varying, 'github'::character varying])::text[])),
+    raw                varchar(255) not null,
+    status             varchar(255) not null
+        constraint users_status_check
+            check ((status)::text = ANY
+                   ((ARRAY ['active'::character varying, 'pending'::character varying, 'inactive'::character varying, 'blocked'::character varying, 'deleted'::character varying])::text[])),
+    username           varchar(255) not null
+        constraint ukr43af9ap4edm43mmtq01oddj6
+            unique
 );
 
 CREATE TABLE roles

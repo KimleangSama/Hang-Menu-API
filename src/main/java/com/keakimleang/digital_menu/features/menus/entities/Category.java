@@ -41,6 +41,6 @@ public class Category extends BaseEntityAudit {
 
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id", unique = true, nullable = false)
+    @JoinColumn(name = "group_id")
     private Group group;
 }

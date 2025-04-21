@@ -1,19 +1,25 @@
-CREATE TABLE categories
+create table categories
 (
-    id           UUID         NOT NULL,
-    created_by   UUID,
-    updated_by   UUID,
-    created_at   TIMESTAMP WITHOUT TIME ZONE,
-    updated_at   TIMESTAMP WITHOUT TIME ZONE,
-    name         VARCHAR(255) NOT NULL,
-    description  VARCHAR(255),
-    icon         VARCHAR(255),
-    is_hidden    BOOLEAN      NOT NULL,
-    is_available BOOLEAN      NOT NULL,
-    position     INTEGER      NOT NULL,
-    store_id     UUID,
-    group_id     UUID         NOT NULL,
-    CONSTRAINT pk_categories PRIMARY KEY (id)
+    id           uuid         not null
+        primary key,
+    created_at   timestamp(6),
+    created_by   uuid,
+    updated_at   timestamp(6),
+    updated_by   uuid,
+    description  varchar(255),
+    icon         varchar(255),
+    is_available boolean      not null,
+    is_hidden    boolean      not null,
+    name         varchar(255) not null,
+    position     integer      not null,
+    group_id     uuid         not null
+        constraint fk36j4852qk859jhclfoocn6i7k
+            references groups,
+    store_id     uuid
+        constraint fkswh8ov7e46aj6bf053xla2c6b
+            references stores,
+    constraint uk9ov5tvnnyqbsej9s8cuww53aa
+        unique (name, store_id)
 );
 
 CREATE TABLE menu_badges
@@ -31,24 +37,28 @@ CREATE TABLE menu_images
     CONSTRAINT pk_menu_images PRIMARY KEY (id)
 );
 
-CREATE TABLE menus
+create table menus
 (
-    id           UUID NOT NULL,
-    created_by   UUID,
-    updated_by   UUID,
-    created_at   TIMESTAMP WITHOUT TIME ZONE,
-    updated_at   TIMESTAMP WITHOUT TIME ZONE,
-    code         VARCHAR(255),
-    name         VARCHAR(255),
-    description  VARCHAR(255),
-    price        DOUBLE PRECISION,
-    discount     DOUBLE PRECISION,
-    currency     VARCHAR(255),
-    image        VARCHAR(255),
-    is_available BOOLEAN,
-    category_id  UUID,
-    group_id     UUID NOT NULL,
-    CONSTRAINT pk_menus PRIMARY KEY (id)
+    id           uuid not null
+        primary key,
+    created_at   timestamp(6),
+    created_by   uuid,
+    updated_at   timestamp(6),
+    updated_by   uuid,
+    code         varchar(255),
+    currency     varchar(255),
+    description  varchar(255),
+    discount     double precision,
+    image        varchar(255),
+    is_available boolean,
+    name         varchar(255),
+    price        double precision,
+    category_id  uuid
+        constraint fkp0a1nfv0qt1ftw07yd8h00ud7
+            references categories,
+    group_id     uuid
+        constraint fksikep6sn85nnxo7563v28oo4l
+            references groups
 );
 
 ALTER TABLE categories

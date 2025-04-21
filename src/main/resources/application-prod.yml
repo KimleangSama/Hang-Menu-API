@@ -32,7 +32,7 @@ spring:
       ddl-auto: update
     properties:
       format_sql: true
-      show_sql: true
+      show_sql: false
     open-in-view: false
   datasource:
     driver-class-name: ${DRIVER_CLASS_NAME:org.postgresql.Driver}
@@ -44,7 +44,7 @@ spring:
       username: ${spring.datasource.username}
       password: ${spring.datasource.password}
       pool-name: SpringBootHikariCP # HikariCP
-      maximum-pool-size: 20
+      maximum-pool-size: 10
       minimum-idle: 2
       initialization-fail-timeout: 0
       connection-timeout: 30000
@@ -52,9 +52,8 @@ spring:
 
   flyway:
     enabled: false
-    locations: classpath:db/migration/structure
+    locations: classpath:db/migration/structure, classpath:db/migration/data
     validate-on-migrate: true
-    baseline-on-migrate: true
     default-schema: public
     url: ${spring.datasource.url}
     user: ${spring.datasource.username}

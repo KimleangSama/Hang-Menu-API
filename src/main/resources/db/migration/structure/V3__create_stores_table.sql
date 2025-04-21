@@ -35,7 +35,8 @@ create table stores
         constraint ukiuwp3nhdhgj07a18qm2vlh9cl
             unique
         constraint fkfymk9mqeegtsw2dluhx1xnsjy
-            references groups
+            references groups,
+    extend_reason    varchar(255)
 );
 
 CREATE TABLE fee_ranges

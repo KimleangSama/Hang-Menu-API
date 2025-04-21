@@ -10,7 +10,7 @@ import com.keakimleang.digital_menu.utils.*;
 import java.util.*;
 import lombok.*;
 import org.springframework.cache.annotation.*;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.prepost.*;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,7 +23,7 @@ public class DashboardController {
 
     @GetMapping("/overview")
     @PreAuthorize("hasAnyRole('admin', 'manager', 'staff', 'cashier')")
-    @Cacheable(value = "overview", key = "#storeId", sync = true, cacheNames = "overview")
+    @Cacheable(value = CacheValue.OVERVIEW, key = "#storeId", sync = true, cacheNames = CacheValue.OVERVIEW)
     public BaseResponse<OverviewResponse> getOverview(@RequestParam UUID storeId) {
         List<Category> categories = categoryRepository.findAllByStoreId(storeId);
         Integer totalMenus = menuRepository.countByCategoryIn(categories);

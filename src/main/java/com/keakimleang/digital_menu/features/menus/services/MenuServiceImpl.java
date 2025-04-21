@@ -43,7 +43,8 @@ public class MenuServiceImpl {
     @Transactional
     @Caching(evict = {
             @CacheEvict(value = CacheValue.MENUS, key = "#request.storeId"),
-            @CacheEvict(value = CacheValue.MENU_ENTITIES, key = "#request.storeId")
+            @CacheEvict(value = CacheValue.MENU_ENTITIES, key = "#request.storeId"),
+            @CacheEvict(value = CacheValue.OVERVIEW, key = "#request.storeId"),
     })
     public MenuResponse create(User user, CreateMenuRequest request) {
         CompletableFuture<Optional<Category>> categoryFuture =
