@@ -65,7 +65,7 @@ jobs:
 
       - name: JaCoCo Report
         id: jacoco-report
-        uses: Madrapps/jacoco-report@v1.7.1
+        uses: Madrapps/jacoco-report@v1.7.2
         with:
           paths: ${{ github.workspace }}/target/site/jacoco/jacoco.xml
           token: ${{ secrets.GITHUB_TOKEN }}
